@@ -3,8 +3,9 @@ package org.example.service.impl;
 import org.example.DAO.UserRegestration;
 import org.example.DAO.impl.ImplUserRegestration;
 import org.example.model.User;
+import org.example.service.UserService;
 
-public class ImplUserService {
+public class ImplUserService implements UserService {
 
     private final UserRegestration userRegestration;
 
@@ -14,12 +15,25 @@ public class ImplUserService {
 
     public UserRegestration getUserRegestration() { return userRegestration; }
 
-    public void registrationName(String username){
+    public User register(String username){
         if(username == null || username.isBlank()){
-            throw new IllegalArgumentException("Имя пользователя не должно быть пустым");
+            throw new IllegalArgumentException("Имя пользователя не должно быть пустым.");
         }
-        User user = new User(username);
-        userRegestration.save(user);
+        if(username.contains(" ")){
+            throw new IllegalArgumentException("Имя не должно содержать пробелы.");
+        }
+        if(username.length() < 2 || username.length() > 50){
+            throw new IllegalArgumentException("Длинна имени должна быть от 2 до 50.");
+        }
+
+        User userFromData = userRegestration.findByUserName(username);
+
+        if(userFromData != null){
+            return userFromData;
+        }
+
+        User newUser = new User(username);
+        return userRegestration.save(newUser);
 
     }
 }

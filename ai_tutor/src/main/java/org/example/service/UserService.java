@@ -3,5 +3,5 @@ package org.example.service;
 import org.example.model.User;
 
 public interface UserService {
-    User registerUser(String username);
+    User register(String username);
 }

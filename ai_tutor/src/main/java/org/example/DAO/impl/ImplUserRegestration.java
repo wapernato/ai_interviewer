@@ -36,4 +36,25 @@ public class ImplUserRegestration implements UserRegestration {
         }
     }
 
+    @Override
+    public User findByUserName(String username){
+        String sql = "select id, username from users where username = ?";
+        try (Connection connection = dbConnection.getConnectionDB();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        ){
+            preparedStatement.setString(1, username);
+            try (ResultSet resultSet = preparedStatement.executeQuery()){
+                while (resultSet.next()){
+                    User user = new User();
+                    user.setId(resultSet.getLong("id"));
+                    user.setUsername(resultSet.getString("username"));
+                    return user;
+                }
+            }
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
 }

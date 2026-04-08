@@ -4,5 +4,5 @@ import org.example.model.User;
 
 public interface UserRegestration {
     User save(User user);
-    //User findByUsername(String username);
+    User findByUserName(String username);
 }
