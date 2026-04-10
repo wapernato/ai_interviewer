@@ -1,7 +1,7 @@
 package org.example;
 
-import org.example.DAO.UserRegestration;
-import org.example.DAO.impl.ImplUserRegestration;
+import org.example.DAO.UserDAO;
+import org.example.DAO.impl.ImplUserDAO;
 import org.example.DBConnection.DBConnection;
 import org.example.model.User;
 import org.example.service.UserService;
@@ -18,7 +18,7 @@ public class Main {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
         DBConnection dbConnection = new DBConnection();
-        UserRegestration userRegestration = new ImplUserRegestration(dbConnection);
+        UserDAO userRegestration = new ImplUserDAO(dbConnection);
         UserService userService = new ImplUserService(userRegestration);
 
         System.out.print("Введите имя пользователя: ");

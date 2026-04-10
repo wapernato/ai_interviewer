@@ -1,19 +1,18 @@
 package org.example.service.impl;
 
-import org.example.DAO.UserRegestration;
-import org.example.DAO.impl.ImplUserRegestration;
+import org.example.DAO.UserDAO;
 import org.example.model.User;
 import org.example.service.UserService;
 
 public class ImplUserService implements UserService {
 
-    private final UserRegestration userRegestration;
+    private final UserDAO userRegistration;
 
-    public ImplUserService(UserRegestration userRegestration) {
-        this.userRegestration = userRegestration;
+    public ImplUserService(UserDAO userRegestration) {
+        this.userRegistration = userRegestration;
     }
 
-    public UserRegestration getUserRegestration() { return userRegestration; }
+    public UserDAO getUserRegistration() { return userRegistration; }
 
     public User register(String username){
         if(username == null || username.isBlank()){
@@ -26,14 +25,15 @@ public class ImplUserService implements UserService {
             throw new IllegalArgumentException("Длинна имени должна быть от 2 до 50.");
         }
 
-        User userFromData = userRegestration.findByUserName(username);
+        User userFromData = userRegistration.findByName(username);
 
         if(userFromData != null){
             return userFromData;
         }
 
         User newUser = new User(username);
-        return userRegestration.save(newUser);
-
+        return userRegistration.save(newUser);
     }
+
+
 }
