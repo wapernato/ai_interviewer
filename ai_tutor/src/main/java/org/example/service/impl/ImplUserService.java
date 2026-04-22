@@ -10,8 +10,8 @@ public class ImplUserService implements UserService {
 
     private final UserDAO userDAO;
 
-    public ImplUserService(UserDAO userRegestration) {
-        this.userDAO = userRegestration;
+    public ImplUserService(UserDAO userRegistration) {
+        this.userDAO = userRegistration;
     }
 
     public UserDAO getUserRegistration() { return userDAO; }
