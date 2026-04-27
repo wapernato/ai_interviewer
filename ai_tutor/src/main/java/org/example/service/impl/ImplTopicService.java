@@ -10,20 +10,19 @@ public class ImplTopicService implements TopicService {
 
     private final TopicDAO topicDAO;
 
-    public ImplTopicService(TopicDAO topicRegistration) { this.topicDAO = topicRegistration; }
-
-    public TopicDAO getUserRegistration() { return topicDAO; }
+    public ImplTopicService(TopicDAO topicDAO) { this.topicDAO = topicDAO; }
 
     @Override
     public Topic addTopic(String topicName){
+
         if(topicName == null || topicName.isBlank()){
             throw new IllegalArgumentException("Имя темы пользователя не должно быть пустым.");
         }
-        if(topicName.contains(" ")){
-            throw new IllegalArgumentException("Имя темы не должно содержать пробелы.");
-        }
-        if(topicName.length() < 2 || topicName.length() > 50){
-            throw new IllegalArgumentException("Длинна темы должна быть от 2 до 50.");
+
+        topicName = topicName.trim();
+
+        if(topicName.length() < 2 || topicName.length() > 100){
+            throw new IllegalArgumentException("Длинна темы должна быть от 2 до 100.");
         }
 
         Topic topic = topicDAO.findByTopicName(topicName);
@@ -46,7 +45,7 @@ public class ImplTopicService implements TopicService {
         Topic fromData = topicDAO.findByTopicId(id);
 
         if(fromData == null){
-            throw new RuntimeException("Пользователь с таким id не найден.");
+            throw new RuntimeException("Тема с таким id не найдена.");
         }
 
         return fromData;
@@ -62,6 +61,8 @@ public class ImplTopicService implements TopicService {
         if (topicName == null) {
             throw new RuntimeException("Название темы не должно быть null.");
         }
+
+        topicName = topicName.trim();
 
         if (topicName.isBlank()) {
             throw new RuntimeException("Название темы не должно быть пустым.");
