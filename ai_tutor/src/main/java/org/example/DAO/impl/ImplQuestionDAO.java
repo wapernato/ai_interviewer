@@ -18,6 +18,19 @@ public class ImplQuestionDAO implements QuestionDAO {
 
     public ImplQuestionDAO(DBConnection dbConnection) { this.dbConnection = dbConnection; }
 
+    private Question mapResultSetToQuestion(ResultSet resultSet) throws SQLException{
+        Question question = new Question();
+
+        question.setId(resultSet.getLong("id"));
+        question.setUserId(resultSet.getLong("user_id"));
+        question.setTopicId(resultSet.getObject("topic_id", Long.class));
+        question.setTextQuestion(resultSet.getString("text_question"));
+        question.setSource(resultSet.getString("source"));
+        question.setLanguage(resultSet.getString("language"));
+
+        return question;
+    }
+
     @Override
     public Question save(Question question) {
         String sql = """
@@ -54,27 +67,15 @@ public class ImplQuestionDAO implements QuestionDAO {
                 if (resultSet.next()) {
                     Long generatedId = resultSet.getLong("id");
                     question.setId(generatedId);
+                    return question;
                 }
             }
 
-            return question;
+            throw new RuntimeException("Вопрос не был сохранён.");
 
         } catch (SQLException e) {
             throw new RuntimeException("Ошибка при сохранении вопроса.", e);
         }
-    }
-
-    private Question mapResultSetToQuestion(ResultSet resultSet) throws SQLException{
-        Question question = new Question();
-
-        question.setId(resultSet.getLong("id"));
-        question.setUserId(resultSet.getLong("user_id"));
-        question.setTopicId(resultSet.getObject("topic_id", Long.class));
-        question.setTextQuestion(resultSet.getString("text_question"));
-        question.setSource(resultSet.getString("source"));
-        question.setLanguage(resultSet.getString("language"));
-
-        return question;
     }
 
     @Override
