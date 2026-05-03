@@ -8,6 +8,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
+
 public class ImplAnswerDAO implements AnswerDAO {
 
     private final DBConnection dbConnection;
@@ -36,6 +39,22 @@ public class ImplAnswerDAO implements AnswerDAO {
         try(Connection connection = dbConnection.getConnectionDB();
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
         ) {
+            if (answer == null) {
+                throw new RuntimeException("Ответ не может быть null.");
+            }
+
+            if (answer.getQuestionId() == null) {
+                throw new RuntimeException("Id вопроса не может быть null.");
+            }
+
+            if (answer.getAnswerText() == null || answer.getAnswerText().isBlank()) {
+                throw new RuntimeException("Текст ответа не может быть пустым.");
+            }
+
+            if (answer.getModelName() == null || answer.getModelName().isBlank()) {
+                throw new RuntimeException("Название модели не может быть пустым.");
+            }
+
             preparedStatement.setLong(1, answer.getQuestionId());
             if (answer.getAiProfileId() != null) {
                 preparedStatement.setLong(2, answer.getAiProfileId());
@@ -60,26 +79,180 @@ public class ImplAnswerDAO implements AnswerDAO {
         }
     }
 
-    public Answer update(Long id){
+    @Override
+    public Answer update(Answer answer){
         String sql = """
                 UPDATE answers
-                SET answer_text, model_name
-                WHERE ID = ?
+                SET answer_text = ?, model_name = ?
+                WHERE id = ?
                 """;
         try(Connection connection = dbConnection.getConnectionDB();
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
         ){
-            preparedStatement.setLong(1, id);
+            if(answer.getAnswerText() == null|| answer.getAnswerText().isBlank()){
+                throw new RuntimeException("Текст ответа не может быть пустым.");
+            }else{
+                preparedStatement.setString(1, answer.getAnswerText());
+            }
+            if(answer.getModelName() == null|| answer.getModelName().isBlank()){
+                throw new RuntimeException("Название модели не может быть пустым.");
+            }else{
+                preparedStatement.setString(2, answer.getModelName());
+            }
+
+            if(answer.getId() == null){
+                throw new RuntimeException("Id ответа не может быть null.");
+            }
+            preparedStatement.setLong(3, answer.getId());
+
             int updateRows = preparedStatement.executeUpdate();
 
             if(updateRows == 0){
-                throw new RuntimeException("Строки не были обновлены.");
+                throw new RuntimeException("Такого ответа не было найдено.");
             }
 
-            
+            return answer;
         }
         catch (SQLException e){
             throw new RuntimeException("Ошибка при обновлении ответа.", e);
+        }
+    }
+
+    @Override
+    public void deleteById(Long id){
+        String sql = """
+                DELETE from answers
+                WHERE id = ?
+                """;
+        try(Connection connection = dbConnection.getConnectionDB();
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            ){
+            if(id == null){
+                throw new RuntimeException("Id ответа не может быть null.");
+            }
+            preparedStatement.setLong(1, id);
+
+            int deleteRows = preparedStatement.executeUpdate();
+
+            if(deleteRows == 0){
+                throw new RuntimeException("Ответ с таким id не найден.");
+            }
+
+        }catch (SQLException e){
+            throw new RuntimeException("Ошибка при удалении вопроса по id", e);
+        }
+    }
+
+    @Override
+    public List<Answer> findByQuestionId(Long questionId){
+        String sql = """
+                SELECT id, question_id, ai_profile_id, answer_text, model_name
+                FROM answers
+                WHERE question_id = ?
+                """;
+        List<Answer> answers = new ArrayList<>();
+        try(Connection connection = dbConnection.getConnectionDB();
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        ){
+            if (questionId == null) {
+                throw new RuntimeException("Id вопроса не может быть null.");
+            }
+            preparedStatement.setLong(1, questionId);
+            try (ResultSet resultSet = preparedStatement.executeQuery()){
+                while(resultSet.next()){
+                    answers.add(mapResultSetToAnswer(resultSet));
+                }
+                return answers;
+            }
+        }
+        catch(SQLException e){
+            throw new RuntimeException("Ошибка при поиске ответа по id вопроса", e);
+        }
+    }
+
+    @Override
+    public List<Answer> findByProfileId(Long profileId) {
+        String sql = """
+            SELECT id, question_id, ai_profile_id, answer_text, model_name
+            FROM answers
+            WHERE ai_profile_id = ?
+            """;
+
+        List<Answer> answers = new ArrayList<>();
+
+        try (Connection connection = dbConnection.getConnectionDB();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            if (profileId == null) {
+                throw new RuntimeException("Id AI-профиля не может быть null.");
+            }
+
+            preparedStatement.setLong(1, profileId);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    answers.add(mapResultSetToAnswer(resultSet));
+                }
+            }
+
+            return answers;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка при поиске ответов по id AI-профиля.", e);
+        }
+    }
+
+    @Override
+    public Answer findById(Long id) {
+        String sql = """
+            SELECT id, question_id, ai_profile_id, answer_text, model_name
+            FROM answers
+            WHERE id = ?
+            """;
+
+        try (Connection connection = dbConnection.getConnectionDB();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            if (id == null) {
+                throw new RuntimeException("Id ответа не может быть null.");
+            }
+
+            preparedStatement.setLong(1, id);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToAnswer(resultSet);
+                }
+            }
+
+            return null;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка при поиске ответа по id.", e);
+        }
+    }
+
+    @Override
+    public List<Answer> findAll() {
+        String sql = """
+            SELECT id, question_id, ai_profile_id, answer_text, model_name
+            FROM answers
+            """;
+
+        List<Answer> answers = new ArrayList<>();
+
+        try (Connection connection = dbConnection.getConnectionDB();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+
+            while (resultSet.next()) {
+                answers.add(mapResultSetToAnswer(resultSet));
+            }
+
+            return answers;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка при получении всех ответов.", e);
         }
     }
 }

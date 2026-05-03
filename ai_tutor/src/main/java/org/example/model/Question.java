@@ -58,4 +58,16 @@ public class Question {
     public String getSource() {
         return source;
     }
+
+    @Override
+    public String toString() {
+        return "Question{" +
+                "id=" + id +
+                ", userId=" + userId +
+                ", topicId=" + topicId +
+                ", textQuestion='" + textQuestion + '\'' +
+                ", source='" + source + '\'' +
+                ", language='" + language + '\'' +
+                '}';
+    }
 }

@@ -57,4 +57,15 @@ public class Answer {
     public void setModelName(String modelName) {
         this.modelName = modelName;
     }
+
+    @Override
+    public String toString() {
+        return "Answer{" +
+                "id=" + id +
+                ", questionId=" + questionId +
+                ", aiProfileId=" + aiProfileId +
+                ", answerText='" + answerText + '\'' +
+                ", modelName='" + modelName + '\'' +
+                '}';
+    }
 }
