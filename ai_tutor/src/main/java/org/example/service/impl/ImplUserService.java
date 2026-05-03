@@ -1,6 +1,6 @@
 package org.example.service.impl;
 
-import org.example.DAO.UserDAO;
+import org.example.dao.UserDAO;
 import org.example.model.User;
 import org.example.service.UserService;
 

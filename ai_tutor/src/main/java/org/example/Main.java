@@ -1,7 +1,7 @@
 package org.example;
 
-import org.example.DAO.*;
-import org.example.DAO.impl.*;
+import org.example.dao.*;
+import org.example.dao.impl.*;
 import org.example.DBConnection.DBConnection;
 import org.example.model.*;
 import org.example.service.*;

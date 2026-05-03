@@ -1,6 +1,6 @@
-package org.example.DAO.impl;
+package org.example.dao.impl;
 
-import org.example.DAO.UserDAO;
+import org.example.dao.UserDAO;
 import org.example.DBConnection.DBConnection;
 import org.example.model.User;
 

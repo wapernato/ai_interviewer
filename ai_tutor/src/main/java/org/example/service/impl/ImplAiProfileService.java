@@ -1,6 +1,6 @@
 package org.example.service.impl;
 
-import org.example.DAO.AiProfileDAO;
+import org.example.dao.AiProfileDAO;
 import org.example.model.AiProfile;
 import org.example.service.AiProfileService;
 
