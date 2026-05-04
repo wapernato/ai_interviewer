@@ -3,11 +3,12 @@ package org.example;
 import org.example.dao.*;
 import org.example.dao.impl.*;
 import org.example.DBConnection.DBConnection;
+import org.example.dto.UserHistoryItem;
 import org.example.model.*;
 import org.example.service.*;
 import org.example.service.impl.*;
 
-
+import java.util.List;
 import java.io.IOException;
 
 import java.sql.*;
@@ -29,39 +30,59 @@ public class Main {
         QuestionService questionService = new ImplQuestionService(questionDAO);
         AnswerService answerService = new ImplAnswerService(answerDAO);
         AiProfileService aiProfileService = new ImplAiProfileService(aiProfileDAO);
+        UserHistoryDAO userHistoryDAO = new ImplUserHistoryDAO(dbConnection);
 
-        User user = userService.register("Ignazem");
+        UserHistoryService userHistoryService = new ImpldUserHistoryService(userHistoryDAO, userDAO);
 
-        Topic topic = topicService.addTopic("Greedy");
+//        User user = userService.register("Ignazem");
+//
+//        Topic topic = topicService.addTopic("Greedy");
+//
+//        AiProfile aiProfile = aiProfileService.addAiProfile(
+//                "hard_interviewer",
+//                "Строгий технический интервьюер",
+//                "Ты проводишь жёсткое техническое собеседование по Java.",
+//                "ru",
+//                "strict",
+//                true,
+//                true);
+//
+//        Question question = questionService.addQuestion(
+//                user.getId(),
+//                topic.getId(),
+//                "Что такое инкапсуляция в Java?"
+//        );
+//
+//
+//        Answer answer = answerService.addAnswer(
+//                question.getId(),
+//                aiProfile.getId(),
+//                "Инкапсуляция — это принцип ООП, при котором данные объекта скрываются...",
+//                "gpt-5.5"
+//        );
+//
+//        System.out.println(user);
+//        System.out.println(topic);
+//        System.out.println(aiProfile);
+//        System.out.println(question);
+//        System.out.println(answer);
 
-        AiProfile aiProfile = aiProfileService.addAiProfile(
-                "hard_interviewer",
-                "Строгий технический интервьюер",
-                "Ты проводишь жёсткое техническое собеседование по Java.",
-                "ru",
-                "strict",
-                true,
-                true);
+        try {
+            Long userId = 1L;
 
-        Question question = questionService.addQuestion(
-                user.getId(),
-                topic.getId(),
-                "Что такое инкапсуляция в Java?"
-        );
+            List<UserHistoryItem> history = userHistoryService.findHistoryByUserId(userId);
 
+            if (history.isEmpty()) {
+                System.out.println("История пользователя пустая.");
+            } else {
+                for (UserHistoryItem item : history) {
+                    System.out.println(item);
+                }
+            }
 
-        Answer answer = answerService.addAnswer(
-                question.getId(),
-                aiProfile.getId(),
-                "Инкапсуляция — это принцип ООП, при котором данные объекта скрываются...",
-                "gpt-5.5"
-        );
-
-        System.out.println(user);
-        System.out.println(topic);
-        System.out.println(aiProfile);
-        System.out.println(question);
-        System.out.println(answer);
+        } catch (RuntimeException e) {
+            System.out.println("Ошибка: " + e.getMessage());
+        }
     }
 
 
