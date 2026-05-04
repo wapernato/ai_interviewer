@@ -6,24 +6,7 @@ import java.util.List;
 
 public interface AiProfileService {
 
-    AiProfile addAiProfile(String mode,
-                           String descriptionMode,
-                           String instructionMode,
-                           String language,
-                           String answerStyle,
-                           Boolean hintMode,
-                           Boolean active);
-
-    AiProfile updateAiProfile(Long id,
-                              String mode,
-                              String descriptionMode,
-                              String instructionMode,
-                              String language,
-                              String answerStyle,
-                              Boolean hintMode,
-                              Boolean active);
-
-    void deleteById(Long id);
+    AiProfile addProfile(AiProfile aiProfile);
 
     AiProfile getById(Long id);
 
@@ -31,9 +14,11 @@ public interface AiProfileService {
 
     List<AiProfile> getAllProfiles();
 
-    List<AiProfile> getActiveProfiles();
+    AiProfile updateProfile(AiProfile aiProfile);
+
+    void deleteById(Long id);
+
+    AiProfile getActiveProfile();
 
     AiProfile activateProfile(Long id);
-
-    AiProfile deactivateProfile(Long id);
 }

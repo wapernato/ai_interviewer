@@ -4,10 +4,8 @@ import org.example.dao.AiProfileDAO;
 import org.example.DBConnection.DBConnection;
 import org.example.model.AiProfile;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.math.BigDecimal;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,10 +24,22 @@ public class ImplAiProfileDAO implements AiProfileDAO {
         aiProfile.setMode(resultSet.getString("mode"));
         aiProfile.setDescriptionMode(resultSet.getString("description_mode"));
         aiProfile.setInstructionMode(resultSet.getString("instruction_mode"));
+
+        aiProfile.setModelName(resultSet.getString("model_name"));
         aiProfile.setLanguage(resultSet.getString("language"));
         aiProfile.setAnswerStyle(resultSet.getString("answer_style"));
-        aiProfile.setHintMode(resultSet.getObject("hint_mode", Boolean.class));
-        aiProfile.setActive(resultSet.getObject("active", Boolean.class));
+
+        aiProfile.setDifficulty(resultSet.getString("difficulty"));
+        aiProfile.setFeedbackMode(resultSet.getString("feedback_mode"));
+
+        aiProfile.setHintMode(resultSet.getBoolean("hint_mode"));
+        aiProfile.setActive(resultSet.getBoolean("active"));
+
+        BigDecimal temperature = resultSet.getBigDecimal("temperature");
+        aiProfile.setTemperature(temperature == null ? null : temperature.doubleValue());
+
+        int maxTokens = resultSet.getInt("max_tokens");
+        aiProfile.setMaxTokens(resultSet.wasNull() ? null : maxTokens);
 
         return aiProfile;
     }
@@ -37,69 +47,57 @@ public class ImplAiProfileDAO implements AiProfileDAO {
     @Override
     public AiProfile save(AiProfile aiProfile) {
         String sql = """
-                INSERT INTO ai_profiles(
+                insert into ai_profiles(
                     mode,
                     description_mode,
                     instruction_mode,
+                    model_name,
                     language,
                     answer_style,
+                    difficulty,
+                    feedback_mode,
                     hint_mode,
-                    active
+                    active,
+                    temperature,
+                    max_tokens
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                RETURNING id
+                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                returning id
                 """;
 
         try (Connection connection = dbConnection.getConnectionDB();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-            if (aiProfile == null) {
-                throw new RuntimeException("AI-профиль не может быть null.");
-            }
-
-            if (aiProfile.getMode() == null || aiProfile.getMode().isBlank()) {
-                throw new RuntimeException("Режим AI-профиля не может быть пустым.");
-            }
-
-            if (aiProfile.getInstructionMode() == null || aiProfile.getInstructionMode().isBlank()) {
-                throw new RuntimeException("Инструкция AI-профиля не может быть пустой.");
-            }
-
-            String language = aiProfile.getLanguage();
-            if (language == null || language.isBlank()) {
-                language = "ru";
-            }
-
-            Boolean hintMode = aiProfile.getHintMode();
-            if (hintMode == null) {
-                hintMode = false;
-            }
-
-            Boolean active = aiProfile.getActive();
-            if (active == null) {
-                active = false;
-            }
-
-            preparedStatement.setString(1, aiProfile.getMode().trim());
+            preparedStatement.setString(1, aiProfile.getMode());
             preparedStatement.setString(2, aiProfile.getDescriptionMode());
-            preparedStatement.setString(3, aiProfile.getInstructionMode().trim());
-            preparedStatement.setString(4, language.trim());
-            preparedStatement.setString(5, aiProfile.getAnswerStyle());
-            preparedStatement.setBoolean(6, hintMode);
-            preparedStatement.setBoolean(7, active);
+            preparedStatement.setString(3, aiProfile.getInstructionMode());
+            preparedStatement.setString(4, aiProfile.getModelName());
+            preparedStatement.setString(5, aiProfile.getLanguage());
+            preparedStatement.setString(6, aiProfile.getAnswerStyle());
+            preparedStatement.setString(7, aiProfile.getDifficulty());
+            preparedStatement.setString(8, aiProfile.getFeedbackMode());
+            preparedStatement.setBoolean(9, aiProfile.getHintMode());
+            preparedStatement.setBoolean(10, aiProfile.getActive());
+
+            if (aiProfile.getTemperature() == null) {
+                preparedStatement.setNull(11, Types.NUMERIC);
+            } else {
+                preparedStatement.setBigDecimal(11, BigDecimal.valueOf(aiProfile.getTemperature()));
+            }
+
+            if (aiProfile.getMaxTokens() == null) {
+                preparedStatement.setNull(12, Types.INTEGER);
+            } else {
+                preparedStatement.setInt(12, aiProfile.getMaxTokens());
+            }
 
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
-                    Long generatedId = resultSet.getLong("id");
-                    aiProfile.setId(generatedId);
-                    aiProfile.setLanguage(language);
-                    aiProfile.setHintMode(hintMode);
-                    aiProfile.setActive(active);
-                    return aiProfile;
+                    aiProfile.setId(resultSet.getLong("id"));
                 }
             }
 
-            throw new RuntimeException("AI-профиль не был сохранён.");
+            return aiProfile;
 
         } catch (SQLException e) {
             throw new RuntimeException("Ошибка при сохранении AI-профиля.", e);
@@ -107,120 +105,28 @@ public class ImplAiProfileDAO implements AiProfileDAO {
     }
 
     @Override
-    public AiProfile update(AiProfile aiProfile) {
-        String sql = """
-                UPDATE ai_profiles
-                SET mode = ?,
-                    description_mode = ?,
-                    instruction_mode = ?,
-                    language = ?,
-                    answer_style = ?,
-                    hint_mode = ?,
-                    active = ?
-                WHERE id = ?
-                """;
-
-        try (Connection connection = dbConnection.getConnectionDB();
-             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-
-            if (aiProfile == null) {
-                throw new RuntimeException("AI-профиль не может быть null.");
-            }
-
-            if (aiProfile.getId() == null) {
-                throw new RuntimeException("Id AI-профиля не может быть null.");
-            }
-
-            if (aiProfile.getMode() == null || aiProfile.getMode().isBlank()) {
-                throw new RuntimeException("Режим AI-профиля не может быть пустым.");
-            }
-
-            if (aiProfile.getInstructionMode() == null || aiProfile.getInstructionMode().isBlank()) {
-                throw new RuntimeException("Инструкция AI-профиля не может быть пустой.");
-            }
-
-            String language = aiProfile.getLanguage();
-            if (language == null || language.isBlank()) {
-                language = "ru";
-            }
-
-            Boolean hintMode = aiProfile.getHintMode();
-            if (hintMode == null) {
-                hintMode = false;
-            }
-
-            Boolean active = aiProfile.getActive();
-            if (active == null) {
-                active = false;
-            }
-
-            preparedStatement.setString(1, aiProfile.getMode().trim());
-            preparedStatement.setString(2, aiProfile.getDescriptionMode());
-            preparedStatement.setString(3, aiProfile.getInstructionMode().trim());
-            preparedStatement.setString(4, language.trim());
-            preparedStatement.setString(5, aiProfile.getAnswerStyle());
-            preparedStatement.setBoolean(6, hintMode);
-            preparedStatement.setBoolean(7, active);
-            preparedStatement.setLong(8, aiProfile.getId());
-
-            int updatedRows = preparedStatement.executeUpdate();
-
-            if (updatedRows == 0) {
-                throw new RuntimeException("AI-профиль с таким id не найден.");
-            }
-
-            aiProfile.setLanguage(language);
-            aiProfile.setHintMode(hintMode);
-            aiProfile.setActive(active);
-
-            return aiProfile;
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Ошибка при обновлении AI-профиля.", e);
-        }
-    }
-
-    @Override
-    public void deleteById(Long id) {
-        String sql = """
-                DELETE FROM ai_profiles
-                WHERE id = ?
-                """;
-
-        try (Connection connection = dbConnection.getConnectionDB();
-             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-
-            if (id == null) {
-                throw new RuntimeException("Id AI-профиля не может быть null.");
-            }
-
-            preparedStatement.setLong(1, id);
-
-            int deletedRows = preparedStatement.executeUpdate();
-
-            if (deletedRows == 0) {
-                throw new RuntimeException("AI-профиль с таким id не найден.");
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Ошибка при удалении AI-профиля по id.", e);
-        }
-    }
-
-    @Override
     public AiProfile findById(Long id) {
         String sql = """
-                SELECT id, mode, description_mode, instruction_mode, language, answer_style, hint_mode, active
-                FROM ai_profiles
-                WHERE id = ?
+                select
+                    id,
+                    mode,
+                    description_mode,
+                    instruction_mode,
+                    model_name,
+                    language,
+                    answer_style,
+                    difficulty,
+                    feedback_mode,
+                    hint_mode,
+                    active,
+                    temperature,
+                    max_tokens
+                from ai_profiles
+                where id = ?
                 """;
 
         try (Connection connection = dbConnection.getConnectionDB();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-
-            if (id == null) {
-                throw new RuntimeException("Id AI-профиля не может быть null.");
-            }
 
             preparedStatement.setLong(1, id);
 
@@ -240,19 +146,28 @@ public class ImplAiProfileDAO implements AiProfileDAO {
     @Override
     public AiProfile findByMode(String mode) {
         String sql = """
-                SELECT id, mode, description_mode, instruction_mode, language, answer_style, hint_mode, active
-                FROM ai_profiles
-                WHERE mode = ?
+                select
+                    id,
+                    mode,
+                    description_mode,
+                    instruction_mode,
+                    model_name,
+                    language,
+                    answer_style,
+                    difficulty,
+                    feedback_mode,
+                    hint_mode,
+                    active,
+                    temperature,
+                    max_tokens
+                from ai_profiles
+                where mode = ?
                 """;
 
         try (Connection connection = dbConnection.getConnectionDB();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
-            if (mode == null || mode.isBlank()) {
-                throw new RuntimeException("Режим AI-профиля не может быть пустым.");
-            }
-
-            preparedStatement.setString(1, mode.trim());
+            preparedStatement.setString(1, mode);
 
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
@@ -263,56 +178,232 @@ public class ImplAiProfileDAO implements AiProfileDAO {
             return null;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Ошибка при поиске AI-профиля по режиму.", e);
+            throw new RuntimeException("Ошибка при поиске AI-профиля по mode.", e);
         }
     }
 
     @Override
     public List<AiProfile> findAll() {
         String sql = """
-                SELECT id, mode, description_mode, instruction_mode, language, answer_style, hint_mode, active
-                FROM ai_profiles
+                select
+                    id,
+                    mode,
+                    description_mode,
+                    instruction_mode,
+                    model_name,
+                    language,
+                    answer_style,
+                    difficulty,
+                    feedback_mode,
+                    hint_mode,
+                    active,
+                    temperature,
+                    max_tokens
+                from ai_profiles
+                order by id
                 """;
 
-        List<AiProfile> aiProfiles = new ArrayList<>();
+        List<AiProfile> profiles = new ArrayList<>();
 
         try (Connection connection = dbConnection.getConnectionDB();
              PreparedStatement preparedStatement = connection.prepareStatement(sql);
              ResultSet resultSet = preparedStatement.executeQuery()) {
 
             while (resultSet.next()) {
-                aiProfiles.add(mapResultSetToAiProfile(resultSet));
+                profiles.add(mapResultSetToAiProfile(resultSet));
             }
 
-            return aiProfiles;
+            return profiles;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Ошибка при получении всех AI-профилей.", e);
+            throw new RuntimeException("Ошибка при получении списка AI-профилей.", e);
         }
     }
 
     @Override
-    public List<AiProfile> findActiveProfiles() {
+    public AiProfile update(AiProfile aiProfile) {
         String sql = """
-                SELECT id, mode, description_mode, instruction_mode, language, answer_style, hint_mode, active
-                FROM ai_profiles
-                WHERE active = true
+                update ai_profiles
+                set
+                    mode = ?,
+                    description_mode = ?,
+                    instruction_mode = ?,
+                    model_name = ?,
+                    language = ?,
+                    answer_style = ?,
+                    difficulty = ?,
+                    feedback_mode = ?,
+                    hint_mode = ?,
+                    active = ?,
+                    temperature = ?,
+                    max_tokens = ?
+                where id = ?
+                returning
+                    id,
+                    mode,
+                    description_mode,
+                    instruction_mode,
+                    model_name,
+                    language,
+                    answer_style,
+                    difficulty,
+                    feedback_mode,
+                    hint_mode,
+                    active,
+                    temperature,
+                    max_tokens
                 """;
 
-        List<AiProfile> aiProfiles = new ArrayList<>();
+        try (Connection connection = dbConnection.getConnectionDB();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            preparedStatement.setString(1, aiProfile.getMode());
+            preparedStatement.setString(2, aiProfile.getDescriptionMode());
+            preparedStatement.setString(3, aiProfile.getInstructionMode());
+            preparedStatement.setString(4, aiProfile.getModelName());
+            preparedStatement.setString(5, aiProfile.getLanguage());
+            preparedStatement.setString(6, aiProfile.getAnswerStyle());
+            preparedStatement.setString(7, aiProfile.getDifficulty());
+            preparedStatement.setString(8, aiProfile.getFeedbackMode());
+            preparedStatement.setBoolean(9, aiProfile.getHintMode());
+            preparedStatement.setBoolean(10, aiProfile.getActive());
+
+            if (aiProfile.getTemperature() == null) {
+                preparedStatement.setNull(11, Types.NUMERIC);
+            } else {
+                preparedStatement.setBigDecimal(11, BigDecimal.valueOf(aiProfile.getTemperature()));
+            }
+
+            if (aiProfile.getMaxTokens() == null) {
+                preparedStatement.setNull(12, Types.INTEGER);
+            } else {
+                preparedStatement.setInt(12, aiProfile.getMaxTokens());
+            }
+
+            preparedStatement.setLong(13, aiProfile.getId());
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToAiProfile(resultSet);
+                }
+            }
+
+            return null;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка при обновлении AI-профиля.", e);
+        }
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        String sql = """
+                delete from ai_profiles
+                where id = ?
+                """;
+
+        try (Connection connection = dbConnection.getConnectionDB();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            preparedStatement.setLong(1, id);
+            preparedStatement.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка при удалении AI-профиля.", e);
+        }
+    }
+
+    @Override
+    public AiProfile findActive() {
+        String sql = """
+                select
+                    id,
+                    mode,
+                    description_mode,
+                    instruction_mode,
+                    model_name,
+                    language,
+                    answer_style,
+                    difficulty,
+                    feedback_mode,
+                    hint_mode,
+                    active,
+                    temperature,
+                    max_tokens
+                from ai_profiles
+                where active = true
+                limit 1
+                """;
 
         try (Connection connection = dbConnection.getConnectionDB();
              PreparedStatement preparedStatement = connection.prepareStatement(sql);
              ResultSet resultSet = preparedStatement.executeQuery()) {
 
-            while (resultSet.next()) {
-                aiProfiles.add(mapResultSetToAiProfile(resultSet));
+            if (resultSet.next()) {
+                return mapResultSetToAiProfile(resultSet);
             }
 
-            return aiProfiles;
+            return null;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Ошибка при получении активных AI-профилей.", e);
+            throw new RuntimeException("Ошибка при поиске активного AI-профиля.", e);
+        }
+    }
+
+    @Override
+    public void deactivateAll() {
+        String sql = """
+                update ai_profiles
+                set active = false
+                """;
+
+        try (Connection connection = dbConnection.getConnectionDB();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            preparedStatement.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка при деактивации AI-профилей.", e);
+        }
+    }
+
+    @Override
+    public AiProfile activateById(Long id) {
+        String sql = """
+                update ai_profiles
+                set active = true
+                where id = ?
+                returning
+                    id,
+                    mode,
+                    description_mode,
+                    instruction_mode,
+                    model_name,
+                    language,
+                    answer_style,
+                    difficulty,
+                    feedback_mode,
+                    hint_mode,
+                    active,
+                    temperature,
+                    max_tokens
+                """;
+
+        try (Connection connection = dbConnection.getConnectionDB();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+            preparedStatement.setLong(1, id);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToAiProfile(resultSet);
+                }
+            }
+
+            return null;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Ошибка при активации AI-профиля.", e);
         }
     }
 }

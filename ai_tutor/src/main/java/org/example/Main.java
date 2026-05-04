@@ -23,7 +23,7 @@ public class Main {
         TopicDAO topicDAO = new ImplTopicDAO(dbConnection);
         QuestionDAO questionDAO = new ImplQuestionDAO(dbConnection);
         AnswerDAO answerDAO = new ImplAnswerDAO(dbConnection);
-        AiProfileDAO aiProfileDAO = new ImplAiProfileDAO(dbConnection);
+       AiProfileDAO aiProfileDAO = new ImplAiProfileDAO(dbConnection);
 
         UserService userService = new ImplUserService(userDAO);
         TopicService topicService = new ImplTopicService(topicDAO);
