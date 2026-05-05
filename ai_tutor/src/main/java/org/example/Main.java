@@ -3,6 +3,8 @@ package org.example;
 import org.example.dao.*;
 import org.example.dao.impl.*;
 import org.example.DBConnection.DBConnection;
+import org.example.dto.InterviewAnswerResult;
+import org.example.dto.InterviewQuestionResult;
 import org.example.dto.UserHistoryItem;
 import org.example.model.*;
 import org.example.service.*;
@@ -23,7 +25,8 @@ public class Main {
         TopicDAO topicDAO = new ImplTopicDAO(dbConnection);
         QuestionDAO questionDAO = new ImplQuestionDAO(dbConnection);
         AnswerDAO answerDAO = new ImplAnswerDAO(dbConnection);
-       AiProfileDAO aiProfileDAO = new ImplAiProfileDAO(dbConnection);
+        AiProfileDAO aiProfileDAO = new ImplAiProfileDAO(dbConnection);
+
 
         UserService userService = new ImplUserService(userDAO);
         TopicService topicService = new ImplTopicService(topicDAO);
@@ -31,6 +34,7 @@ public class Main {
         AnswerService answerService = new ImplAnswerService(answerDAO);
         AiProfileService aiProfileService = new ImplAiProfileService(aiProfileDAO);
         UserHistoryDAO userHistoryDAO = new ImplUserHistoryDAO(dbConnection);
+        InterviewService interviewService = new ImplInterviewService(userService, topicService, questionService, answerService, aiProfileService);
 
         UserHistoryService userHistoryService = new ImpldUserHistoryService(userHistoryDAO, userDAO);
 
@@ -67,22 +71,34 @@ public class Main {
 //        System.out.println(question);
 //        System.out.println(answer);
 
-        try {
-            Long userId = 1L;
+//        try {
+//            Long userId = 1L;
+//
+//            List<UserHistoryItem> history = userHistoryService.findHistoryByUserId(userId);
+//
+//            if (history.isEmpty()) {
+//                System.out.println("История пользователя пустая.");
+//            } else {
+//                for (UserHistoryItem item : history) {
+//                    System.out.println(item);
+//                }
+//            }
+//
+//        } catch (RuntimeException e) {
+//            System.out.println("Ошибка: " + e.getMessage());
+//        }
 
-            List<UserHistoryItem> history = userHistoryService.findHistoryByUserId(userId);
+        InterviewQuestionResult questionResult = interviewService.generateQuestion(1L, 1L);
 
-            if (history.isEmpty()) {
-                System.out.println("История пользователя пустая.");
-            } else {
-                for (UserHistoryItem item : history) {
-                    System.out.println(item);
-                }
-            }
+        System.out.println(questionResult);
 
-        } catch (RuntimeException e) {
-            System.out.println("Ошибка: " + e.getMessage());
-        }
+        InterviewAnswerResult answerResult = interviewService.submitUserAnswer(
+                        1L,
+                        questionResult.getQuestionId(),
+                        "Инкапсуляция — это принцип ООП, который скрывает внутреннюю реализацию объекта."
+                );
+
+        System.out.println(answerResult);
     }
 
 
