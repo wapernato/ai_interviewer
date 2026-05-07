@@ -1,13 +1,11 @@
 package org.example.console;
 
 import org.example.dto.InterviewQuestionResult;
-import org.example.model.Question;
 import org.example.model.Topic;
 import org.example.service.AiProfileService;
 import org.example.service.InterviewService;
 import org.example.service.TopicService;
 import org.example.service.UserHistoryService;
-import java.awt.*;
 import java.util.List;
 import java.util.Scanner;
 
@@ -46,10 +44,18 @@ public class DevConsoleApp {
 
             int command = readInt("Выберите команду: ");
 
-            switch (command) {
-                case 1 -> generateQuestion();
-                case 0 -> running = false;
-                default -> System.out.println("Неизвестная команда.");
+            try {
+                switch (command) {
+                    case 1 -> generateQuestion();
+                    case 2 -> answerQuestion();
+                    case 3 -> readUserHistory();
+                    case 4 -> printAllTopics();
+                    case 5 -> showActiveAi();
+                    case 0 -> running = false;
+                    default -> System.out.println("Неизвестная команда.");
+                }
+            } catch (RuntimeException e) {
+                System.out.println("Ошибка: " + e.getMessage());
             }
         }
 
@@ -75,14 +81,12 @@ public class DevConsoleApp {
         System.out.println("========================");
         System.out.println();
         for(int i = 0; i < topicList.size(); i++){
-            System.out.println((i + 1) + ") " + "Название темы - " + topicList.get(i));
+            System.out.println((i + 1) + ") " + topicList.get(i).getName());
         }
         System.out.println();
     }
 
     public void generateQuestion() {
-
-        printAllTopics();
 
         List<Topic> topics = topicService.getAllTopics();
 
@@ -90,6 +94,11 @@ public class DevConsoleApp {
             System.out.println("Тем пока нет.");
             return;
         }
+
+        for (int i = 0; i < topics.size(); i++) {
+            System.out.println((i + 1) + ") " + topics.get(i).getName());
+        }
+
 
         int choice = readInt("Выберите номер темы: ");
 
@@ -131,9 +140,13 @@ public class DevConsoleApp {
             return;
         }
 
-        interviewService.submitUserAnswer(currentUserId, lastQuestionId, ans);
-
+        var result = interviewService.submitUserAnswer(currentUserId, lastQuestionId, ans);
         System.out.println("Ответ сохранён.");
+
+        System.out.println(result);
+
+        lastQuestionId = null;
+        lastQuestionText = null;
     }
 
     public void readUserHistory(){
@@ -141,14 +154,25 @@ public class DevConsoleApp {
             throw new RuntimeException("Id пользователя указан некорректно.");
         }
 
-        userHistoryService.findHistoryByUserId(currentUserId);
+        var history = userHistoryService.findHistoryByUserId(currentUserId);
+
+        if (history.isEmpty()) {
+            System.out.println("История пользователя пустая.");
+            return;
+        }
+
+        for (var item : history) {
+            System.out.println(item);
+        }
     }
 
+    public void showActiveAi(){
+        try {
+            System.out.println(aiProfileService.getActiveProfile());
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
 
-    private Long readLong() {
-        Long value = scanner.nextLong();
-        scanner.nextLine(); // очистить Enter после числа
-        return value;
     }
 
     private int readInt(String message) {

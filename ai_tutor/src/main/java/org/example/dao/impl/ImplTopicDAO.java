@@ -3,6 +3,7 @@ package org.example.dao.impl;
 import org.example.dao.TopicDAO;
 import org.example.DBConnection.DBConnection;
 import org.example.model.Topic;
+import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,6 +12,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+
+@Repository
 public class ImplTopicDAO implements TopicDAO {
 
     private final DBConnection dbConnection;

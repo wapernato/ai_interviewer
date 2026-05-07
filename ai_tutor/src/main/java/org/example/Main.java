@@ -1,5 +1,6 @@
 package org.example;
 
+import org.example.console.DevConsoleApp;
 import org.example.dao.*;
 import org.example.dao.impl.*;
 import org.example.DBConnection.DBConnection;
@@ -88,17 +89,29 @@ public class Main {
 //            System.out.println("Ошибка: " + e.getMessage());
 //        }
 
-        InterviewQuestionResult questionResult = interviewService.generateQuestion(1L, 1L);
+//        InterviewQuestionResult questionResult = interviewService.generateQuestion(1L, 1L);
+//
+//        System.out.println(questionResult);
+//
+//        InterviewAnswerResult answerResult = interviewService.submitUserAnswer(
+//                        1L,
+//                        questionResult.getQuestionId(),
+//                        "Инкапсуляция — это принцип ООП, который скрывает внутреннюю реализацию объекта."
+//                );
+//
+//        System.out.println(answerResult);
 
-        System.out.println(questionResult);
+        Long currentUserId = 1L;
 
-        InterviewAnswerResult answerResult = interviewService.submitUserAnswer(
-                        1L,
-                        questionResult.getQuestionId(),
-                        "Инкапсуляция — это принцип ООП, который скрывает внутреннюю реализацию объекта."
-                );
+        DevConsoleApp app = new DevConsoleApp(
+                interviewService,
+                topicService,
+                userHistoryService,
+                aiProfileService,
+                currentUserId
+        );
 
-        System.out.println(answerResult);
+        app.run();
     }
 
 
