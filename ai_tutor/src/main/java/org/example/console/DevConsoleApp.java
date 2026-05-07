@@ -1,6 +1,7 @@
 package org.example.console;
 
 import org.example.dto.InterviewQuestionResult;
+import org.example.model.Question;
 import org.example.model.Topic;
 import org.example.service.AiProfileService;
 import org.example.service.InterviewService;
@@ -21,6 +22,8 @@ public class DevConsoleApp {
 
     private Long currentUserId;
     private Long lastQuestionId;
+    private String lastQuestionText;
+
 
     public DevConsoleApp(InterviewService interviewService,
                          TopicService topicService,
@@ -44,6 +47,7 @@ public class DevConsoleApp {
             int command = readInt("Выберите команду: ");
 
             switch (command) {
+                case 1 -> generateQuestion();
                 case 0 -> running = false;
                 default -> System.out.println("Неизвестная команда.");
             }
@@ -78,7 +82,6 @@ public class DevConsoleApp {
 
     public void generateQuestion() {
 
-
         printAllTopics();
 
         List<Topic> topics = topicService.getAllTopics();
@@ -101,10 +104,46 @@ public class DevConsoleApp {
         InterviewQuestionResult result = interviewService.generateQuestion(currentUserId, topicId);
 
         lastQuestionId = result.getQuestionId();
-
+        lastQuestionText = result.getQuestionText();
         System.out.println("AI сгенерировал вопрос:");
         System.out.println(result.getQuestionText());
     }
+
+    public void answerQuestion(){
+        if (currentUserId == null || currentUserId <= 0) {
+            throw new RuntimeException("Id пользователя указан некорректно.");
+        }
+
+        if (lastQuestionId == null || lastQuestionId <= 0) {
+            System.out.println("Вопрос еще не был создан.");
+            return;
+        }
+
+        System.out.println();
+        System.out.println("Вопрос:");
+        System.out.println(lastQuestionText);
+        System.out.println();
+
+        String ans = readLine("Ответьте на вопрос: ");
+
+        if (ans == null || ans.isBlank()) {
+            System.out.println("Ответ не может быть пустым.");
+            return;
+        }
+
+        interviewService.submitUserAnswer(currentUserId, lastQuestionId, ans);
+
+        System.out.println("Ответ сохранён.");
+    }
+
+    public void readUserHistory(){
+        if (currentUserId == null || currentUserId <= 0) {
+            throw new RuntimeException("Id пользователя указан некорректно.");
+        }
+
+        userHistoryService.findHistoryByUserId(currentUserId);
+    }
+
 
     private Long readLong() {
         Long value = scanner.nextLong();
