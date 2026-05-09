@@ -2,17 +2,17 @@ package org.example.dto.user;
 
 public class UpdateUserRequest {
 
-    private String newUsername;
+    private String username;
 
     public UpdateUserRequest() {}
 
-    public UpdateUserRequest(String newUsername){ this.newUsername = newUsername; }
+    public UpdateUserRequest(String newUsername){ this.username = newUsername; }
 
     public void setNewUsername(String newUsername) {
-        this.newUsername = newUsername;
+        this.username = newUsername;
     }
 
     public String getNewUsername() {
-        return newUsername;
+        return username;
     }
 }

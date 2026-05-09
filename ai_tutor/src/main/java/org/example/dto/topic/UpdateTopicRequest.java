@@ -4,8 +4,7 @@ public class UpdateTopicRequest {
 
     private String name;
 
-    public UpdateTopicRequest() {
-    }
+    public UpdateTopicRequest() {}
 
     public String getName() {
         return name;
