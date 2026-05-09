@@ -1,7 +1,7 @@
 package org.example.service.impl;
 
-import org.example.dto.InterviewAnswerResult;
-import org.example.dto.InterviewQuestionResult;
+import org.example.dto.interview.InterviewAnswerResult;
+import org.example.dto.interview.InterviewQuestionResult;
 import org.example.model.*;
 import org.example.service.*;
 

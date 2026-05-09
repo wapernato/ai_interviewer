@@ -1,6 +1,6 @@
 package org.example.dao;
 
-import org.example.dto.UserHistoryItem;
+import org.example.dto.user.UserHistoryItem;
 
 import java.util.List;
 

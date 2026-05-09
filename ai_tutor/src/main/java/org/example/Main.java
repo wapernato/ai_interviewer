@@ -4,14 +4,9 @@ import org.example.console.DevConsoleApp;
 import org.example.dao.*;
 import org.example.dao.impl.*;
 import org.example.DBConnection.DBConnection;
-import org.example.dto.InterviewAnswerResult;
-import org.example.dto.InterviewQuestionResult;
-import org.example.dto.UserHistoryItem;
-import org.example.model.*;
 import org.example.service.*;
 import org.example.service.impl.*;
 
-import java.util.List;
 import java.io.IOException;
 
 import java.sql.*;

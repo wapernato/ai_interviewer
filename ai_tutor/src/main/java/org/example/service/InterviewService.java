@@ -1,7 +1,7 @@
 package org.example.service;
 
-import org.example.dto.InterviewAnswerResult;
-import org.example.dto.InterviewQuestionResult;
+import org.example.dto.interview.InterviewAnswerResult;
+import org.example.dto.interview.InterviewQuestionResult;
 
 public interface InterviewService {
     InterviewQuestionResult generateQuestion(Long userId, Long topicId);

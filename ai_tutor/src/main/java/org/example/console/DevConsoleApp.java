@@ -1,6 +1,6 @@
 package org.example.console;
 
-import org.example.dto.InterviewQuestionResult;
+import org.example.dto.interview.InterviewQuestionResult;
 import org.example.model.Topic;
 import org.example.service.AiProfileService;
 import org.example.service.InterviewService;

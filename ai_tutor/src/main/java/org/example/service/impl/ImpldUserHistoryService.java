@@ -2,10 +2,9 @@ package org.example.service.impl;
 
 import org.example.dao.UserDAO;
 import org.example.dao.UserHistoryDAO;
-import org.example.dto.UserHistoryItem;
+import org.example.dto.user.UserHistoryItem;
 import org.example.service.UserHistoryService;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ImpldUserHistoryService implements UserHistoryService {

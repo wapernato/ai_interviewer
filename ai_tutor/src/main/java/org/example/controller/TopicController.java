@@ -2,8 +2,8 @@ package org.example.controller;
 
 
 
-import org.example.dto.CreateTopicRequest;
-import org.example.dto.UpdateTopicRequest;
+import org.example.dto.topic.CreateTopicRequest;
+import org.example.dto.topic.UpdateTopicRequest;
 import org.example.model.Topic;
 import org.example.service.TopicService;
 import org.springframework.http.ResponseEntity;

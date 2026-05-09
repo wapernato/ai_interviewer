@@ -2,7 +2,7 @@ package org.example.dao.impl;
 
 import org.example.DBConnection.DBConnection;
 import org.example.dao.UserHistoryDAO;
-import org.example.dto.UserHistoryItem;
+import org.example.dto.user.UserHistoryItem;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
