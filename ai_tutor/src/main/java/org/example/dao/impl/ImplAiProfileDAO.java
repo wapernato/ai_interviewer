@@ -3,12 +3,14 @@ package org.example.dao.impl;
 import org.example.dao.AiProfileDAO;
 import org.example.DBConnection.DBConnection;
 import org.example.model.AiProfile;
+import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Repository
 public class ImplAiProfileDAO implements AiProfileDAO {
 
     private final DBConnection dbConnection;

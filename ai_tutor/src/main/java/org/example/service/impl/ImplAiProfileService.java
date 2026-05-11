@@ -3,9 +3,11 @@ package org.example.service.impl;
 import org.example.dao.AiProfileDAO;
 import org.example.model.AiProfile;
 import org.example.service.AiProfileService;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class ImplAiProfileService implements AiProfileService {
 
     private final AiProfileDAO aiProfileDAO;

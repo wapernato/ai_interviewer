@@ -2,6 +2,7 @@ package org.example.dto.Aiprofile;
 
 public class CreateAiProfileRequest {
 
+
     private String mode;
     private String descriptionMode;
     private String instructionMode;
