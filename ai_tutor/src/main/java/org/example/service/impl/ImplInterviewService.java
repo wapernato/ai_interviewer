@@ -4,7 +4,9 @@ import org.example.dto.interview.InterviewAnswerResult;
 import org.example.dto.interview.InterviewQuestionResult;
 import org.example.model.*;
 import org.example.service.*;
+import org.springframework.stereotype.Service;
 
+@Service
 public class ImplInterviewService implements InterviewService {
 
     private final UserService userService;
@@ -35,7 +37,7 @@ public class ImplInterviewService implements InterviewService {
 
         AiProfile aiProfile = aiProfileService.getActiveProfile();
 
-        String questionText = "ГЕНЕРАЦИЯ ВОПРОСА ЧЕРЕЗ AI" + topic.getName();
+        String questionText = "ГЕНЕРАЦИЯ ВОПРОСА ЧЕРЕЗ AI:" + topic.getName();
 
         Question question = questionService.addQuestion(
                 user.getId(),
@@ -49,6 +51,7 @@ public class ImplInterviewService implements InterviewService {
         result.setUserId(user.getId());
         result.setTopicId(topic.getId());
         result.setAiProfileId(aiProfile.getId());
+        result.setTopicName(topic.getName());
         result.setQuestionText(question.getTextQuestion());
         result.setAiMode(aiProfile.getMode());
         result.setDifficulty(aiProfile.getDifficulty());

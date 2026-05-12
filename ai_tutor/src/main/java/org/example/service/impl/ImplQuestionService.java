@@ -3,9 +3,11 @@ package org.example.service.impl;
 import org.example.dao.QuestionDAO;
 import org.example.model.Question;
 import org.example.service.QuestionService;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class ImplQuestionService implements QuestionService {
 
     private final QuestionDAO questionDAO;

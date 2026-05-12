@@ -4,9 +4,11 @@ import org.example.dao.UserDAO;
 import org.example.dao.UserHistoryDAO;
 import org.example.dto.user.UserHistoryItem;
 import org.example.service.UserHistoryService;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class ImpldUserHistoryService implements UserHistoryService {
 
     private final UserHistoryDAO userHistoryDAO;

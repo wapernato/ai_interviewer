@@ -1,7 +1,7 @@
 package org.example.controller;
 
 
-import org.example.dto.Aiprofile.CreateAiProfileRequest;
+import org.example.dto.aiprofile.CreateAiProfileRequest;
 import org.example.model.AiProfile;
 import org.example.service.AiProfileService;
 import org.springframework.http.ResponseEntity;

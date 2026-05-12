@@ -3,6 +3,7 @@ package org.example.dao.impl;
 import org.example.dao.AnswerDAO;
 import org.example.DBConnection.DBConnection;
 import org.example.model.Answer;
+import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,6 +12,7 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
+@Repository
 public class ImplAnswerDAO implements AnswerDAO {
 
     private final DBConnection dbConnection;

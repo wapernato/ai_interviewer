@@ -1,4 +1,4 @@
-package org.example.dto.Aiprofile;
+package org.example.dto.aiprofile;
 
 public class CreateAiProfileRequest {
 
