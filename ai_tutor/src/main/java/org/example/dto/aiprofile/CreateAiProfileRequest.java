@@ -2,14 +2,22 @@ package org.example.dto.aiprofile;
 
 public class CreateAiProfileRequest {
 
-
     private String mode;
     private String descriptionMode;
     private String instructionMode;
+
+    private String modelName;
     private String language;
     private String answerStyle;
+
+    private String difficulty;
+    private String feedbackMode;
+
     private Boolean hintMode;
     private Boolean active;
+
+    private Double temperature;
+    private Integer maxTokens;
 
     public CreateAiProfileRequest() {
     }
@@ -17,17 +25,27 @@ public class CreateAiProfileRequest {
     public CreateAiProfileRequest(String mode,
                                   String descriptionMode,
                                   String instructionMode,
+                                  String modelName,
                                   String language,
                                   String answerStyle,
+                                  String difficulty,
+                                  String feedbackMode,
                                   Boolean hintMode,
-                                  Boolean active) {
+                                  Boolean active,
+                                  Double temperature,
+                                  Integer maxTokens) {
         this.mode = mode;
         this.descriptionMode = descriptionMode;
         this.instructionMode = instructionMode;
+        this.modelName = modelName;
         this.language = language;
         this.answerStyle = answerStyle;
+        this.difficulty = difficulty;
+        this.feedbackMode = feedbackMode;
         this.hintMode = hintMode;
         this.active = active;
+        this.temperature = temperature;
+        this.maxTokens = maxTokens;
     }
 
     public String getMode() {
@@ -54,6 +72,14 @@ public class CreateAiProfileRequest {
         this.instructionMode = instructionMode;
     }
 
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
+    }
+
     public String getLanguage() {
         return language;
     }
@@ -70,6 +96,22 @@ public class CreateAiProfileRequest {
         this.answerStyle = answerStyle;
     }
 
+    public String getDifficulty() {
+        return difficulty;
+    }
+
+    public void setDifficulty(String difficulty) {
+        this.difficulty = difficulty;
+    }
+
+    public String getFeedbackMode() {
+        return feedbackMode;
+    }
+
+    public void setFeedbackMode(String feedbackMode) {
+        this.feedbackMode = feedbackMode;
+    }
+
     public Boolean getHintMode() {
         return hintMode;
     }
@@ -84,5 +126,21 @@ public class CreateAiProfileRequest {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public Double getTemperature() {
+        return temperature;
+    }
+
+    public void setTemperature(Double temperature) {
+        this.temperature = temperature;
+    }
+
+    public Integer getMaxTokens() {
+        return maxTokens;
+    }
+
+    public void setMaxTokens(Integer maxTokens) {
+        this.maxTokens = maxTokens;
     }
 }

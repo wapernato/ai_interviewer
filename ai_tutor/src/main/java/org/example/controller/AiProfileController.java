@@ -34,10 +34,19 @@ public class AiProfileController {
         aiProfile.setMode(request.getMode());
         aiProfile.setDescriptionMode(request.getDescriptionMode());
         aiProfile.setInstructionMode(request.getInstructionMode());
+
+        aiProfile.setModelName(request.getModelName());
         aiProfile.setLanguage(request.getLanguage());
         aiProfile.setAnswerStyle(request.getAnswerStyle());
+
+        aiProfile.setDifficulty(request.getDifficulty());
+        aiProfile.setFeedbackMode(request.getFeedbackMode());
+
         aiProfile.setHintMode(request.getHintMode());
         aiProfile.setActive(request.getActive());
+
+        aiProfile.setTemperature(request.getTemperature());
+        aiProfile.setMaxTokens(request.getMaxTokens());
 
         return aiProfileService.addProfile(aiProfile);
     }
@@ -49,19 +58,32 @@ public class AiProfileController {
     }
 
     @PutMapping("/{id}")
-    public AiProfile updateAiProfile(@PathVariable Long id,@RequestBody CreateAiProfileRequest request){
+    public AiProfile updateAiProfile(@PathVariable Long id, @RequestBody CreateAiProfileRequest request) {
 
         AiProfile aiProfile = aiProfileService.getById(id);
 
         aiProfile.setMode(request.getMode());
         aiProfile.setDescriptionMode(request.getDescriptionMode());
         aiProfile.setInstructionMode(request.getInstructionMode());
+
+        aiProfile.setModelName(request.getModelName());
         aiProfile.setLanguage(request.getLanguage());
         aiProfile.setAnswerStyle(request.getAnswerStyle());
+
+        aiProfile.setDifficulty(request.getDifficulty());
+        aiProfile.setFeedbackMode(request.getFeedbackMode());
+
         aiProfile.setHintMode(request.getHintMode());
         aiProfile.setActive(request.getActive());
+
+        aiProfile.setTemperature(request.getTemperature());
+        aiProfile.setMaxTokens(request.getMaxTokens());
 
         return aiProfileService.updateProfile(aiProfile);
     }
 
+    @PutMapping("/{id}/activate")
+    public AiProfile activeAiProfile(@PathVariable Long id){
+        return aiProfileService.activateProfile(id);
+    }
 }
