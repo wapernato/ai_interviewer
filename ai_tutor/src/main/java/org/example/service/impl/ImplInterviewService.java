@@ -14,17 +14,23 @@ public class ImplInterviewService implements InterviewService {
     private final QuestionService questionService;
     private final AnswerService answerService;
     private final AiProfileService aiProfileService;
+    private final AiQuestionGenerator aiQuestionGenerator;
+    private final AiAnswerEvaluator aiAnswerEvaluator;
 
     public ImplInterviewService(UserService userService,
                                 TopicService topicService,
                                 QuestionService questionService,
                                 AnswerService answerService,
-                                AiProfileService aiProfileService ){
+                                AiProfileService aiProfileService,
+                                AiQuestionGenerator aiQuestionGenerator,
+                                AiAnswerEvaluator aiAnswerEvaluator  ){
         this.topicService = topicService;
         this.userService = userService;
         this.questionService = questionService;
         this.answerService = answerService;
         this.aiProfileService =  aiProfileService;
+        this.aiQuestionGenerator = aiQuestionGenerator;
+        this.aiAnswerEvaluator = aiAnswerEvaluator;
     };
 
 
@@ -37,13 +43,15 @@ public class ImplInterviewService implements InterviewService {
 
         AiProfile aiProfile = aiProfileService.getActiveProfile();
 
-        String questionText = "ГЕНЕРАЦИЯ ВОПРОСА ЧЕРЕЗ AI:" + topic.getName();
+        String questionText = aiQuestionGenerator.generatedQuestion(topic, aiProfile);
 
         Question question = questionService.addQuestion(
                 user.getId(),
                 topic.getId(),
                 questionText
         );
+
+
 
         InterviewQuestionResult result = new InterviewQuestionResult();
 
@@ -85,6 +93,11 @@ public class ImplInterviewService implements InterviewService {
                 "user-input"
         );
 
+        String feedbackText = aiAnswerEvaluator.evaluateAnswer(
+                question,
+                aiProfile,
+                userAnswerText.trim()
+        );
 
         InterviewAnswerResult result = new InterviewAnswerResult();
 
@@ -93,6 +106,7 @@ public class ImplInterviewService implements InterviewService {
         result.setUserId(userId);
         result.setUserAnswerText(userAnswerText);
         result.setQuestionText(question.getTextQuestion());
+        result.setFeedback(feedbackText);
 
         return result;
     }

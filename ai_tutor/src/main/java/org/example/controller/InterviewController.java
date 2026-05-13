@@ -20,7 +20,6 @@ public class InterviewController {
 
     @PostMapping("/answer")
     public InterviewAnswerResult answerResult(@RequestBody AnswerRequest request){
-        // topic and text
         return interviewService.submitUserAnswer(request.getUserId(), request.getQuestionId(), request.getTextAnswer());
     }
 

@@ -8,6 +8,7 @@ public class InterviewAnswerResult {
 
     private String questionText;
     private String userAnswerText;
+    private String feedback;
 
     public InterviewAnswerResult() {
     }
@@ -16,12 +17,14 @@ public class InterviewAnswerResult {
                                  Long questionId,
                                  Long answerId,
                                  String questionText,
-                                 String userAnswerText) {
+                                 String userAnswerText,
+                                 String feedback) {
         this.userId = userId;
         this.questionId = questionId;
         this.answerId = answerId;
         this.questionText = questionText;
         this.userAnswerText = userAnswerText;
+        this.feedback = feedback;
     }
 
     public Long getUserId() {
@@ -35,6 +38,10 @@ public class InterviewAnswerResult {
     public Long getAnswerId() {
         return answerId;
     }
+
+    public String getFeedback() { return feedback; }
+
+    public void setFeedback(String feedback) { this.feedback = feedback; }
 
     public String getQuestionText() {
         return questionText;
@@ -72,6 +79,7 @@ public class InterviewAnswerResult {
                 ", answerId=" + answerId +
                 ", questionText='" + questionText + '\'' +
                 ", userAnswerText='" + userAnswerText + '\'' +
+                ", feedback='" + feedback + '\'' +
                 '}';
     }
 
