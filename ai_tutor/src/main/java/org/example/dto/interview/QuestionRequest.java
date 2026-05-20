@@ -4,6 +4,7 @@ public class QuestionRequest {
     private Long userId;
     private Long topicId;
 
+    public QuestionRequest() {}
 
     public QuestionRequest(Long userId, Long topicId ){
         this.userId = userId;

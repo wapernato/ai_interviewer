@@ -6,6 +6,8 @@ public class AnswerRequest {
     private Long questionId;
     private String textAnswer;
 
+    public AnswerRequest() {}
+
     public AnswerRequest(Long userId, Long questionId, String textAnswer){
         this.userId = userId;
         this.questionId = questionId;
