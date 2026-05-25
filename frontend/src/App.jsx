@@ -1,9 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 const API_URL = "http://localhost:8080";
 
-function InterviewSettings({ userId, topicId, setUserId, setTopicId, onGenerateQuestion, loading }) {
+async function readResponse(response) {
+    const contentType = response.headers.get("content-type");
+
+    if (contentType && contentType.includes("application/json")) {
+        return await response.json();
+    }
+
+    return await response.text();
+}
+
+function InterviewSettings({
+    userId,
+    topicId,
+    users,
+    topics,
+    setUserId,
+    setTopicId,
+    onGenerateQuestion,
+    loading
+}) {
     return (
         <section className="panel settings-panel">
             <div className="section-header">
@@ -16,26 +35,50 @@ function InterviewSettings({ userId, topicId, setUserId, setTopicId, onGenerateQ
 
             <div className="form-grid">
                 <label>
-                    User ID
-                    <input
+                    Пользователь
+                    <select
                         value={userId}
                         onChange={(event) => setUserId(event.target.value)}
-                        placeholder="Например: 1"
-                    />
+                        disabled={loading || users.length === 0}
+                    >
+                        {users.length === 0 && (
+                            <option value="">Пользователи не загружены</option>
+                        )}
+
+                        {users.map((user) => (
+                            <option key={user.id} value={user.id}>
+                                {user.username} — ID {user.id}
+                            </option>
+                        ))}
+                    </select>
                 </label>
 
                 <label>
-                    Topic ID
-                    <input
+                    Тема
+                    <select
                         value={topicId}
                         onChange={(event) => setTopicId(event.target.value)}
-                        placeholder="Например: 1"
-                    />
+                        disabled={loading || topics.length === 0}
+                    >
+                        {topics.length === 0 && (
+                            <option value="">Темы не загружены</option>
+                        )}
+
+                        {topics.map((topic) => (
+                            <option key={topic.id} value={topic.id}>
+                                {topic.name} — ID {topic.id}
+                            </option>
+                        ))}
+                    </select>
                 </label>
             </div>
 
-            <button className="primary-button" onClick={onGenerateQuestion} disabled={loading}>
-                {loading ? "Генерируем вопрос..." : "Сгенерировать вопрос"}
+            <button
+                className="primary-button"
+                onClick={onGenerateQuestion}
+                disabled={loading || users.length === 0 || topics.length === 0}
+            >
+                {loading ? "Загружаем..." : "Сгенерировать вопрос"}
             </button>
         </section>
     );
@@ -48,7 +91,7 @@ function QuestionCard({ question }) {
                 <p className="eyebrow">Step 2</p>
                 <h2>Вопрос появится здесь</h2>
                 <p>
-                    Укажи userId и topicId, затем нажми кнопку генерации.
+                    Выбери пользователя и тему, затем нажми кнопку генерации.
                     Backend создаст вопрос и сохранит его в PostgreSQL.
                 </p>
             </section>
@@ -101,7 +144,7 @@ function QuestionCard({ question }) {
 
 function AnswerForm({ question, answerText, setAnswerText, onSubmitAnswer, loading }) {
     return (
-        <section className="panel">
+        <section className="panel answer-panel">
             <div className="section-header">
                 <div>
                     <p className="eyebrow">Step 3</p>
@@ -119,7 +162,11 @@ function AnswerForm({ question, answerText, setAnswerText, onSubmitAnswer, loadi
             />
 
             <div className="actions-row">
-                <button className="primary-button" onClick={onSubmitAnswer} disabled={!question || loading}>
+                <button
+                    className="primary-button"
+                    onClick={onSubmitAnswer}
+                    disabled={!question || loading}
+                >
                     {loading ? "Отправляем ответ..." : "Отправить ответ"}
                 </button>
 
@@ -147,9 +194,64 @@ function FeedbackCard({ feedback }) {
     );
 }
 
+function AiProfileCard({ activeProfile }) {
+    if (!activeProfile) {
+        return (
+            <section className="panel ai-profile-panel">
+                <p className="eyebrow">AI Profile</p>
+                <h2>Активный профиль</h2>
+
+                <div className="history-empty">
+                    Активный AI-профиль не найден.
+                </div>
+            </section>
+        );
+    }
+
+    return (
+        <section className="panel ai-profile-panel">
+            <p className="eyebrow">AI Profile</p>
+            <h2>Активный профиль</h2>
+
+            <div className="profile-card">
+                <div className="profile-main">
+                    <span className="profile-dot"></span>
+
+                    <div>
+                        <h3>{activeProfile.mode}</h3>
+                        <p>{activeProfile.descriptionMode || "Описание не указано"}</p>
+                    </div>
+                </div>
+
+                <div className="profile-grid">
+                    <div>
+                        <span>Сложность</span>
+                        <strong>{activeProfile.difficulty || "—"}</strong>
+                    </div>
+
+                    <div>
+                        <span>Feedback</span>
+                        <strong>{activeProfile.feedbackMode || "—"}</strong>
+                    </div>
+
+                    <div>
+                        <span>Модель</span>
+                        <strong>{activeProfile.modelName || "—"}</strong>
+                    </div>
+
+                    <div>
+                        <span>Язык</span>
+                        <strong>{activeProfile.language || "—"}</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
+
 function HistoryList({ history, onLoadHistory, loading }) {
     return (
-        <section className="panel">
+        <section className="panel history-panel">
             <div className="section-header">
                 <div>
                     <p className="eyebrow">Step 5</p>
@@ -210,20 +312,87 @@ function Message({ type, text }) {
 }
 
 function App() {
-    const [userId, setUserId] = useState("1");
-    const [topicId, setTopicId] = useState("1");
+    const [users, setUsers] = useState([]);
+    const [topics, setTopics] = useState([]);
+    const [activeProfile, setActiveProfile] = useState(null);
+
+    const [userId, setUserId] = useState("");
+    const [topicId, setTopicId] = useState("");
 
     const [question, setQuestion] = useState(null);
     const [answerText, setAnswerText] = useState("");
     const [feedback, setFeedback] = useState("");
     const [history, setHistory] = useState([]);
 
+    const [loadingInitialData, setLoadingInitialData] = useState(false);
     const [loadingQuestion, setLoadingQuestion] = useState(false);
     const [loadingAnswer, setLoadingAnswer] = useState(false);
     const [loadingHistory, setLoadingHistory] = useState(false);
 
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+
+    useEffect(() => {
+        async function loadInitialData() {
+            setLoadingInitialData(true);
+            setError("");
+            setSuccess("");
+
+            try {
+                const usersResponse = await fetch(`${API_URL}/api/users`);
+                const topicsResponse = await fetch(`${API_URL}/api/topics`);
+                const aiProfilesResponse = await fetch(`${API_URL}/api/aiProfile`);
+
+                const usersData = await readResponse(usersResponse);
+                const topicsData = await readResponse(topicsResponse);
+                const aiProfilesData = await readResponse(aiProfilesResponse);
+
+                if (!usersResponse.ok) {
+                    throw new Error(
+                        typeof usersData === "string"
+                            ? usersData
+                            : "Ошибка при загрузке пользователей."
+                    );
+                }
+
+                if (!topicsResponse.ok) {
+                    throw new Error(
+                        typeof topicsData === "string"
+                            ? topicsData
+                            : "Ошибка при загрузке тем."
+                    );
+                }
+
+                if (!aiProfilesResponse.ok) {
+                    throw new Error(
+                        typeof aiProfilesData === "string"
+                            ? aiProfilesData
+                            : "Ошибка при загрузке AI-профилей."
+                    );
+                }
+
+                setUsers(usersData);
+                setTopics(topicsData);
+
+                const foundActiveProfile = aiProfilesData.find((profile) => profile.active === true);
+                setActiveProfile(foundActiveProfile || null);
+
+                if (usersData.length > 0) {
+                    setUserId(String(usersData[0].id));
+                }
+
+                if (topicsData.length > 0) {
+                    setTopicId(String(topicsData[0].id));
+                }
+            } catch (error) {
+                setError(error.message || "Не удалось загрузить начальные данные.");
+            } finally {
+                setLoadingInitialData(false);
+            }
+        }
+
+        loadInitialData();
+    }, []);
 
     function clearMessages() {
         setError("");
@@ -232,26 +401,16 @@ function App() {
 
     function validateIds() {
         if (!userId || Number(userId) <= 0) {
-            setError("User ID должен быть положительным числом.");
+            setError("Выбери пользователя.");
             return false;
         }
 
         if (!topicId || Number(topicId) <= 0) {
-            setError("Topic ID должен быть положительным числом.");
+            setError("Выбери тему.");
             return false;
         }
 
         return true;
-    }
-
-    async function readResponse(response) {
-        const contentType = response.headers.get("content-type");
-
-        if (contentType && contentType.includes("application/json")) {
-            return await response.json();
-        }
-
-        return await response.text();
     }
 
     async function generateQuestion() {
@@ -278,7 +437,11 @@ function App() {
             const data = await readResponse(response);
 
             if (!response.ok) {
-                throw new Error(typeof data === "string" ? data : "Ошибка при генерации вопроса.");
+                throw new Error(
+                    typeof data === "string"
+                        ? data
+                        : "Ошибка при генерации вопроса."
+                );
             }
 
             setQuestion(data);
@@ -323,7 +486,11 @@ function App() {
             const data = await readResponse(response);
 
             if (!response.ok) {
-                throw new Error(typeof data === "string" ? data : "Ошибка при отправке ответа.");
+                throw new Error(
+                    typeof data === "string"
+                        ? data
+                        : "Ошибка при отправке ответа."
+                );
             }
 
             setFeedback(data.feedback);
@@ -339,7 +506,7 @@ function App() {
         clearMessages();
 
         if (!userId || Number(userId) <= 0) {
-            setError("User ID должен быть положительным числом.");
+            setError("Выбери пользователя.");
             return;
         }
 
@@ -351,7 +518,11 @@ function App() {
             const data = await readResponse(response);
 
             if (!response.ok) {
-                throw new Error(typeof data === "string" ? data : "Ошибка при загрузке истории.");
+                throw new Error(
+                    typeof data === "string"
+                        ? data
+                        : "Ошибка при загрузке истории."
+                );
             }
 
             setHistory(data);
@@ -391,10 +562,12 @@ function App() {
                         <InterviewSettings
                             userId={userId}
                             topicId={topicId}
+                            users={users}
+                            topics={topics}
                             setUserId={setUserId}
                             setTopicId={setTopicId}
                             onGenerateQuestion={generateQuestion}
-                            loading={loadingQuestion}
+                            loading={loadingInitialData || loadingQuestion}
                         />
 
                         <QuestionCard question={question} />
@@ -435,6 +608,8 @@ function App() {
                                 <strong>{answerText.length}</strong>
                             </div>
                         </section>
+
+                        <AiProfileCard activeProfile={activeProfile} />
 
                         <HistoryList
                             history={history}
