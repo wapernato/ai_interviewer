@@ -6,6 +6,8 @@ import org.example.dto.interview.InterviewAnswerResult;
 import org.example.dto.interview.InterviewQuestionResult;
 import org.example.dto.interview.QuestionRequest;
 import org.example.service.InterviewService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,13 +21,19 @@ public class InterviewController {
     }
 
     @PostMapping("/answer")
-    public InterviewAnswerResult answerResult(@RequestBody AnswerRequest request){
-        return interviewService.submitUserAnswer(request.getUserId(), request.getQuestionId(), request.getTextAnswer());
+    public ResponseEntity<InterviewAnswerResult> answerResult(@RequestBody AnswerRequest request){
+        InterviewAnswerResult interviewAnswerResult = interviewService.submitUserAnswer(request.getUserId(), request.getQuestionId(), request.getTextAnswer());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(interviewAnswerResult);
     }
 
     @PostMapping("/question")
-    public InterviewQuestionResult questionResult(@RequestBody QuestionRequest request){
-        return interviewService.generateQuestion(request.getUserId(), request.getTopicId());
+    public ResponseEntity<InterviewQuestionResult> questionResult(@RequestBody QuestionRequest request){
+        InterviewQuestionResult interviewQuestionResult = interviewService.generateQuestion(request.getUserId(), request.getTopicId());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(interviewQuestionResult);
     }
 
 }

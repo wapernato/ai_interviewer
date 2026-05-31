@@ -1,6 +1,9 @@
 package org.example.service.impl;
 
 import org.example.dao.AnswerDAO;
+import org.example.exception.AnswerAlreadyExistsException;
+import org.example.exception.BadRequestException;
+import org.example.exception.NotFoundException;
 import org.example.model.Answer;
 import org.example.service.AnswerService;
 import org.springframework.stereotype.Service;
@@ -19,15 +22,15 @@ public class ImplAnswerService implements AnswerService {
     @Override
     public Answer addAnswer(Long questionId, Long aiProfileId, String answerText, String modelName) {
         if (questionId == null) {
-            throw new RuntimeException("Id вопроса не может быть null.");
+            throw new BadRequestException("Id вопроса не может быть null.");
         }
 
         if (answerText == null || answerText.isBlank()) {
-            throw new RuntimeException("Текст ответа не может быть пустым.");
+            throw new BadRequestException("Текст ответа не может быть пустым.");
         }
 
         if (modelName == null || modelName.isBlank()) {
-            throw new RuntimeException("Название модели не может быть пустым.");
+            throw new BadRequestException("Название модели не может быть пустым.");
         }
 
         Answer answer = new Answer();
@@ -42,21 +45,21 @@ public class ImplAnswerService implements AnswerService {
     @Override
     public Answer updateAnswer(Long id, String answerText, String modelName) {
         if (id == null) {
-            throw new RuntimeException("Id ответа не может быть null.");
+            throw new BadRequestException("Id ответа не может быть null.");
         }
 
         if (answerText == null || answerText.isBlank()) {
-            throw new RuntimeException("Текст ответа не может быть пустым.");
+            throw new BadRequestException("Текст ответа не может быть пустым.");
         }
 
         if (modelName == null || modelName.isBlank()) {
-            throw new RuntimeException("Название модели не может быть пустым.");
+            throw new BadRequestException("Название модели не может быть пустым.");
         }
 
         Answer existingAnswer = answerDAO.findById(id);
 
         if (existingAnswer == null) {
-            throw new RuntimeException("Ответ с таким id не найден.");
+            throw new AnswerAlreadyExistsException("Ответ с таким id не найден.");
         }
 
         existingAnswer.setAnswerText(answerText.trim());
@@ -68,13 +71,13 @@ public class ImplAnswerService implements AnswerService {
     @Override
     public void deleteById(Long id) {
         if (id == null) {
-            throw new RuntimeException("Id ответа не может быть null.");
+            throw new BadRequestException("Id ответа не может быть null.");
         }
 
         Answer existingAnswer = answerDAO.findById(id);
 
         if (existingAnswer == null) {
-            throw new RuntimeException("Ответ с таким id не найден.");
+            throw new NotFoundException("Ответ с таким id не найден.");
         }
 
         answerDAO.deleteById(id);
@@ -83,13 +86,13 @@ public class ImplAnswerService implements AnswerService {
     @Override
     public Answer getById(Long id) {
         if (id == null) {
-            throw new RuntimeException("Id ответа не может быть null.");
+            throw new BadRequestException("Id ответа не может быть null.");
         }
 
         Answer answer = answerDAO.findById(id);
 
         if (answer == null) {
-            throw new RuntimeException("Ответ с таким id не найден.");
+            throw new NotFoundException("Ответ с таким id не найден.");
         }
 
         return answer;
@@ -98,7 +101,7 @@ public class ImplAnswerService implements AnswerService {
     @Override
     public List<Answer> getByQuestionId(Long questionId) {
         if (questionId == null) {
-            throw new RuntimeException("Id вопроса не может быть null.");
+            throw new BadRequestException("Id вопроса не может быть null.");
         }
 
         return answerDAO.findByQuestionId(questionId);
@@ -107,7 +110,7 @@ public class ImplAnswerService implements AnswerService {
     @Override
     public List<Answer> getByProfileId(Long profileId) {
         if (profileId == null) {
-            throw new RuntimeException("Id AI-профиля не может быть null.");
+            throw new BadRequestException("Id AI-профиля не может быть null.");
         }
 
         return answerDAO.findByProfileId(profileId);

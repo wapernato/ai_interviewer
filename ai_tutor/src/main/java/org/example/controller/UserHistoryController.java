@@ -3,6 +3,8 @@ package org.example.controller;
 import org.example.dto.user.UserHistoryItem;
 import org.example.model.User;
 import org.example.service.UserHistoryService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,7 +22,10 @@ public class UserHistoryController {
         this.userHistoryService = userHistoryService;
     }
     @GetMapping("/{userId}/history")
-    public List<UserHistoryItem> userHistory(@PathVariable Long userId){
-        return userHistoryService.findHistoryByUserId(userId);
+    public ResponseEntity<List<UserHistoryItem>> userHistory(@PathVariable Long userId){
+        List<UserHistoryItem> userHistoryItems = userHistoryService.findHistoryByUserId(userId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(userHistoryItems);
     }
 }

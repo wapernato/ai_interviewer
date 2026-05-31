@@ -1,6 +1,8 @@
 package org.example.service.impl;
 
 import org.example.dao.QuestionDAO;
+import org.example.exception.BadRequestException;
+import org.example.exception.NotFoundException;
 import org.example.model.Question;
 import org.example.service.QuestionService;
 import org.springframework.stereotype.Service;
@@ -19,21 +21,21 @@ public class ImplQuestionService implements QuestionService {
     @Override
     public Question addQuestion(Long userId, Long topicId, String textQuestion) {
         if (userId == null || userId <= 0) {
-            throw new IllegalArgumentException("Id пользователя должен быть положительным числом.");
+            throw new BadRequestException("Id пользователя должен быть положительным числом.");
         }
 
         if (topicId == null || topicId <= 0) {
-            throw new IllegalArgumentException("Id темы должен быть положительным числом.");
+            throw new BadRequestException("Id темы должен быть положительным числом.");
         }
 
         if(textQuestion == null || textQuestion.isBlank()){
-            throw new IllegalArgumentException("Текст вопроса не должен быть пустым.");
+            throw new BadRequestException("Текст вопроса не должен быть пустым.");
         }
 
         textQuestion = textQuestion.trim();
 
         if (textQuestion.length() < 3 || textQuestion.length() > 1000) {
-            throw new IllegalArgumentException("Длина вопроса должна быть от 3 до 1000 символов.");
+            throw new BadRequestException("Длина вопроса должна быть от 3 до 1000 символов.");
         }
 
         Question question = new Question();
@@ -41,7 +43,7 @@ public class ImplQuestionService implements QuestionService {
         question.setUserId(userId);
         question.setTopicId(topicId);
         question.setTextQuestion(textQuestion);
-        question.setSource("manual"); // понимать откуда пришел вопрос автоматически\
+        question.setSource("manual"); // понимать откуда пришел вопрос автоматически
         question.setLanguage("ru"); // добавить определения языка по тексу
 
         return questionDAO.save(question);
@@ -49,8 +51,8 @@ public class ImplQuestionService implements QuestionService {
 
     @Override
     public Question getById(Long id) {
-        if(id == null){
-            throw new IllegalArgumentException("Id вопроса не должен быть пустым.");
+        if (id == null || id <= 0){
+            throw new BadRequestException("Id вопроса не должен быть пустым.");
         }
         return questionDAO.findById(id);
     }
@@ -58,7 +60,7 @@ public class ImplQuestionService implements QuestionService {
     @Override
     public List<Question> getByTopicId(Long topicId) {
         if(topicId == null){
-            throw new IllegalArgumentException("Id темы не должен быть пустым.");
+            throw new BadRequestException("Id темы не должен быть пустым.");
         }
         return questionDAO.findByTopicId(topicId);
     }
@@ -66,7 +68,7 @@ public class ImplQuestionService implements QuestionService {
     @Override
     public List<Question> getByUserId(Long userId) {
         if(userId == null){
-            throw new IllegalArgumentException("Id пользователя не должен быть пустым.");
+            throw new BadRequestException("Id пользователя не должен быть пустым.");
         }
         return questionDAO.findByUserId(userId);
     }
@@ -78,20 +80,34 @@ public class ImplQuestionService implements QuestionService {
 
     @Override
     public Question updateQuestion(Long id, String newTextQuestion, String source, String language) {
-        source = source.trim();
-        language = language.trim();
-
-        if(id == null){
-            throw new IllegalArgumentException("Id вопроса не должен быть пустым.");
+        if (id == null || id <= 0) {
+            throw new BadRequestException("Id вопроса должен быть положительным числом.");
         }
+
+        if (source == null || source.isBlank()) {
+            source = "manual";
+        } else {
+            source = source.trim();
+        }
+
+        if (language == null || language.isBlank()) {
+            language = "ru";
+        } else {
+            language = language.trim();
+        }
+
         Question oldQuestion = questionDAO.findById(id);
 
         if (oldQuestion == null) {
-            throw new RuntimeException("Вопрос с id = " + id + " не найден.");
+            throw new NotFoundException("Вопрос с id = " + id + " не найден.");
         }
 
         if (newTextQuestion == null || newTextQuestion.isBlank()) {
-            throw new IllegalArgumentException("Новый текст вопроса не должен быть пустым.");
+            throw new BadRequestException("Новый текст вопроса не должен быть пустым.");
+        }
+
+        if (newTextQuestion.length() < 3 || newTextQuestion.length() > 1000) {
+            throw new BadRequestException("Длина вопроса должна быть от 3 до 1000 символов.");
         }
 
         newTextQuestion = newTextQuestion.trim();
@@ -99,17 +115,11 @@ public class ImplQuestionService implements QuestionService {
         String oldText = oldQuestion.getTextQuestion().trim();
 
         if(newTextQuestion.equals(oldText)){
-            throw new RuntimeException("Текст не должен совпадать со старым текстом.");
+            throw new BadRequestException("Текст не должен совпадать со старым текстом.");
         }
 
 
-        if (source == null || source.isBlank()) {
-            source = "manual";
-        }
 
-        if (language == null || language.isBlank()) {
-            language = "ru";
-        }
 
         // добавить потом проверку существует ли такой язык
         oldQuestion.setLanguage(language);
@@ -122,7 +132,13 @@ public class ImplQuestionService implements QuestionService {
     @Override
     public void deleteById(Long id) {
         if(id == null || id <= 0){
-            throw new IllegalArgumentException("Id вопроса должен быть положительным числом.");
+            throw new BadRequestException("Id вопроса должен быть положительным числом.");
+        }
+
+        Question question = questionDAO.findById(id);
+
+        if (question == null) {
+            throw new NotFoundException("Вопрос с id = " + id + " не найден.");
         }
 
         questionDAO.deleteById(id);

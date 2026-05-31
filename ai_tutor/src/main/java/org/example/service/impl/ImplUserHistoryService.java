@@ -3,18 +3,20 @@ package org.example.service.impl;
 import org.example.dao.UserDAO;
 import org.example.dao.UserHistoryDAO;
 import org.example.dto.user.UserHistoryItem;
+import org.example.exception.BadRequestException;
+import org.example.exception.NotFoundException;
 import org.example.service.UserHistoryService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class ImpldUserHistoryService implements UserHistoryService {
+public class ImplUserHistoryService implements UserHistoryService {
 
     private final UserHistoryDAO userHistoryDAO;
     private final UserDAO userDAO;
 
-    public ImpldUserHistoryService(UserHistoryDAO userHistoryDAO, UserDAO userDAO) {
+    public ImplUserHistoryService(UserHistoryDAO userHistoryDAO, UserDAO userDAO) {
         this.userHistoryDAO = userHistoryDAO;
         this.userDAO = userDAO;
     }
@@ -22,10 +24,10 @@ public class ImpldUserHistoryService implements UserHistoryService {
     @Override
     public List<UserHistoryItem> findHistoryByUserId(Long userId){
         if(userId == null || userId <= 0){
-            throw new RuntimeException("Некорректный id.");
+            throw new BadRequestException("Некорректный id.");
         }
         if(userDAO.findById(userId) == null){
-            throw new RuntimeException("Пользователя с таким id не существует.");
+            throw new NotFoundException("Пользователя с таким id не существует.");
         }
         return userHistoryDAO.findHistoryByUserId(userId);
     }

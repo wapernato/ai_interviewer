@@ -4,6 +4,7 @@ import org.example.dto.user.CreateUserRequest;
 import org.example.dto.user.UpdateUserRequest;
 import org.example.model.User;
 import org.example.service.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,18 +21,27 @@ public class UserController {
     }
 
     @GetMapping
-    public List<User> getAllUsers(){
-        return userService.getAllUsers();
+    public ResponseEntity<List<User>> getAllUsers(){
+        List<User> users = userService.getAllUsers();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(users);
     }
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable Long id){
-        return userService.getById(id);
+    public ResponseEntity<User> getUserById(@PathVariable Long id){
+        User user = userService.getById(id);
+        return  ResponseEntity
+                .status(HttpStatus.OK)
+                .body(user);
     }
 
     @PostMapping
-    public User createUser(@RequestBody CreateUserRequest createUserRequest){
-        return userService.register(createUserRequest.getUsername());
+    public ResponseEntity<User> createUser(@RequestBody CreateUserRequest createUserRequest){
+        User user = userService.register(createUserRequest.getUsername());
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(user);
     }
 
     @DeleteMapping("/{id}")
@@ -41,8 +51,11 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public User updateUserById(@PathVariable Long id, @RequestBody UpdateUserRequest updateUserRequest){
-        return userService.updateUsername(id, updateUserRequest.getNewUsername());
+    public ResponseEntity<User> updateUserById(@PathVariable Long id, @RequestBody UpdateUserRequest updateUserRequest){
+        User user = userService.updateUsername(id, updateUserRequest.getNewUsername());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(user);
     }
 
 }

@@ -2,6 +2,7 @@ package org.example.service.impl;
 
 import org.example.dto.interview.InterviewAnswerResult;
 import org.example.dto.interview.InterviewQuestionResult;
+import org.example.exception.BadRequestException;
 import org.example.model.*;
 import org.example.service.*;
 import org.springframework.stereotype.Service;
@@ -77,14 +78,12 @@ public class ImplInterviewService implements InterviewService {
 
         Question question = questionService.getById(questionId);
 
-
-
         if(!question.getUserId().equals(userId)){
-            throw new RuntimeException("Нельзя ответить на вопрос другого пользователя.");
+            throw new BadRequestException("Нельзя ответить на вопрос другого пользователя.");
         }
 
         if(userAnswerText == null || userAnswerText.isBlank()){
-            throw new RuntimeException("Ответ не может быть пустой.");
+            throw new BadRequestException("Ответ не может быть пустой.");
         }
 
         AiProfile aiProfile = aiProfileService.getActiveProfile();

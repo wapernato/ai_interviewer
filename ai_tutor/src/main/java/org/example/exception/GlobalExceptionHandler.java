@@ -72,4 +72,31 @@ public class GlobalExceptionHandler {
                 .body(errorResponse);
     }
 
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(UserAlreadyExistsException userAlreadyExistsException){
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.name(),
+                userAlreadyExistsException.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(errorResponse);
+
+    }
+
+    @ExceptionHandler(AnswerAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleAnswerAlreadyExistsException(AnswerAlreadyExistsException answerAlreadyExistsException){
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.name(),
+                answerAlreadyExistsException.getMessage()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(errorResponse);
+    }
+
 }

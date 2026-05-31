@@ -1,5 +1,6 @@
 package org.example.service.impl;
 
+import org.example.exception.BadRequestException;
 import org.example.model.AiProfile;
 import org.example.model.Topic;
 import org.example.service.AiQuestionGenerator;
@@ -11,11 +12,11 @@ public class ImplAiQuestionService implements AiQuestionGenerator {
     @Override
     public String generatedQuestion(Topic topic, AiProfile aiProfile) {
         if (topic == null) {
-            throw new RuntimeException("Topic обязателен для генерации вопроса.");
+            throw new BadRequestException("Topic обязателен для генерации вопроса.");
         }
 
         if (aiProfile == null) {
-            throw new RuntimeException("AiProfile обязателен для генерации вопроса.");
+            throw new BadRequestException("AiProfile обязателен для генерации вопроса.");
         }
 
         String topicName = topic.getName();
@@ -23,7 +24,7 @@ public class ImplAiQuestionService implements AiQuestionGenerator {
         String mode = aiProfile.getMode();
 
         if (topicName == null || topicName.isBlank()) {
-            throw new RuntimeException("Название темы не может быть пустым.");
+            throw new BadRequestException("Название темы не может быть пустым.");
         }
 
         if (difficulty == null || difficulty.isBlank()) {
