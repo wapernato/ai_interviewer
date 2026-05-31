@@ -1,5 +1,6 @@
 package org.example.service.impl;
 
+import org.example.exception.BadRequestException;
 import org.example.model.AiProfile;
 import org.example.model.Question;
 import org.example.service.AiAnswerEvaluator;
@@ -11,15 +12,15 @@ public class ImplAiAnswerEvaluator implements AiAnswerEvaluator {
     @Override
     public String evaluateAnswer(Question question, AiProfile aiProfile, String userAnswerText) {
         if (question == null) {
-            throw new RuntimeException("Question обязателен для оценки ответа.");
+            throw new BadRequestException("Question обязателен для оценки ответа.");
         }
 
         if (aiProfile == null) {
-            throw new RuntimeException("AiProfile обязателен для оценки ответа.");
+            throw new BadRequestException("AiProfile обязателен для оценки ответа.");
         }
 
         if (userAnswerText == null || userAnswerText.isBlank()) {
-            throw new RuntimeException("Ответ пользователя не может быть пустым.");
+            throw new BadRequestException("Ответ пользователя не может быть пустым.");
         }
 
         String trimmedAnswer = userAnswerText.trim();

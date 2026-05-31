@@ -1,6 +1,9 @@
 package org.example.service.impl;
 
 import org.example.dao.AiProfileDAO;
+import org.example.exception.AiProfileAlreadyExistsException;
+import org.example.exception.BadRequestException;
+import org.example.exception.NotFoundException;
 import org.example.model.AiProfile;
 import org.example.service.AiProfileService;
 import org.springframework.stereotype.Service;
@@ -19,7 +22,7 @@ public class ImplAiProfileService implements AiProfileService {
     @Override
     public AiProfile addProfile(AiProfile aiProfile) {
         if (aiProfile == null) {
-            throw new RuntimeException("AI-профиль не должен быть null.");
+            throw new BadRequestException("AI-профиль не должен быть null.");
         }
 
         normalizeProfile(aiProfile);
@@ -28,7 +31,7 @@ public class ImplAiProfileService implements AiProfileService {
         AiProfile existingProfile = aiProfileDAO.findByMode(aiProfile.getMode());
 
         if (existingProfile != null) {
-            throw new RuntimeException("AI-профиль с таким mode уже существует.");
+            throw new AiProfileAlreadyExistsException("AI-профиль с таким mode уже существует.");
         }
 
         if (Boolean.TRUE.equals(aiProfile.getActive())) {
@@ -45,7 +48,7 @@ public class ImplAiProfileService implements AiProfileService {
         AiProfile aiProfile = aiProfileDAO.findById(id);
 
         if (aiProfile == null) {
-            throw new RuntimeException("AI-профиль с таким id не найден.");
+            throw new NotFoundException("AI-профиль с таким id не найден.");
         }
 
         return aiProfile;
@@ -54,7 +57,7 @@ public class ImplAiProfileService implements AiProfileService {
     @Override
     public AiProfile getByMode(String mode) {
         if (mode == null || mode.isBlank()) {
-            throw new RuntimeException("Mode AI-профиля не должен быть пустым.");
+            throw new BadRequestException("Mode AI-профиля не должен быть пустым.");
         }
 
         mode = mode.trim();
@@ -62,7 +65,7 @@ public class ImplAiProfileService implements AiProfileService {
         AiProfile aiProfile = aiProfileDAO.findByMode(mode);
 
         if (aiProfile == null) {
-            throw new RuntimeException("AI-профиль с таким mode не найден.");
+            throw new NotFoundException("AI-профиль с таким mode не найден.");
         }
 
         return aiProfile;
@@ -76,7 +79,7 @@ public class ImplAiProfileService implements AiProfileService {
     @Override
     public AiProfile updateProfile(AiProfile aiProfile) {
         if (aiProfile == null) {
-            throw new RuntimeException("AI-профиль не должен быть null.");
+            throw new BadRequestException("AI-профиль не должен быть null.");
         }
 
         validateId(aiProfile.getId());
@@ -84,7 +87,7 @@ public class ImplAiProfileService implements AiProfileService {
         AiProfile oldProfile = aiProfileDAO.findById(aiProfile.getId());
 
         if (oldProfile == null) {
-            throw new RuntimeException("AI-профиль с таким id не найден.");
+            throw new NotFoundException("AI-профиль с таким id не найден.");
         }
 
         normalizeProfile(aiProfile);
@@ -93,7 +96,7 @@ public class ImplAiProfileService implements AiProfileService {
         AiProfile profileWithSameMode = aiProfileDAO.findByMode(aiProfile.getMode());
 
         if (profileWithSameMode != null && !profileWithSameMode.getId().equals(aiProfile.getId())) {
-            throw new RuntimeException("AI-профиль с таким mode уже существует.");
+            throw new AiProfileAlreadyExistsException("AI-профиль с таким mode уже существует.");
         }
 
         if (Boolean.TRUE.equals(aiProfile.getActive())) {
@@ -110,7 +113,7 @@ public class ImplAiProfileService implements AiProfileService {
         AiProfile aiProfile = aiProfileDAO.findById(id);
 
         if (aiProfile == null) {
-            throw new RuntimeException("AI-профиль с таким id не найден.");
+            throw new NotFoundException("AI-профиль с таким id не найден.");
         }
 
         aiProfileDAO.deleteById(id);
@@ -121,7 +124,7 @@ public class ImplAiProfileService implements AiProfileService {
         AiProfile activeProfile = aiProfileDAO.findActive();
 
         if (activeProfile == null) {
-            throw new RuntimeException("Активный AI-профиль не найден.");
+            throw new NotFoundException("Активный AI-профиль не найден.");
         }
 
         return activeProfile;
@@ -134,7 +137,7 @@ public class ImplAiProfileService implements AiProfileService {
         AiProfile aiProfile = aiProfileDAO.findById(id);
 
         if (aiProfile == null) {
-            throw new RuntimeException("AI-профиль с таким id не найден.");
+            throw new NotFoundException("AI-профиль с таким id не найден.");
         }
 
         aiProfileDAO.deactivateAll();
@@ -142,7 +145,7 @@ public class ImplAiProfileService implements AiProfileService {
         AiProfile activatedProfile = aiProfileDAO.activateById(id);
 
         if (activatedProfile == null) {
-            throw new RuntimeException("Не удалось активировать AI-профиль.");
+            throw new BadRequestException("Не удалось активировать AI-профиль.");
         }
 
         return activatedProfile;
@@ -150,7 +153,7 @@ public class ImplAiProfileService implements AiProfileService {
 
     private void validateId(Long id) {
         if (id == null || id <= 0) {
-            throw new RuntimeException("Некорректный id.");
+            throw new BadRequestException("Некорректный id.");
         }
     }
 
@@ -216,51 +219,51 @@ public class ImplAiProfileService implements AiProfileService {
 
     private void validateProfile(AiProfile aiProfile) {
         if (aiProfile.getMode() == null || aiProfile.getMode().isBlank()) {
-            throw new RuntimeException("Mode AI-профиля не должен быть пустым.");
+            throw new BadRequestException("Mode AI-профиля не должен быть пустым.");
         }
 
         if (aiProfile.getMode().length() < 2 || aiProfile.getMode().length() > 100) {
-            throw new RuntimeException("Mode AI-профиля должен быть от 2 до 100 символов.");
+            throw new BadRequestException("Mode AI-профиля должен быть от 2 до 100 символов.");
         }
 
         if (aiProfile.getInstructionMode() == null || aiProfile.getInstructionMode().isBlank()) {
-            throw new RuntimeException("Инструкция AI-профиля не должна быть пустой.");
+            throw new BadRequestException("Инструкция AI-профиля не должна быть пустой.");
         }
 
         if (aiProfile.getInstructionMode().length() < 10) {
-            throw new RuntimeException("Инструкция AI-профиля слишком короткая.");
+            throw new BadRequestException("Инструкция AI-профиля слишком короткая.");
         }
 
         if (aiProfile.getModelName().length() > 100) {
-            throw new RuntimeException("Название модели не должно быть длиннее 100 символов.");
+            throw new BadRequestException("Название модели не должно быть длиннее 100 символов.");
         }
 
         if (aiProfile.getLanguage().length() > 20) {
-            throw new RuntimeException("Название языка не должно быть длиннее 20 символов.");
+            throw new BadRequestException("Название языка не должно быть длиннее 20 символов.");
         }
 
         if (aiProfile.getAnswerStyle().length() > 50) {
-            throw new RuntimeException("Стиль ответа не должен быть длиннее 50 символов.");
+            throw new BadRequestException("Стиль ответа не должен быть длиннее 50 символов.");
         }
 
         if (aiProfile.getDifficulty().length() > 30) {
-            throw new RuntimeException("Сложность не должна быть длиннее 30 символов.");
+            throw new BadRequestException("Сложность не должна быть длиннее 30 символов.");
         }
 
         if (aiProfile.getFeedbackMode().length() > 50) {
-            throw new RuntimeException("Режим обратной связи не должен быть длиннее 50 символов.");
+            throw new BadRequestException("Режим обратной связи не должен быть длиннее 50 символов.");
         }
 
         if (aiProfile.getTemperature() < 0 || aiProfile.getTemperature() > 2) {
-            throw new RuntimeException("Temperature должна быть в диапазоне от 0 до 2.");
+            throw new BadRequestException("Temperature должна быть в диапазоне от 0 до 2.");
         }
 
         if (aiProfile.getMaxTokens() <= 0) {
-            throw new RuntimeException("Max tokens должен быть больше 0.");
+            throw new BadRequestException("Max tokens должен быть больше 0.");
         }
 
         if (aiProfile.getMaxTokens() > 4000) {
-            throw new RuntimeException("Max tokens пока не должен быть больше 4000.");
+            throw new BadRequestException("Max tokens пока не должен быть больше 4000.");
         }
     }
 }

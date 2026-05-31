@@ -6,6 +6,7 @@ import org.example.dto.topic.CreateTopicRequest;
 import org.example.dto.topic.UpdateTopicRequest;
 import org.example.model.Topic;
 import org.example.service.TopicService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,18 +23,27 @@ public class TopicController {
     }
 
     @GetMapping
-    public List<Topic> getAllTopics(){
-        return topicService.getAllTopics();
+    public ResponseEntity<List<Topic>> getAllTopics(){
+        List<Topic> topics = topicService.getAllTopics();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(topics);
     }
 
     @GetMapping("/{id}")
-    public Topic getTopicById(@PathVariable Long id){
-        return topicService.getByTopicId(id);
+    public ResponseEntity<Topic> getTopicById(@PathVariable Long id){
+        Topic topic = topicService.getByTopicId(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(topic);
     }
 
     @PostMapping
-    public Topic createTopic(@RequestBody CreateTopicRequest createTopicRequest){
-        return topicService.addTopic(createTopicRequest.getName());
+    public ResponseEntity<Topic> createTopic(@RequestBody CreateTopicRequest createTopicRequest){
+        Topic topic = topicService.addTopic(createTopicRequest.getName());
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(topic);
     }
 
     @DeleteMapping("/{id}")
@@ -43,8 +53,11 @@ public class TopicController {
     }
 
     @PutMapping("/{id}")
-    public Topic updateTopicById(@PathVariable Long id, @RequestBody UpdateTopicRequest updateTopicRequest){
-        return topicService.updateTopic(id, updateTopicRequest.getName());
+    public ResponseEntity<Topic> updateTopicById(@PathVariable Long id, @RequestBody UpdateTopicRequest updateTopicRequest){
+        Topic topic = topicService.updateTopic(id, updateTopicRequest.getName());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(topic);
     }
 
 }

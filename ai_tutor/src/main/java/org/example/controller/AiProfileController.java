@@ -4,13 +4,14 @@ package org.example.controller;
 import org.example.dto.aiprofile.CreateAiProfileRequest;
 import org.example.model.AiProfile;
 import org.example.service.AiProfileService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/aiProfile")
+@RequestMapping("/api/ai-profiles")
 public class AiProfileController {
 
     private final AiProfileService aiProfileService;
@@ -18,17 +19,23 @@ public class AiProfileController {
     public AiProfileController(AiProfileService aiProfileService) { this.aiProfileService = aiProfileService; }
 
     @GetMapping
-    public List<AiProfile> getAllAiProfile(){
-        return aiProfileService.getAllProfiles();
+    public ResponseEntity<List<AiProfile>> getAllAiProfile(){
+        List<AiProfile> aiProfiles = aiProfileService.getAllProfiles();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(aiProfiles);
     }
 
     @GetMapping("/{id}")
-    public AiProfile getAiProfileById(@PathVariable Long id){
-        return aiProfileService.getById(id);
+    public ResponseEntity<AiProfile> getAiProfileById(@PathVariable Long id){
+        AiProfile aiProfile = aiProfileService.getById(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(aiProfile);
     }
 
     @PostMapping
-    public AiProfile addNewProfile(@RequestBody CreateAiProfileRequest request) {
+    public ResponseEntity<AiProfile> addNewProfile(@RequestBody CreateAiProfileRequest request) {
         AiProfile aiProfile = new AiProfile();
 
         aiProfile.setMode(request.getMode());
@@ -48,7 +55,10 @@ public class AiProfileController {
         aiProfile.setTemperature(request.getTemperature());
         aiProfile.setMaxTokens(request.getMaxTokens());
 
-        return aiProfileService.addProfile(aiProfile);
+        AiProfile savedProfile = aiProfileService.addProfile(aiProfile);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(savedProfile);
     }
 
     @DeleteMapping("/{id}")
@@ -58,7 +68,7 @@ public class AiProfileController {
     }
 
     @PutMapping("/{id}")
-    public AiProfile updateAiProfile(@PathVariable Long id, @RequestBody CreateAiProfileRequest request) {
+    public ResponseEntity<AiProfile> updateAiProfile(@PathVariable Long id, @RequestBody CreateAiProfileRequest request) {
 
         AiProfile aiProfile = aiProfileService.getById(id);
 
@@ -79,11 +89,18 @@ public class AiProfileController {
         aiProfile.setTemperature(request.getTemperature());
         aiProfile.setMaxTokens(request.getMaxTokens());
 
-        return aiProfileService.updateProfile(aiProfile);
+        AiProfile updatedProfile = aiProfileService.updateProfile(aiProfile);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(updatedProfile);
     }
 
     @PutMapping("/{id}/activate")
-    public AiProfile activeAiProfile(@PathVariable Long id){
-        return aiProfileService.activateProfile(id);
+    public ResponseEntity<AiProfile> activeAiProfile(@PathVariable Long id){
+        AiProfile aiProfile = aiProfileService.activateProfile(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(aiProfile);
     }
 }

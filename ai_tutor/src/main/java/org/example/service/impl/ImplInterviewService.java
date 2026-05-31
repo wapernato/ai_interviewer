@@ -34,6 +34,7 @@ public class ImplInterviewService implements InterviewService {
     };
 
 
+
     @Override
     public InterviewQuestionResult generateQuestion(Long userId, Long topicId){
 
@@ -53,6 +54,7 @@ public class ImplInterviewService implements InterviewService {
 
 
 
+
         InterviewQuestionResult result = new InterviewQuestionResult();
 
         result.setQuestionId(question.getId());
@@ -66,6 +68,7 @@ public class ImplInterviewService implements InterviewService {
 
         return result;
     }
+
 
     @Override
     public InterviewAnswerResult submitUserAnswer(Long userId, Long questionId, String userAnswerText){
