@@ -29,7 +29,7 @@ public class AiProfileController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AiProfile> getAiProfileById(@PathVariable @Positive(message = "ID AI-профиля всегда должен быть положительным числом.") Long id){
+    public ResponseEntity<AiProfile> getAiProfileById(@PathVariable @Positive(message = "ID AI-профиля должен быть положительным числом.") Long id){
         AiProfile aiProfile = aiProfileService.getById(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -64,13 +64,13 @@ public class AiProfileController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteByAiProfileId(@PathVariable @Positive(message = "ID AI-профиля всегда должен быть положительным числом.") Long id){
+    public ResponseEntity<Void> deleteByAiProfileId(@PathVariable @Positive(message = "ID AI-профиля должен быть положительным числом.") Long id){
         aiProfileService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AiProfile> updateAiProfile(@PathVariable @Positive(message = "ID AI-профиля всегда должен быть положительным числом.") Long id,@Valid @RequestBody CreateAiProfileRequest request) {
+    public ResponseEntity<AiProfile> updateAiProfile(@PathVariable @Positive(message = "ID AI-профиля должен быть положительным числом.") Long id,@Valid @RequestBody CreateAiProfileRequest request) {
 
         AiProfile aiProfile = aiProfileService.getById(id);
 
@@ -99,7 +99,7 @@ public class AiProfileController {
     }
 
     @PutMapping("/{id}/activate")
-    public ResponseEntity<AiProfile> activeAiProfile( @PathVariable @Positive(message = "ID AI-профиля всегда должен быть положительным числом.") Long id){
+    public ResponseEntity<AiProfile> activeAiProfile( @PathVariable @Positive(message = "ID AI-профиля должен быть положительным числом.") Long id){
         AiProfile aiProfile = aiProfileService.activateProfile(id);
         return ResponseEntity
                 .status(HttpStatus.OK)

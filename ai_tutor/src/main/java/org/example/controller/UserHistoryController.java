@@ -1,5 +1,6 @@
 package org.example.controller;
 
+import jakarta.validation.constraints.Positive;
 import org.example.dto.user.UserHistoryItem;
 import org.example.model.User;
 import org.example.service.UserHistoryService;
@@ -22,7 +23,7 @@ public class UserHistoryController {
         this.userHistoryService = userHistoryService;
     }
     @GetMapping("/{userId}/history")
-    public ResponseEntity<List<UserHistoryItem>> userHistory(@PathVariable  Long userId){
+    public ResponseEntity<List<UserHistoryItem>> userHistory(@PathVariable @Positive(message = "ID пользователя должен быть положительным числом.") Long userId){
         List<UserHistoryItem> userHistoryItems = userHistoryService.findHistoryByUserId(userId);
         return ResponseEntity
                 .status(HttpStatus.OK)

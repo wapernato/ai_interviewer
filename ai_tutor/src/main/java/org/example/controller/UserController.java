@@ -31,7 +31,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable @Positive(message = "ID пользователя всегда должен быть положительным числом.") Long id){
+    public ResponseEntity<User> getUserById(@PathVariable @Positive(message = "ID пользователя должен быть положительным числом.") Long id){
         User user = userService.getById(id);
         return  ResponseEntity
                 .status(HttpStatus.OK)
@@ -47,13 +47,13 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUserById(@PathVariable @Positive(message = "ID пользователя всегда должен быть положительным числом.") Long id){
+    public ResponseEntity<Void> deleteUserById(@PathVariable @Positive(message = "ID пользователя должен быть положительным числом.") Long id){
         userService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUserById(@PathVariable @Positive(message = "ID пользователя всегда должен быть положительным числом.") Long id, @Valid @RequestBody UpdateUserRequest updateUserRequest){
+    public ResponseEntity<User> updateUserById(@PathVariable @Positive(message = "ID пользователя должен быть положительным числом.") Long id, @Valid @RequestBody UpdateUserRequest updateUserRequest){
         User user = userService.updateUsername(id, updateUserRequest.getNewUsername());
         return ResponseEntity
                 .status(HttpStatus.OK)

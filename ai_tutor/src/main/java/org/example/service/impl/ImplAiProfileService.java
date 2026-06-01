@@ -189,7 +189,7 @@ public class ImplAiProfileService implements AiProfileService {
         }
 
         if (aiProfile.getDifficulty() == null || aiProfile.getDifficulty().isBlank()) {
-            aiProfile.setDifficulty("middle");
+            aiProfile.setDifficulty("medium");
         } else {
             aiProfile.setDifficulty(aiProfile.getDifficulty().trim());
         }
