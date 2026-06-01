@@ -51,10 +51,13 @@ public class ImplQuestionService implements QuestionService {
 
     @Override
     public Question getById(Long id) {
-        if (id == null || id <= 0){
-            throw new BadRequestException("Id вопроса не должен быть пустым.");
+        Question question = questionDAO.findById(id);
+
+        if (question == null) {
+            throw new NotFoundException("Вопрос с id = " + id + " не найден.");
         }
-        return questionDAO.findById(id);
+
+        return question;
     }
 
     @Override
@@ -106,11 +109,11 @@ public class ImplQuestionService implements QuestionService {
             throw new BadRequestException("Новый текст вопроса не должен быть пустым.");
         }
 
+        newTextQuestion = newTextQuestion.trim();
+
         if (newTextQuestion.length() < 3 || newTextQuestion.length() > 1000) {
             throw new BadRequestException("Длина вопроса должна быть от 3 до 1000 символов.");
         }
-
-        newTextQuestion = newTextQuestion.trim();
 
         String oldText = oldQuestion.getTextQuestion().trim();
 

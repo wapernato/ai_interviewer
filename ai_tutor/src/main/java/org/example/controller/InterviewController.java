@@ -1,6 +1,7 @@
 package org.example.controller;
 
 
+import jakarta.validation.Valid;
 import org.example.dto.interview.AnswerRequest;
 import org.example.dto.interview.InterviewAnswerResult;
 import org.example.dto.interview.InterviewQuestionResult;
@@ -21,7 +22,7 @@ public class InterviewController {
     }
 
     @PostMapping("/answer")
-    public ResponseEntity<InterviewAnswerResult> answerResult(@RequestBody AnswerRequest request){
+    public ResponseEntity<InterviewAnswerResult> answerResult(@Valid @RequestBody AnswerRequest request){
         InterviewAnswerResult interviewAnswerResult = interviewService.submitUserAnswer(request.getUserId(), request.getQuestionId(), request.getTextAnswer());
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -29,7 +30,7 @@ public class InterviewController {
     }
 
     @PostMapping("/question")
-    public ResponseEntity<InterviewQuestionResult> questionResult(@RequestBody QuestionRequest request){
+    public ResponseEntity<InterviewQuestionResult> questionResult(@Valid @RequestBody QuestionRequest request){
         InterviewQuestionResult interviewQuestionResult = interviewService.generateQuestion(request.getUserId(), request.getTopicId());
         return ResponseEntity
                 .status(HttpStatus.OK)

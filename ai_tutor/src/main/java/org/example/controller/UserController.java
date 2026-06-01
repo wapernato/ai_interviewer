@@ -1,5 +1,6 @@
 package org.example.controller;
 
+import jakarta.validation.Valid;
 import org.example.dto.user.CreateUserRequest;
 import org.example.dto.user.UpdateUserRequest;
 import org.example.model.User;
@@ -37,7 +38,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody CreateUserRequest createUserRequest){
+    public ResponseEntity<User> createUser(@Valid @RequestBody CreateUserRequest createUserRequest){
         User user = userService.register(createUserRequest.getUsername());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -51,7 +52,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUserById(@PathVariable Long id, @RequestBody UpdateUserRequest updateUserRequest){
+    public ResponseEntity<User> updateUserById(@PathVariable Long id, @Valid @RequestBody UpdateUserRequest updateUserRequest){
         User user = userService.updateUsername(id, updateUserRequest.getNewUsername());
         return ResponseEntity
                 .status(HttpStatus.OK)

@@ -1,24 +1,60 @@
 package org.example.dto.aiprofile;
 
+import jakarta.validation.constraints.*;
+
 public class CreateAiProfileRequest {
 
+    @NotBlank(message = "Режим AI-профиля не может быть пустым.")
+    @Size(min = 2, max = 100, message = "Режим AI-профиля должен быть от 2 до 100 символов.")
     private String mode;
+
+    @Size(max = 1000, message = "Описание режима не должно превышать 1000 символов.")
     private String descriptionMode;
+
+    @NotBlank(message = "Инструкция для AI-профиля не может быть пустой.")
+    @Size(min = 10, max = 4000, message = "Инструкция должна быть от 10 до 4000 символов.")
     private String instructionMode;
 
+    @NotBlank(message = "Название модели не может быть пустым.")
+    @Size(max = 100, message = "Название модели не должно превышать 100 символов.")
     private String modelName;
+
+    @NotBlank(message = "Язык не может быть пустым.")
+    @Pattern(regexp = "ru|en", message = "Язык должен быть 'ru' или 'en'.")
     private String language;
+
+    @Size(max = 100, message = "Стиль ответа не должен превышать 100 символов.")
     private String answerStyle;
 
+    @NotBlank(message = "Сложность не может быть пустой.")
+    @Pattern(
+            regexp = "easy|medium|hard",
+            message = "Сложность должна быть: easy, medium или hard."
+    )
     private String difficulty;
+
+    @NotBlank(message = "Режим обратной связи не может быть пустым.")
+    @Pattern(
+            regexp = "short|detailed|strict",
+            message = "Режим обратной связи должен быть: short, detailed или strict."
+    )
     private String feedbackMode;
 
+    @NotNull(message = "Режим подсказок должен быть указан.")
     private Boolean hintMode;
+
+    @NotNull(message = "Статус активности должен быть указан.")
     private Boolean active;
 
+    @NotNull(message = "Temperature не должен быть пустым.")
+    @DecimalMin(value = "0.0", message = "Temperature не может быть меньше 0.0.")
+    @DecimalMax(value = "2.0", message = "Temperature не может быть больше 2.0.")
     private Double temperature;
-    private Integer maxTokens;
 
+    @NotNull(message = "Max tokens не должен быть пустым.")
+    @Min(value = 1, message = "Max tokens должен быть больше 0.")
+    @Max(value = 8000, message = "Max tokens не должен превышать 8000.")
+    private Integer maxTokens;
     public CreateAiProfileRequest() {
     }
 

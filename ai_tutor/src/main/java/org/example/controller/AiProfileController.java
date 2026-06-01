@@ -1,6 +1,7 @@
 package org.example.controller;
 
 
+import jakarta.validation.Valid;
 import org.example.dto.aiprofile.CreateAiProfileRequest;
 import org.example.model.AiProfile;
 import org.example.service.AiProfileService;
@@ -35,7 +36,7 @@ public class AiProfileController {
     }
 
     @PostMapping
-    public ResponseEntity<AiProfile> addNewProfile(@RequestBody CreateAiProfileRequest request) {
+    public ResponseEntity<AiProfile> addNewProfile(@Valid @RequestBody CreateAiProfileRequest request) {
         AiProfile aiProfile = new AiProfile();
 
         aiProfile.setMode(request.getMode());
@@ -68,7 +69,7 @@ public class AiProfileController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AiProfile> updateAiProfile(@PathVariable Long id, @RequestBody CreateAiProfileRequest request) {
+    public ResponseEntity<AiProfile> updateAiProfile(@PathVariable Long id,@Valid @RequestBody CreateAiProfileRequest request) {
 
         AiProfile aiProfile = aiProfileService.getById(id);
 

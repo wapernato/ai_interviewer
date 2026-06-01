@@ -1,16 +1,33 @@
 package org.example.dto.interview;
 
-public class InterviewQuestionResult {
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
+public class InterviewQuestionResult {
+    @NotNull(message = "ID вопроса не должен быть пустым.")
+    @Min(value = 1, message = "ID вопроса должен быть положительным числом")
     private Long questionId;
+
+    @NotNull(message = "ID пользователя не должен быть пустым.")
+    @Min(value = 1, message = "ID пользователя должен быть положительным числом")
     private Long userId;
+
+    @NotNull(message = "ID темы не должен быть пустым.")
+    @Min(value = 1, message = "ID темы должен быть положительным числом")
     private Long topicId;
+
+    @NotNull(message = "ID AI-профиля не должен быть пустым.")
+    @Min(value = 1, message = "ID AI-профиля должен быть положительным числом")
     private Long aiProfileId;
 
+    @NotBlank(message = "Название темы не может быть пустое.")
     private String topicName;
+    @NotBlank(message = "Текст вопроса не может быть пустым.")
     private String questionText;
-
+    @NotBlank(message = "AI-мод не может быть пустым.")
     private String aiMode;
+    @NotBlank(message = "Сложность собеседования не может быть пустое.")
     private String difficulty;
 
     public InterviewQuestionResult() {

@@ -1,13 +1,30 @@
 package org.example.dto.interview;
 
-public class InterviewAnswerResult {
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
+public class InterviewAnswerResult {
+    @NotNull(message = "ID пользователя не должен быть пустым.")
+    @Min(value = 1, message = "ID пользователя должен быть положительным числом")
     private Long userId;
+
+    @NotNull(message = "ID вопроса не должен быть пустым.")
+    @Min(value = 1, message = "ID вопроса должен быть положительным числом")
     private Long questionId;
+
+    @NotNull(message = "ID ответа не должен быть пустым.")
+    @Min(value = 1, message = "ID ответа должен быть положительным числом")
     private Long answerId;
 
+    @NotBlank(message = "Вопрос не может быть пустым.")
     private String questionText;
+
+    @NotBlank(message = "Ответ пользователя не может быть пустым.")
     private String userAnswerText;
+
+    @NotBlank(message = "Обратная связь не может быть пустой.")
     private String feedback;
 
     public InterviewAnswerResult() {

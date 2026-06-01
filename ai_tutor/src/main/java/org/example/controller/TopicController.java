@@ -2,6 +2,7 @@ package org.example.controller;
 
 
 
+import jakarta.validation.Valid;
 import org.example.dto.topic.CreateTopicRequest;
 import org.example.dto.topic.UpdateTopicRequest;
 import org.example.model.Topic;
@@ -39,7 +40,7 @@ public class TopicController {
     }
 
     @PostMapping
-    public ResponseEntity<Topic> createTopic(@RequestBody CreateTopicRequest createTopicRequest){
+    public ResponseEntity<Topic> createTopic(@Valid @RequestBody CreateTopicRequest createTopicRequest){
         Topic topic = topicService.addTopic(createTopicRequest.getName());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -53,7 +54,7 @@ public class TopicController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Topic> updateTopicById(@PathVariable Long id, @RequestBody UpdateTopicRequest updateTopicRequest){
+    public ResponseEntity<Topic> updateTopicById(@PathVariable Long id, @Valid @RequestBody UpdateTopicRequest updateTopicRequest){
         Topic topic = topicService.updateTopic(id, updateTopicRequest.getName());
         return ResponseEntity
                 .status(HttpStatus.OK)

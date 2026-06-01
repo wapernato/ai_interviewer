@@ -1,7 +1,15 @@
 package org.example.dto.interview;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+
 public class QuestionRequest {
+    @NotNull(message = "ID пользователя не должен быть пустым.")
+    @Min(value = 1, message = "ID пользователя должно быть положительным числом")
     private Long userId;
+
+    @NotNull(message = "ID темы не должен быть пустым.")
+    @Min(value = 1, message = "ID темы должно быть положительным числом")
     private Long topicId;
 
     public QuestionRequest() {}
