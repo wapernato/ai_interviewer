@@ -53,7 +53,7 @@ public class CreateAiProfileRequest {
 
     @NotNull(message = "Max tokens не должен быть пустым.")
     @Min(value = 1, message = "Max tokens должен быть больше 0.")
-    @Max(value = 4000, message = "Max tokens не должен превышать 8000.")
+    @Max(value = 4000, message = "Max tokens не должен превышать 4000.")
     private Integer maxTokens;
     public CreateAiProfileRequest() {
     }
