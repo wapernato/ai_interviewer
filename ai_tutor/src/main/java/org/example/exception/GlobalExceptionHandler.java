@@ -1,5 +1,6 @@
 package org.example.exception;
 
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -121,10 +122,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<ErrorResponse> handleMethodValidationException(HandlerMethodValidationException handlerMethodValidationException){
+        String message = handlerMethodValidationException.getParameterValidationResults()
+                .stream()
+                .flatMap(result -> result.getResolvableErrors().stream())
+                .map(MessageSourceResolvable::getDefaultMessage)
+                .findFirst()
+                .orElse("Ошибка валидации параметров запроса.");
+
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.name(),
-                handlerMethodValidationException.getMessage()
+                message
         );
 
         return ResponseEntity
