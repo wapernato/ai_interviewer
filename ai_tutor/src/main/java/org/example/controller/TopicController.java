@@ -3,6 +3,7 @@ package org.example.controller;
 
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.example.dto.topic.CreateTopicRequest;
 import org.example.dto.topic.UpdateTopicRequest;
 import org.example.model.Topic;
@@ -32,7 +33,7 @@ public class TopicController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Topic> getTopicById(@PathVariable Long id){
+    public ResponseEntity<Topic> getTopicById(@PathVariable @Positive(message = "ID темы всегда должен быть положительным числом.") Long id){
         Topic topic = topicService.getByTopicId(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -48,13 +49,13 @@ public class TopicController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteByTopicId(@PathVariable Long id){
+    public ResponseEntity<Void> deleteByTopicId(@PathVariable @Positive(message = "ID темы всегда должен быть положительным числом.") Long id){
         topicService.deleteByTopicId(id);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Topic> updateTopicById(@PathVariable Long id, @Valid @RequestBody UpdateTopicRequest updateTopicRequest){
+    public ResponseEntity<Topic> updateTopicById(@PathVariable @Positive(message = "ID темы всегда должен быть положительным числом.") Long id, @Valid @RequestBody UpdateTopicRequest updateTopicRequest){
         Topic topic = topicService.updateTopic(id, updateTopicRequest.getName());
         return ResponseEntity
                 .status(HttpStatus.OK)

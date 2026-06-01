@@ -22,7 +22,7 @@ public class UserHistoryController {
         this.userHistoryService = userHistoryService;
     }
     @GetMapping("/{userId}/history")
-    public ResponseEntity<List<UserHistoryItem>> userHistory(@PathVariable Long userId){
+    public ResponseEntity<List<UserHistoryItem>> userHistory(@PathVariable  Long userId){
         List<UserHistoryItem> userHistoryItems = userHistoryService.findHistoryByUserId(userId);
         return ResponseEntity
                 .status(HttpStatus.OK)

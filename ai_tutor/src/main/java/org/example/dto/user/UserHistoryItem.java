@@ -1,5 +1,7 @@
 package org.example.dto.user;
 
+
+
 public class UserHistoryItem {
 
     private Long questionId;

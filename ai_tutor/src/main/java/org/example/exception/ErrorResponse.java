@@ -8,7 +8,7 @@ public class ErrorResponse {
 
     public ErrorResponse() {}
 
-    public ErrorResponse(int status, String message, String error){
+    public ErrorResponse(int status, String error, String message){
         this.status = status;
         this.error = error;
         this.message = message;
