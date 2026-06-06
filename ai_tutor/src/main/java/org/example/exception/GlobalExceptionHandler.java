@@ -3,10 +3,17 @@ package org.example.exception;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.method.ParameterValidationResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -103,36 +110,51 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException methodArgumentNotValidException) {
-        String message = methodArgumentNotValidException.getBindingResult()
-                .getFieldErrors()
-                .get(0)
-                .getDefaultMessage();
+    public ResponseEntity<ValidationErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException methodArgumentNotValidException){
 
-        ErrorResponse errorResponse = new ErrorResponse(
+        Map<String, String> errorMap = new LinkedHashMap<>();
+        for(FieldError fieldError : methodArgumentNotValidException.getBindingResult().getFieldErrors()){
+            errorMap.putIfAbsent(fieldError.getField(), fieldError.getDefaultMessage());
+        }
+
+        ValidationErrorResponse errorResponse = new ValidationErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.name(),
-                message
+                "Ошибка валидации данных.",
+                errorMap
         );
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(errorResponse);
+
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
-    public ResponseEntity<ErrorResponse> handleMethodValidationException(HandlerMethodValidationException handlerMethodValidationException){
-        String message = handlerMethodValidationException.getParameterValidationResults()
-                .stream()
-                .flatMap(result -> result.getResolvableErrors().stream())
-                .map(MessageSourceResolvable::getDefaultMessage)
-                .findFirst()
-                .orElse("Ошибка валидации параметров запроса.");
+    public ResponseEntity<ValidationErrorResponse> handleMethodValidationException(HandlerMethodValidationException methodValidationException){
 
-        ErrorResponse errorResponse = new ErrorResponse(
+        Map<String, String> errorMap = new LinkedHashMap<>();
+        for(ParameterValidationResult result : methodValidationException.getParameterValidationResults()){
+            String parameterName = result.getMethodParameter().getParameterName();
+
+            if (parameterName == null) {
+                parameterName = "parameter";
+            }
+
+            for (MessageSourceResolvable error : result.getResolvableErrors()) {
+                errorMap.putIfAbsent(
+                        parameterName,
+                        error.getDefaultMessage()
+                );
+            }
+
+        }
+
+        ValidationErrorResponse errorResponse = new ValidationErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.name(),
-                message
+                "Ошибка валидации параметров запроса.",
+                errorMap
         );
 
         return ResponseEntity
@@ -140,5 +162,6 @@ public class GlobalExceptionHandler {
                 .body(errorResponse);
 
     }
+
 
 }

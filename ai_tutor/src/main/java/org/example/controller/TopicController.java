@@ -3,6 +3,7 @@ package org.example.controller;
 
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import org.example.dto.topic.CreateTopicRequest;
 import org.example.dto.topic.UpdateTopicRequest;
@@ -57,6 +58,14 @@ public class TopicController {
     @PutMapping("/{id}")
     public ResponseEntity<Topic> updateTopicById(@PathVariable @Positive(message = "ID темы должен быть положительным числом.") Long id, @Valid @RequestBody UpdateTopicRequest updateTopicRequest){
         Topic topic = topicService.updateTopic(id, updateTopicRequest.getName());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(topic);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Topic> findForName(@NotBlank(message = "Имя не должно быть пустое.") @RequestParam String topicName){
+        Topic topic = topicService.getByTopicName(topicName);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(topic);
