@@ -3,18 +3,19 @@ package org.example.controller;
 
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 import org.example.dto.topic.CreateTopicRequest;
 import org.example.dto.topic.UpdateTopicRequest;
 import org.example.model.Topic;
 import org.example.service.TopicService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/api/topics")
 public class TopicController {
@@ -63,8 +64,9 @@ public class TopicController {
                 .body(topic);
     }
 
+
     @GetMapping("/search")
-    public ResponseEntity<Topic> findForName(@NotBlank(message = "Имя не должно быть пустое.") @RequestParam String topicName){
+    public ResponseEntity<Topic> findByName(@NotBlank(message = "Имя не должно быть пустое.") @Size(min = 2, max = 50) @RequestParam String topicName){
         Topic topic = topicService.getByTopicName(topicName);
         return ResponseEntity
                 .status(HttpStatus.OK)

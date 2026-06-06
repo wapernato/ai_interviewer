@@ -1,17 +1,19 @@
 package org.example.controller;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 import org.example.dto.user.CreateUserRequest;
 import org.example.dto.user.UpdateUserRequest;
 import org.example.model.User;
 import org.example.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -60,4 +62,11 @@ public class UserController {
                 .body(user);
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<User> findByUsername(@NotBlank(message = "Имя пользователя не должно быть пустым.") @Size(min = 2, max = 50) @RequestParam String username){
+        User user = userService.findByName(username);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(user);
+    }
 }

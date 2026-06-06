@@ -121,6 +121,29 @@ public class ImplUserService implements UserService {
         userDAO.deleteById(id);
     }
 
+    @Override
+    public User findByName(String userName){
+        User user = userDAO.findByName(userName);
+
+        if(userName == null){
+            throw new BadRequestException("Имя пользователя не должно быть null.");
+        }
+
+        String username = userName.trim();
+
+        if(username.isBlank()){
+            throw new BadRequestException("Имя пользователя не должно быть пустым.");
+        }
+
+        if(username.contains(" ")){
+            throw new BadRequestException("Имя не должно содержать пробелы.");
+        }
+        if(username.length() < 2 || username.length() > 50){
+            throw new BadRequestException("Длина имени должна быть от 2 до 50.");
+        }
+
+        return user;
+    }
 
 
 
