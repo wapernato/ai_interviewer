@@ -23,4 +23,6 @@ public interface AiProfileDAO {
     void deactivateAll();
 
     AiProfile activateById(Long id);
+
+    List<AiProfile> findAllActiveProfiles();
 }

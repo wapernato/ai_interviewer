@@ -353,6 +353,44 @@ public class ImplAiProfileDAO implements AiProfileDAO {
     }
 
     @Override
+    public List<AiProfile> findAllActiveProfiles(){
+        String sql = """
+                select
+                id,
+                mode,
+                description_mode,
+                instruction_mode,
+                model_name,
+                language,
+                answer_style,
+                difficulty,
+                feedback_mode,
+                hint_mode,
+                active,
+                temperature,
+                max_tokens
+            from ai_profiles
+            where active = true
+            order by id
+            """;
+        List<AiProfile> aiProfileList = new ArrayList<>();
+        try(Connection connection = dbConnection.getConnectionDB();
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        ) {
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()){
+                aiProfileList.add(mapResultSetToAiProfile(resultSet));
+            }
+
+            return aiProfileList;
+        }
+        catch (SQLException e){
+            throw new RuntimeException("Ошибка при поиска всех активных AI-профилей.");
+        }
+    }
+
+    @Override
     public void deactivateAll() {
         String sql = """
                 update ai_profiles
