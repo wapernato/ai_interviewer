@@ -10,10 +10,12 @@ import org.example.model.AiProfile;
 import org.example.service.AiProfileService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/api/ai-profiles")
 public class AiProfileController {
@@ -116,12 +118,12 @@ public class AiProfileController {
                 .body(aiProfile);
     }
 
-    @GetMapping("/active")
+    @GetMapping("/filter")
     public ResponseEntity<List<AiProfile>> findByActive(@RequestParam boolean active){
-        List<AiProfile> aiProfile = aiProfileService.getActiveProfile();
+        List<AiProfile> aiProfiles = aiProfileService.findAllProfiles(active);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(aiProfile);
+                .body(aiProfiles);
     }
 
     @GetMapping("/language")
@@ -131,4 +133,6 @@ public class AiProfileController {
                 .status(HttpStatus.OK)
                 .body(aiProfile);
     }
+
+
 }

@@ -21,4 +21,6 @@ public interface AiProfileService {
     AiProfile getActiveProfile();
 
     AiProfile activateProfile(Long id);
+
+    List<AiProfile> findAllProfiles(boolean active);
 }

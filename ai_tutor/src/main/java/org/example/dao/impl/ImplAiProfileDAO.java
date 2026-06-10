@@ -353,7 +353,7 @@ public class ImplAiProfileDAO implements AiProfileDAO {
     }
 
     @Override
-    public List<AiProfile> findAllActiveProfiles(){
+    public List<AiProfile> findAllProfiles(boolean active){
         String sql = """
                 select
                 id,
@@ -370,13 +370,16 @@ public class ImplAiProfileDAO implements AiProfileDAO {
                 temperature,
                 max_tokens
             from ai_profiles
-            where active = true
+            where active = ?
             order by id
             """;
         List<AiProfile> aiProfileList = new ArrayList<>();
         try(Connection connection = dbConnection.getConnectionDB();
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
         ) {
+
+            preparedStatement.setBoolean(1, active);
+
             ResultSet resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()){

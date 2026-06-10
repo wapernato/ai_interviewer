@@ -266,4 +266,9 @@ public class ImplAiProfileService implements AiProfileService {
             throw new BadRequestException("Max tokens пока не должен быть больше 4000.");
         }
     }
+
+    @Override
+    public List<AiProfile> findAllProfiles(boolean active){
+        return aiProfileDAO.findAllProfiles(active);
+    }
 }

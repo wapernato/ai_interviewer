@@ -24,5 +24,5 @@ public interface AiProfileDAO {
 
     AiProfile activateById(Long id);
 
-    List<AiProfile> findAllActiveProfiles();
+    List<AiProfile> findAllProfiles(boolean active);
 }
