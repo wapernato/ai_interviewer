@@ -1,12 +1,29 @@
 package org.example.model;
 
-public class Question {
+import jakarta.persistence.*;
 
+@Entity
+@Table(name = "questions")
+public class Question {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long userId;
-    private Long topicId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "topic_id")
+    private Topic topic;
+
+    @Column(name = "text_question", nullable = false)
     private String textQuestion;
+
+    @Column(name = "source", nullable = false)
     private String source;
+
+    @Column(name = "language", nullable = false)
     private String language;
 
     public Question() {};
@@ -31,20 +48,20 @@ public class Question {
         this.source = source;
     }
 
-    public void setTopicId(Long topicId) {
-        this.topicId = topicId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
-    public Long getTopicId() {
-        return topicId;
+    public Topic getTopic() {
+        return topic;
     }
 
-    public Long getUserId() {
-        return userId;
+    public void setTopic(Topic topic) {
+        this.topic = topic;
     }
 
     public String getLanguage() {
@@ -63,8 +80,6 @@ public class Question {
     public String toString() {
         return "Question{" +
                 "id=" + id +
-                ", userId=" + userId +
-                ", topicId=" + topicId +
                 ", textQuestion='" + textQuestion + '\'' +
                 ", source='" + source + '\'' +
                 ", language='" + language + '\'' +

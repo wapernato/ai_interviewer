@@ -1,66 +1,65 @@
 package org.example.service.impl;
 
-import org.example.dao.TopicDAO;
+import org.springframework.transaction.annotation.Transactional;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
 import org.example.exception.TopicAlreadyExistsException;
 import org.example.model.Topic;
+import org.example.repository.TopicRepository;
 import org.example.service.TopicService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ImplTopicService implements TopicService {
 
-    private final TopicDAO topicDAO;
+    private final TopicRepository topicRepository;
 
-    public ImplTopicService(TopicDAO topicDAO) { this.topicDAO = topicDAO; }
+    public ImplTopicService(TopicRepository topicRepository) { this.topicRepository = topicRepository; }
 
+    @Transactional
     @Override
-    public Topic addTopic(String topicName){
+    public Topic addTopic(String newTopicName){
 
-        if(topicName == null || topicName.isBlank()){
-            throw new BadRequestException("Название темы не должно быть пустым.");
+        if(newTopicName == null || newTopicName.isBlank()){
+            throw new BadRequestException("Название новой темы не может быть пустой.");
         }
 
-        topicName = topicName.trim();
+        String topicName = newTopicName.trim();
 
         if(topicName.length() < 2 || topicName.length() > 100){
-            throw new BadRequestException("Длина названия темы должна быть от 2 до 100 символов.");
+            throw new BadRequestException("Название новой темы должно быть от 2 до 100 символов.");
         }
 
-        Topic topic = topicDAO.findByTopicName(topicName);
-
-        if(topic != null){
+        if (topicRepository.existsByName(topicName)) {
             throw new TopicAlreadyExistsException("Тема с названием '" + topicName + "' уже существует.");
         }
 
         Topic newTopic = new Topic(topicName);
-        return topicDAO.save(newTopic);
-
+        return topicRepository.save(newTopic);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Topic getByTopicId(Long id) {
         if(id == null || id <= 0){
             throw new BadRequestException("id должен быть больше 0.");
         }
 
-        Topic fromData = topicDAO.findByTopicId(id);
 
-        if(fromData == null){
-            throw new NotFoundException("Тема с id = " + id + " не найдена.");
-        }
-
-        return fromData;
+        return topicRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Тема с id = " + id + " не найдена."));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<Topic> getAllTopics(){
-        return topicDAO.findAll();
+        return topicRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Topic getByTopicName(String topicName){
         if (topicName == null) {
@@ -77,15 +76,13 @@ public class ImplTopicService implements TopicService {
             throw new BadRequestException("Длина названия темы должна быть от 2 до 100 символов.");
         }
 
-        Topic topic = topicDAO.findByTopicName(topicName);
 
-        if (topic == null) {
-            throw new NotFoundException("Тема с названием '" + topicName + "' не найдена.");
-        }
-
-        return topic;
+        String finalTopicName = topicName;
+        return topicRepository.findByName(topicName)
+                .orElseThrow(() -> new NotFoundException("Тема с именем - " + finalTopicName + " - не найдена."));
     }
 
+    @Transactional
     @Override
     public Topic updateTopic(Long id, String newTopicName) {
         if (id == null || id <= 0) {
@@ -98,7 +95,7 @@ public class ImplTopicService implements TopicService {
 
         newTopicName = newTopicName.trim();
 
-        if (newTopicName.isEmpty()) {
+        if (newTopicName.isBlank()) {
             throw new BadRequestException("Название темы не должно быть пустым.");
         }
 
@@ -106,31 +103,30 @@ public class ImplTopicService implements TopicService {
             throw new BadRequestException("Длина названия темы должна быть от 2 до 100 символов.");
         }
 
-        Topic topic = topicDAO.findByTopicId(id);
-        if (topic == null) {
-            throw new NotFoundException("Тема с id = " + id + " не найдена.");
-        }
+        Topic topic = topicRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Тема с id = " + id + " не найдена."));
 
-        Topic existingTopic = topicDAO.findByTopicName(newTopicName);
-        if (existingTopic != null && !existingTopic.getId().equals(id)) {
-            throw new TopicAlreadyExistsException("Тема с названием '" + newTopicName + "' уже существует.");
+        Optional<Topic> existingTopic = topicRepository.findByName(newTopicName);
+
+        if (existingTopic.isPresent() && !existingTopic.get().getId().equals(id)) {
+            throw new TopicAlreadyExistsException("Тема с таким названием уже существует.");
         }
 
         topic.setName(newTopicName);
-        return topicDAO.update(topic);
+
+        return topicRepository.save(topic);
     }
 
+    @Transactional
     @Override
     public void deleteByTopicId(Long id) {
         if (id == null || id <= 0) {
             throw new BadRequestException("Id темы должен быть больше 0.");
         }
 
-        Topic topic = topicDAO.findByTopicId(id);
-        if (topic == null) {
-            throw new NotFoundException("Тема с id = " + id + " не найдена.");
-        }
+        topicRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Тема с id = " + id + " не найдена."));
 
-        topicDAO.deleteById(id);
+        topicRepository.deleteById(id);
     }
 }

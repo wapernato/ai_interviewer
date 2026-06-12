@@ -1,8 +1,17 @@
 package org.example.model;
 
+import jakarta.persistence.*;
+
+
+@Entity
+@Table(name = "topics")
 public class Topic {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "name", nullable = false, unique = true, length = 100)
     private String name;
 
     public Topic(){}

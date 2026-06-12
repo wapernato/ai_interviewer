@@ -1,23 +1,37 @@
 package org.example.service.impl;
 
-import org.example.dao.QuestionDAO;
+import org.springframework.transaction.annotation.Transactional;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
 import org.example.model.Question;
+import org.example.model.Topic;
+import org.example.model.User;
+import org.example.repository.QuestionRepository;
+import org.example.repository.TopicRepository;
+import org.example.repository.UserRepository;
 import org.example.service.QuestionService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ImplQuestionService implements QuestionService {
 
-    private final QuestionDAO questionDAO;
+    private final QuestionRepository questionRepository;
+    private final TopicRepository topicRepository;
+    private final UserRepository userRepository;
 
-    public ImplQuestionService(QuestionDAO questionDAO) {
-        this.questionDAO = questionDAO;
+    public ImplQuestionService(QuestionRepository questionRepository
+                               ,TopicRepository topicRepository
+                               ,UserRepository userRepository
+    ) {
+        this.questionRepository = questionRepository;
+        this.topicRepository = topicRepository;
+        this.userRepository = userRepository;
     }
 
+    @Transactional
     @Override
     public Question addQuestion(Long userId, Long topicId, String textQuestion) {
         if (userId == null || userId <= 0) {
@@ -38,42 +52,56 @@ public class ImplQuestionService implements QuestionService {
             throw new BadRequestException("Длина вопроса должна быть от 3 до 1000 символов.");
         }
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден."));
+
+        Topic topic = topicRepository.findById(topicId)
+                .orElseThrow(()-> new BadRequestException("Тема с таким id=" + topicId + " не существует."));
+
+
+
         Question question = new Question();
 
-        question.setUserId(userId);
-        question.setTopicId(topicId);
+        question.setTopic(topic);
+        question.setUser(user);
         question.setTextQuestion(textQuestion);
-        question.setSource("manual"); // понимать откуда пришел вопрос автоматически
-        question.setLanguage("ru"); // добавить определения языка по тексу
+        question.setSource("manual");
+        question.setLanguage("ru");
 
-        return questionDAO.save(question);
+        return questionRepository.save(question);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Question getById(Long id) {
-        Question question = questionDAO.findById(id);
-
-        if (question == null) {
-            throw new NotFoundException("Вопрос с id = " + id + " не найден.");
+        if (id == null || id <= 0) {
+            throw new BadRequestException("Id должен быть положительным числом.");
         }
+        Optional<Question> question = questionRepository.findById(id);
 
-        return question;
+        return questionRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Вопрос с таким id = " + id + " не найден."));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<Question> getByTopicId(Long topicId) {
         if(topicId == null){
             throw new BadRequestException("Id темы не должен быть пустым.");
         }
-        return questionDAO.findByTopicId(topicId);
+        //реализовать в репозитории поиск по id пользователя и id темы
+        return topicRepository.findByTopic_Id(topicId)
+                .orElseThrow(() -> new BadRequestException("Тема с таким id = " + topicId + " не найден."));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<Question> getByUserId(Long userId) {
         if(userId == null){
             throw new BadRequestException("Id пользователя не должен быть пустым.");
         }
-        return questionDAO.findByUserId(userId);
+        return questionRepository.findById(userId)
+                .orElseThrow(() -> BadRequestException());
     }
 
     @Override
