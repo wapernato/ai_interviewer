@@ -1,28 +1,32 @@
 package org.example.service.impl;
 
-import org.example.dao.UserDAO;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
 import org.example.exception.UserAlreadyExistsException;
 import org.example.model.User;
+import org.example.repository.UserRepository;
 import org.example.service.UserService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ImplUserService implements UserService {
 
-    private final UserDAO userDAO;
+    private final UserRepository userRepository;
 
-    public ImplUserService(UserDAO userDAO) {
-        this.userDAO = userDAO;
+    public ImplUserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
+    @Transactional
+    @Override
     public User register(String userName){
 
-        if(userName == null){
-            throw new BadRequestException("Имя пользователя не должно быть null.");
+        if(userName == null || userName.isBlank()){
+            throw new BadRequestException("Имя пользователя не должно быть пустым.");
         }
 
         String username = userName.trim();
@@ -38,34 +42,33 @@ public class ImplUserService implements UserService {
             throw new BadRequestException("Длина имени должна быть от 2 до 50.");
         }
 
-        User userFromData = userDAO.findByName(username);
+        Optional<User> userFromData = userRepository.findByUsername(username);
 
-        if(userFromData != null){
+        if(userFromData.isPresent()){
             throw new UserAlreadyExistsException("Пользователь с именем '" + username + "' уже существует.");
         }
 
         User newUser = new User(username);
-        return userDAO.save(newUser);
+        return userRepository.save(newUser);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public User getById(Long id){
         if(id == null || id <= 0){
             throw new BadRequestException("id должен быть больше 0.");
         }
-        User userFromData = userDAO.findById(id);
-
-        if(userFromData == null){
-            throw new NotFoundException("Пользователь с таким id не найден.");
-        }
-        return userFromData;
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден."));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<User> getAllUsers(){
-        return userDAO.findAll();
+        return userRepository.findAll();
     }
 
+    @Transactional
     @Override
     public User updateUsername(Long id, String newusername){
 
@@ -89,41 +92,37 @@ public class ImplUserService implements UserService {
             throw new BadRequestException("Длина имени должна быть от 2 до 50.");
         }
 
-        User user = userDAO.findById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден."));
 
-        if(user == null){
-            throw new NotFoundException("Такого id не существует.");
-        }
 
-        User existingUser = userDAO.findByName(newUsername);
+        Optional<User> existingUser = userRepository.findByUsername(newUsername);
 
-        if(existingUser != null && !existingUser.getId().equals(id)){
+        if(existingUser.isPresent() && !existingUser.get().getId().equals(id)){
             throw new UserAlreadyExistsException("Пользователь с таким именем уже существует.");
         }
 
         user.setUsername(newUsername);
-        userDAO.update(user);
-        return user;
+        return userRepository.save(user);
     }
 
+    @Transactional
     @Override
     public void deleteById(Long id){
         if(id == null || id <= 0){
             throw new BadRequestException("Такой id некорректный.");
         }
 
-        User user = userDAO.findById(id);
+        userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден."));
 
-        if(user == null){
-            throw new NotFoundException("Пользователь с таким id не найден");
-        }
 
-        userDAO.deleteById(id);
+        userRepository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public User findByName(String userName){
-        User user = userDAO.findByName(userName);
 
         if(userName == null){
             throw new BadRequestException("Имя пользователя не должно быть null.");
@@ -142,9 +141,7 @@ public class ImplUserService implements UserService {
             throw new BadRequestException("Длина имени должна быть от 2 до 50.");
         }
 
-        return user;
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("Пользователь с именем (" + username + ") не найден."));
     }
-
-
-
 }

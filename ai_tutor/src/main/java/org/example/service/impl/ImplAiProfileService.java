@@ -1,154 +1,33 @@
 package org.example.service.impl;
 
-import org.example.dao.AiProfileDAO;
 import org.example.exception.AiProfileAlreadyExistsException;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
 import org.example.model.AiProfile;
+import org.example.repository.AiProfileRepository;
 import org.example.service.AiProfileService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ImplAiProfileService implements AiProfileService {
 
-    private final AiProfileDAO aiProfileDAO;
+    private final AiProfileRepository aiProfileRepository;
 
-    public ImplAiProfileService(AiProfileDAO aiProfileDAO) {
-        this.aiProfileDAO = aiProfileDAO;
+    public ImplAiProfileService(AiProfileRepository aiProfileRepository) {
+        this.aiProfileRepository = aiProfileRepository;
     }
 
-    @Override
-    public AiProfile addProfile(AiProfile aiProfile) {
-        if (aiProfile == null) {
-            throw new BadRequestException("AI-профиль не должен быть null.");
+
+    private void deactivateAll() {
+        List<AiProfile> profiles = aiProfileRepository.findAll();
+
+        for (AiProfile profile : profiles) {
+            profile.setActive(false);
         }
-
-        normalizeProfile(aiProfile);
-        validateProfile(aiProfile);
-
-        AiProfile existingProfile = aiProfileDAO.findByMode(aiProfile.getMode());
-
-        if (existingProfile != null) {
-            throw new AiProfileAlreadyExistsException("AI-профиль с таким mode уже существует.");
-        }
-
-        if (Boolean.TRUE.equals(aiProfile.getActive())) {
-            aiProfileDAO.deactivateAll();
-        }
-
-        return aiProfileDAO.save(aiProfile);
-    }
-
-    @Override
-    public AiProfile getById(Long id) {
-        validateId(id);
-
-        AiProfile aiProfile = aiProfileDAO.findById(id);
-
-        if (aiProfile == null) {
-            throw new NotFoundException("AI-профиль с таким id не найден.");
-        }
-
-        return aiProfile;
-    }
-
-    @Override
-    public AiProfile getByMode(String mode) {
-        if (mode == null || mode.isBlank()) {
-            throw new BadRequestException("Mode AI-профиля не должен быть пустым.");
-        }
-
-        mode = mode.trim();
-
-        AiProfile aiProfile = aiProfileDAO.findByMode(mode);
-
-        if (aiProfile == null) {
-            throw new NotFoundException("AI-профиль с таким mode не найден.");
-        }
-
-        return aiProfile;
-    }
-
-    @Override
-    public List<AiProfile> getAllProfiles() {
-        return aiProfileDAO.findAll();
-    }
-
-    @Override
-    public AiProfile updateProfile(AiProfile aiProfile) {
-        if (aiProfile == null) {
-            throw new BadRequestException("AI-профиль не должен быть null.");
-        }
-
-        validateId(aiProfile.getId());
-
-        AiProfile oldProfile = aiProfileDAO.findById(aiProfile.getId());
-
-        if (oldProfile == null) {
-            throw new NotFoundException("AI-профиль с таким id не найден.");
-        }
-
-        normalizeProfile(aiProfile);
-        validateProfile(aiProfile);
-
-        AiProfile profileWithSameMode = aiProfileDAO.findByMode(aiProfile.getMode());
-
-        if (profileWithSameMode != null && !profileWithSameMode.getId().equals(aiProfile.getId())) {
-            throw new AiProfileAlreadyExistsException("AI-профиль с таким mode уже существует.");
-        }
-
-        if (Boolean.TRUE.equals(aiProfile.getActive())) {
-            aiProfileDAO.deactivateAll();
-        }
-
-        return aiProfileDAO.update(aiProfile);
-    }
-
-    @Override
-    public void deleteById(Long id) {
-        validateId(id);
-
-        AiProfile aiProfile = aiProfileDAO.findById(id);
-
-        if (aiProfile == null) {
-            throw new NotFoundException("AI-профиль с таким id не найден.");
-        }
-
-        aiProfileDAO.deleteById(id);
-    }
-
-    @Override
-    public AiProfile getActiveProfile() {
-        AiProfile activeProfile = aiProfileDAO.findActive();
-
-        if (activeProfile == null) {
-            throw new NotFoundException("Активный AI-профиль не найден.");
-        }
-
-        return activeProfile;
-    }
-
-    @Override
-    public AiProfile activateProfile(Long id) {
-        validateId(id);
-
-        AiProfile aiProfile = aiProfileDAO.findById(id);
-
-        if (aiProfile == null) {
-            throw new NotFoundException("AI-профиль с таким id не найден.");
-        }
-
-        aiProfileDAO.deactivateAll();
-
-        AiProfile activatedProfile = aiProfileDAO.activateById(id);
-
-        if (activatedProfile == null) {
-            throw new BadRequestException("Не удалось активировать AI-профиль.");
-        }
-
-        return activatedProfile;
     }
 
     private void validateId(Long id) {
@@ -267,8 +146,137 @@ public class ImplAiProfileService implements AiProfileService {
         }
     }
 
+    @Transactional
     @Override
-    public List<AiProfile> findAllProfiles(boolean active){
-        return aiProfileDAO.findAllProfiles(active);
+    public AiProfile addProfile(AiProfile aiProfile) {
+        if (aiProfile == null) {
+            throw new BadRequestException("AI-профиль не должен быть null.");
+        }
+
+        normalizeProfile(aiProfile);
+        validateProfile(aiProfile);
+
+        Optional<AiProfile> existingProfile = aiProfileRepository.findByMode(aiProfile.getMode());
+
+        if (existingProfile.isPresent()) {
+            throw new AiProfileAlreadyExistsException("AI-профиль с таким mode уже существует.");
+        }
+
+        if (Boolean.TRUE.equals(aiProfile.getActive())) {
+            deactivateAll();
+        }
+
+        return aiProfileRepository.save(aiProfile);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public AiProfile getById(Long id) {
+        validateId(id);
+
+        return aiProfileRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("AI-профиль по id=" + id + " не найден."));
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public AiProfile getByMode(String mode) {
+        if (mode == null || mode.isBlank()) {
+            throw new BadRequestException("Mode AI-профиля не должен быть пустым.");
+        }
+
+        mode = mode.trim();
+
+        String finalMode = mode;
+        return aiProfileRepository.findByMode(mode)
+                .orElseThrow(() -> new NotFoundException("Мод с названием (" + finalMode + ") не найден."));
+
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<AiProfile> getAllProfiles() {
+        return aiProfileRepository.findAll();
+    }
+
+    @Transactional
+    @Override
+    public AiProfile updateProfile(AiProfile aiProfile) {
+        if (aiProfile == null) {
+            throw new BadRequestException("AI-профиль не должен быть null.");
+        }
+
+        validateId(aiProfile.getId());
+
+        AiProfile oldProfile = aiProfileRepository.findById(aiProfile.getId())
+                .orElseThrow(() -> new NotFoundException("AI-профиль с id=" + aiProfile.getId() +" не найден."));
+
+        normalizeProfile(aiProfile);
+        validateProfile(aiProfile);
+
+        Optional<AiProfile> profileWithSameMode = aiProfileRepository.findByMode(aiProfile.getMode());
+
+
+        if (profileWithSameMode.isPresent() && !profileWithSameMode.get().getId().equals(aiProfile.getId())) {
+            throw new AiProfileAlreadyExistsException("AI-профиль с таким mode уже существует.");
+        }
+
+        if (Boolean.TRUE.equals(aiProfile.getActive())) {
+            deactivateAll();
+        }
+
+        oldProfile.setMode(aiProfile.getMode());
+        oldProfile.setDescriptionMode(aiProfile.getDescriptionMode());
+        oldProfile.setInstructionMode(aiProfile.getInstructionMode());
+        oldProfile.setModelName(aiProfile.getModelName());
+        oldProfile.setLanguage(aiProfile.getLanguage());
+        oldProfile.setAnswerStyle(aiProfile.getAnswerStyle());
+        oldProfile.setDifficulty(aiProfile.getDifficulty());
+        oldProfile.setFeedbackMode(aiProfile.getFeedbackMode());
+        oldProfile.setHintMode(aiProfile.getHintMode());
+        oldProfile.setActive(aiProfile.getActive());
+        oldProfile.setTemperature(aiProfile.getTemperature());
+        oldProfile.setMaxTokens(aiProfile.getMaxTokens());
+
+        return aiProfileRepository.save(oldProfile);
+    }
+
+    @Transactional
+    @Override
+    public void deleteById(Long id) {
+        validateId(id);
+
+        aiProfileRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("AI-профиль с таким id не найден."));
+
+        aiProfileRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public AiProfile getActiveProfile() {
+        return aiProfileRepository.findFirstByActiveTrue()
+                .orElseThrow(() -> new NotFoundException("Активный AI-профиль не найден."));
+    }
+
+    @Transactional
+    @Override
+    public AiProfile activateProfile(Long id) {
+        validateId(id);
+
+        AiProfile aiProfile = aiProfileRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("AI-профиль по id = " + id + " не найден."));
+
+        deactivateAll();
+
+        aiProfile.setActive(true);
+
+        return aiProfileRepository.save(aiProfile);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<AiProfile> findAllProfiles(boolean active) {
+        return aiProfileRepository.findByActive(active);
     }
 }

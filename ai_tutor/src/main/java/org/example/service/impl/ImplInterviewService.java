@@ -78,7 +78,7 @@ public class ImplInterviewService implements InterviewService {
 
         Question question = questionService.getById(questionId);
 
-        if(!question.getUserId().equals(userId)){
+        if(!question.getUser().getId().equals(userId)){
             throw new BadRequestException("Нельзя ответить на вопрос другого пользователя.");
         }
 
