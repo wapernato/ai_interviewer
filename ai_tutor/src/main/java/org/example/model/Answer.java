@@ -1,33 +1,37 @@
 package org.example.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "answers")
 public class Answer {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long questionId;
-    private Long aiProfileId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "question_id", nullable = false)
+    private Question question;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ai_profile_id", nullable = false)
+    private AiProfile aiProfile;
+    @Column(name = "answer_text", nullable = false)
     private String answerText;
+    @Column(name = "model_name")
     private String modelName;
 
     public Answer() {}
-
-    public Answer(Long id, Long questionId, Long aiProfileId, String answerText, String modelName) {
-        this.id = id;
-        this.questionId = questionId;
-        this.aiProfileId = aiProfileId;
-        this.answerText = answerText;
-        this.modelName = modelName;
-    }
 
     public Long getId() {
         return id;
     }
 
-    public Long getQuestionId() {
-        return questionId;
+    public Question getQuestion() {
+        return question;
     }
 
-    public Long getAiProfileId() {
-        return aiProfileId;
+    public AiProfile getAiProfile() {
+        return aiProfile;
     }
 
     public String getAnswerText() {
@@ -42,12 +46,12 @@ public class Answer {
         this.id = id;
     }
 
-    public void setQuestionId(Long questionId) {
-        this.questionId = questionId;
+    public void setQuestion(Question question) {
+        this.question = question;
     }
 
-    public void setAiProfileId(Long aiProfileId) {
-        this.aiProfileId = aiProfileId;
+    public void setAiProfile(AiProfile aiProfile) {
+        this.aiProfile = aiProfile;
     }
 
     public void setAnswerText(String answerText) {
@@ -62,8 +66,6 @@ public class Answer {
     public String toString() {
         return "Answer{" +
                 "id=" + id +
-                ", questionId=" + questionId +
-                ", aiProfileId=" + aiProfileId +
                 ", answerText='" + answerText + '\'' +
                 ", modelName='" + modelName + '\'' +
                 '}';
