@@ -13,6 +13,20 @@ public class UserHistoryItem {
 
     public UserHistoryItem() {}
 
+    public UserHistoryItem(Long questionId,
+                           String username,
+                           String topicName,
+                           String textQuestion,
+                           String answerText,
+                           String modelName) {
+        this.questionId = questionId;
+        this.username = username;
+        this.topicName = topicName;
+        this.textQuestion = textQuestion;
+        this.answerText = answerText;
+        this.modelName = modelName;
+    }
+
     public Long getQuestionId() {
         return questionId;
     }

@@ -279,4 +279,10 @@ public class ImplAiProfileService implements AiProfileService {
     public List<AiProfile> findAllProfiles(boolean active) {
         return aiProfileRepository.findByActive(active);
     }
+
+    @Transactional(readOnly = true)
+    @Override
+    public AiProfile getByLanguage(String language){
+        return aiProfileRepository.findByLanguage(language);
+    }
 }

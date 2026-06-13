@@ -1,24 +1,42 @@
 package org.example.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "ai_profiles")
 public class AiProfile {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "mode", nullable = false, unique = true, length = 100)
     private String mode;
+    @Column(name = "description_mode")
     private String descriptionMode;
+    @Column(name = "instruction_mode")
     private String instructionMode;
 
+    @Column(name = "model_name")
     private String modelName;
+    @Column(name = "language")
     private String language;
+    @Column(name = "answer_style")
     private String answerStyle;
 
+    @Column(name = "difficulty")
     private String difficulty;
+    @Column(name = "feedback_mode")
     private String feedbackMode;
 
+    @Column(name = "hint_mode")
     private Boolean hintMode;
+    @Column(name = "active")
     private Boolean active;
 
+    @Column(name = "temperature")
     private Double temperature;
+    @Column(name = "max_tokens")
     private Integer maxTokens;
 
     public AiProfile() {

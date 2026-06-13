@@ -128,7 +128,7 @@ public class AiProfileController {
 
     @GetMapping("/language")
     public ResponseEntity<AiProfile> findByLanguage(@NotBlank(message = "Мод должен быть указан.") @RequestParam String language){
-        AiProfile aiProfile = aiProfileService.getByMode(language);
+        AiProfile aiProfile = aiProfileService.getByLanguage(language);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(aiProfile);

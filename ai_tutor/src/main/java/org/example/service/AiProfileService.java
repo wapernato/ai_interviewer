@@ -23,4 +23,6 @@ public interface AiProfileService {
     AiProfile activateProfile(Long id);
 
     List<AiProfile> findAllProfiles(boolean active);
+
+    AiProfile getByLanguage(String language);
 }
