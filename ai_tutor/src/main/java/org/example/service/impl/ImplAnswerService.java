@@ -1,6 +1,5 @@
 package org.example.service.impl;
 
-import org.example.exception.AnswerAlreadyExistsException;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
 import org.example.model.AiProfile;
@@ -120,6 +119,10 @@ public class ImplAnswerService implements AnswerService {
             throw new BadRequestException("Id вопроса не может быть null.");
         }
 
+        if(!questionRepository.existsById(questionId)){
+            throw new NotFoundException("Вопрос с id=" + questionId + " не найден.");
+        }
+
         return answerRepository.findByQuestion_Id(questionId);
     }
 
@@ -128,6 +131,10 @@ public class ImplAnswerService implements AnswerService {
     public List<Answer> getByProfileId(Long profileId) {
         if (profileId == null || profileId <= 0) {
             throw new BadRequestException("Id AI-профиля не может быть null.");
+        }
+
+        if(!aiProfileRepository.existsById(profileId)){
+            throw new NotFoundException("AI-профиль с id=" + profileId + " не найден.");
         }
 
         return answerRepository.findByAiProfile_Id(profileId);
