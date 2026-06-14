@@ -25,7 +25,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        
+
         <!-- Spring Data JPA: Repository + JPA + Hibernate -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

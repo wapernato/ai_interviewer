@@ -5,10 +5,12 @@ import org.example.model.AiProfile;
 import org.example.model.Topic;
 import org.example.service.AiQuestionGenerator;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ImplAiQuestionService implements AiQuestionGenerator {
 
+    @Transactional
     @Override
     public String generatedQuestion(Topic topic, AiProfile aiProfile) {
         if (topic == null) {

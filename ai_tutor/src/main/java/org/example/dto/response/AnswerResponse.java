@@ -40,12 +40,12 @@ public class AnswerResponse {
         this.id = id;
     }
 
-    public void setQuestion(Long question) {
-        this.questionId = question;
+    public void setQuestionId(Long questionId) {
+        this.questionId = questionId;
     }
 
-    public void setAiProfile(Long aiProfile) {
-        this.aiProfileId = aiProfile;
+    public void setAiProfileId(Long aiProfileId) {
+        this.aiProfileId = aiProfileId;
     }
 
     public void setAnswerText(String answerText) {

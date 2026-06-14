@@ -13,7 +13,7 @@ public class Answer {
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ai_profile_id", nullable = false)
+    @JoinColumn(name = "ai_profile_id")
     private AiProfile aiProfile;
     @Column(name = "answer_text", nullable = false)
     private String answerText;

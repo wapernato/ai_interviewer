@@ -36,20 +36,20 @@ public class QuestionResponse {
         this.source = source;
     }
 
-    public Long getUser() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUser(Long user) {
-        this.userId = user;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public Long getTopicId() {
         return topicId;
     }
 
-    public void setTopicId(Long topic) {
-        this.topicId = topic;
+    public void setTopicId(Long topicId) {
+        this.topicId = topicId;
     }
 
     public String getLanguage() {
