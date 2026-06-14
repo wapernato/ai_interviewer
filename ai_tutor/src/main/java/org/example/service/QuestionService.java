@@ -1,18 +1,19 @@
 package org.example.service;
 
+import org.example.dto.response.QuestionResponse;
 import org.example.model.Question;
 
 import java.util.List;
 
 public interface QuestionService {
 
-    Question addQuestion(Long userId, Long topicId, String textQuestion);
-    List<Question> getAllQuestions();
+    QuestionResponse addQuestion(Long userId, Long topicId, String textQuestion);
+    List<QuestionResponse> getAllQuestions();
 
-    Question getById(Long id);
-    List<Question> getByTopicId(Long topicId);
-    List<Question> getByUserId(Long userId);
+    QuestionResponse getById(Long id);
+    List<QuestionResponse> getByTopicId(Long topicId);
+    List<QuestionResponse> getByUserId(Long userId);
 
-    Question updateQuestion(Long id, String newTextQuestion, String source, String language);
+    QuestionResponse updateQuestion(Long id, String newTextQuestion, String source, String language);
     void deleteById(Long id);
 }

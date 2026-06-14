@@ -1,5 +1,7 @@
 package org.example.service.impl;
 
+import org.example.dto.response.QuestionResponse;
+import org.example.mapper.QuestionMapper;
 import org.springframework.transaction.annotation.Transactional;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
@@ -20,36 +22,21 @@ public class ImplQuestionService implements QuestionService {
     private final QuestionRepository questionRepository;
     private final TopicRepository topicRepository;
     private final UserRepository userRepository;
+    private final QuestionMapper questionMapper;
 
-    public ImplQuestionService(QuestionRepository questionRepository
-                               ,TopicRepository topicRepository
-                               ,UserRepository userRepository
-    ) {
+    public ImplQuestionService(QuestionRepository questionRepository,
+                               TopicRepository topicRepository,
+                               UserRepository userRepository,
+                               QuestionMapper questionMapper) {
         this.questionRepository = questionRepository;
         this.topicRepository = topicRepository;
         this.userRepository = userRepository;
+        this.questionMapper = questionMapper;
     }
 
     @Transactional
     @Override
-    public Question addQuestion(Long userId, Long topicId, String textQuestion) {
-        if (userId == null || userId <= 0) {
-            throw new BadRequestException("Id пользователя должен быть положительным числом.");
-        }
-
-        if (topicId == null || topicId <= 0) {
-            throw new BadRequestException("Id темы должен быть положительным числом.");
-        }
-
-        if(textQuestion == null || textQuestion.isBlank()){
-            throw new BadRequestException("Текст вопроса не должен быть пустым.");
-        }
-
-        textQuestion = textQuestion.trim();
-
-        if (textQuestion.length() < 3 || textQuestion.length() > 1000) {
-            throw new BadRequestException("Длина вопроса должна быть от 3 до 1000 символов.");
-        }
+    public QuestionResponse addQuestion(Long userId, Long topicId, String textQuestion) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден."));
@@ -57,85 +44,56 @@ public class ImplQuestionService implements QuestionService {
         Topic topic = topicRepository.findById(topicId)
                 .orElseThrow(()-> new NotFoundException("Тема с таким id=" + topicId + " не существует."));
 
-
-
         Question question = new Question();
 
         question.setTopic(topic);
         question.setUser(user);
-        question.setTextQuestion(textQuestion);
+        question.setTextQuestion(textQuestion.trim());
         question.setSource("manual");
         question.setLanguage("ru");
 
-        return questionRepository.save(question);
+
+        Question savedQuestion = questionRepository.save(question);
+        return questionMapper.toResponse(savedQuestion);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public Question getById(Long id) {
-        if (id == null || id <= 0) {
-            throw new BadRequestException("Id должен быть положительным числом.");
-        }
-        return questionRepository.findById(id)
+    public QuestionResponse getById(Long id) {
+        Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Вопрос с таким id = " + id + " не найден."));
+        return questionMapper.toResponse(question);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<Question> getByTopicId(Long topicId) {
-        if(topicId == null || topicId <= 0){
-            throw new BadRequestException("Id темы не должен быть пустым.");
-        }
+    public List<QuestionResponse> getByTopicId(Long topicId) {
+        topicRepository.findById(topicId)
+                .orElseThrow(() -> new NotFoundException("Тема с id=" + topicId + " не найдена."));
 
-        if(!topicRepository.existsById(topicId)){
-            throw new NotFoundException("Тема с id=" + topicId + " не найдена.");
-        }
-
-        return questionRepository.findByTopic_Id(topicId);
+        return questionMapper.toResponseList(questionRepository.findByTopic_Id(topicId));
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<Question> getByUserId(Long userId) {
-        if(userId == null || userId <= 0){
-            throw new BadRequestException("Id пользователя не должен быть пустым.");
-        }
+    public List<QuestionResponse> getByUserId(Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден."));
 
-        if(!userRepository.existsById(userId)){
-            throw new NotFoundException("Пользователь с id=" + userId + " не найдена.");
-        }
-
-        return questionRepository.findByUser_Id(userId);
+        return questionMapper.toResponseList(questionRepository.findByUser_Id(userId));
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<Question> getAllQuestions() {
-        return questionRepository.findAll();
+    public List<QuestionResponse> getAllQuestions() {
+        List<Question> questionList = questionRepository.findAll();
+        return questionMapper.toResponseList(questionList);
     }
 
     @Transactional
     @Override
-    public Question updateQuestion(Long id, String newTextQuestion, String source, String language) {
-        if (id == null || id <= 0) {
-            throw new BadRequestException("Id вопроса должен быть положительным числом.");
-        }
+    public QuestionResponse updateQuestion(Long id, String newTextQuestion, String source, String language) {
 
-        if (source == null || source.isBlank()) {
-            source = "manual";
-        } else {
-            source = source.trim();
-        }
-
-        if (language == null || language.isBlank()) {
-            language = "ru";
-        } else {
-            language = language.trim();
-        }
-
-        if (newTextQuestion == null || newTextQuestion.isBlank()) {
-            throw new BadRequestException("Новый текст вопроса не должен быть пустым.");
-        }
 
         newTextQuestion = newTextQuestion.trim();
 
@@ -153,21 +111,19 @@ public class ImplQuestionService implements QuestionService {
             throw new BadRequestException("Текст не должен совпадать со старым текстом.");
         }
 
-        // добавить потом проверку существует ли такой язык
+
         oldQuestion.setLanguage(language);
         oldQuestion.setTextQuestion(newTextQuestion);
         oldQuestion.setSource(source);
 
-        return questionRepository.save(oldQuestion);
+        Question question = questionRepository.save(oldQuestion);
+
+        return questionMapper.toResponse(question);
     }
 
     @Transactional
     @Override
     public void deleteById(Long id) {
-        if(id == null || id <= 0){
-            throw new BadRequestException("Id вопроса должен быть положительным числом.");
-        }
-
         questionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Указанный Id=" + id + " не найден в базе данных."));
 

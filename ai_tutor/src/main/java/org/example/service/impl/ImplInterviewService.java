@@ -3,58 +3,70 @@ package org.example.service.impl;
 import org.example.dto.interview.InterviewAnswerResult;
 import org.example.dto.interview.InterviewQuestionResult;
 import org.example.exception.BadRequestException;
+import org.example.exception.NotFoundException;
 import org.example.model.*;
+import org.example.repository.*;
 import org.example.service.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ImplInterviewService implements InterviewService {
 
-    private final UserService userService;
-    private final TopicService topicService;
-    private final QuestionService questionService;
-    private final AnswerService answerService;
-    private final AiProfileService aiProfileService;
     private final AiQuestionGenerator aiQuestionGenerator;
     private final AiAnswerEvaluator aiAnswerEvaluator;
+    private final QuestionRepository questionRepository;
+    private final UserRepository userRepository;
+    private final TopicRepository topicRepository;
+    private final AiProfileRepository aiProfileRepository;
+    private final AnswerRepository answerRepository;
 
-    public ImplInterviewService(UserService userService,
-                                TopicService topicService,
-                                QuestionService questionService,
-                                AnswerService answerService,
-                                AiProfileService aiProfileService,
+    public ImplInterviewService(
                                 AiQuestionGenerator aiQuestionGenerator,
-                                AiAnswerEvaluator aiAnswerEvaluator  ){
-        this.topicService = topicService;
-        this.userService = userService;
-        this.questionService = questionService;
-        this.answerService = answerService;
-        this.aiProfileService =  aiProfileService;
+                                AiAnswerEvaluator aiAnswerEvaluator,
+                                QuestionRepository questionRepository,
+                                UserRepository userRepository,
+                                TopicRepository topicRepository,
+                                AiProfileRepository aiProfileRepository,
+                                AnswerRepository answerRepository
+    ){
+
         this.aiQuestionGenerator = aiQuestionGenerator;
         this.aiAnswerEvaluator = aiAnswerEvaluator;
-    };
+        this.questionRepository = questionRepository;
+        this.userRepository = userRepository;
+        this.topicRepository = topicRepository;
+        this.aiProfileRepository = aiProfileRepository;
+        this.answerRepository = answerRepository;
+    }
 
-
-
+    @Transactional
     @Override
     public InterviewQuestionResult generateQuestion(Long userId, Long topicId){
 
-        User user = userService.getById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден."));
 
-        Topic topic = topicService.getByTopicId(topicId);
+        Topic topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new NotFoundException("Тема не найдена."));
 
-        AiProfile aiProfile = aiProfileService.getActiveProfile();
+        AiProfile aiProfile = aiProfileRepository.findByActive();
 
         String questionText = aiQuestionGenerator.generatedQuestion(topic, aiProfile);
 
-        Question question = questionService.addQuestion(
-                user.getId(),
-                topic.getId(),
-                questionText
-        );
+        if (questionText == null || questionText.isBlank()) {
+            throw new BadRequestException("AI не смог сгенерировать вопрос.");
+        }
 
+        Question newQuestion = new Question();
 
+        newQuestion.setUser(user);
+        newQuestion.setTopic(topic);
+        newQuestion.setTextQuestion(questionText);
+        newQuestion.setSource("ai");
+        newQuestion.setLanguage("ru");
 
+        Question question = questionRepository.save(newQuestion);
 
         InterviewQuestionResult result = new InterviewQuestionResult();
 
@@ -70,13 +82,16 @@ public class ImplInterviewService implements InterviewService {
         return result;
     }
 
-
+    @Transactional
     @Override
     public InterviewAnswerResult submitUserAnswer(Long userId, Long questionId, String userAnswerText){
 
-        User user = userService.getById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден."));
 
-        Question question = questionService.getById(questionId);
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new NotFoundException("Вопрос не найден."));
+
 
         if(!question.getUser().getId().equals(userId)){
             throw new BadRequestException("Нельзя ответить на вопрос другого пользователя.");
@@ -86,14 +101,14 @@ public class ImplInterviewService implements InterviewService {
             throw new BadRequestException("Ответ не может быть пустой.");
         }
 
-        AiProfile aiProfile = aiProfileService.getActiveProfile();
+        AiProfile aiProfile = aiProfileRepository.findByActive();
 
-        Answer answer = answerService.addAnswer(
-                question.getId(),
-                aiProfile.getId(),
-                userAnswerText.trim(),
-                "user-input"
-        );
+        Answer answer = new Answer();
+
+        answer.setAnswerText(userAnswerText);
+        answer.setModelName(aiProfile.getModelName());
+        answer.setQuestion(question);
+        answer.setAiProfile(aiProfile);
 
         String feedbackText = aiAnswerEvaluator.evaluateAnswer(
                 question,
@@ -101,12 +116,14 @@ public class ImplInterviewService implements InterviewService {
                 userAnswerText.trim()
         );
 
+        Answer savedAnswer = answerRepository.save(answer);
+
         InterviewAnswerResult result = new InterviewAnswerResult();
 
-        result.setAnswerId(answer.getId());
+        result.setAnswerId(savedAnswer.getId());
         result.setQuestionId(questionId);
         result.setUserId(userId);
-        result.setUserAnswerText(userAnswerText);
+        result.setUserAnswerText(savedAnswer.getAnswerText());
         result.setQuestionText(question.getTextQuestion());
         result.setFeedback(feedbackText);
 
