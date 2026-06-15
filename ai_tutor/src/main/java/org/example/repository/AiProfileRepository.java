@@ -15,7 +15,5 @@ public interface AiProfileRepository extends JpaRepository<AiProfile, Long> {
 
     List<AiProfile> findByActive(boolean active);
 
-    AiProfile findByLanguage(String language);
-
-    AiProfile findByActive();
+    Optional<AiProfile> findFirstByLanguage(String language);
 }

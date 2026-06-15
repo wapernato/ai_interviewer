@@ -1,9 +1,5 @@
 package org.example.dto.response;
 
-import jakarta.persistence.*;
-import org.example.model.Topic;
-import org.example.model.User;
-
 public class QuestionResponse {
 
     private Long id;

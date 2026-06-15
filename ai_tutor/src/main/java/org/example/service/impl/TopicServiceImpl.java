@@ -13,11 +13,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class ImplTopicService implements TopicService {
+public class TopicServiceImpl implements TopicService {
 
     private final TopicRepository topicRepository;
 
-    public ImplTopicService(TopicRepository topicRepository) { this.topicRepository = topicRepository; }
+    public TopicServiceImpl(TopicRepository topicRepository) { this.topicRepository = topicRepository; }
 
     @Transactional
     @Override

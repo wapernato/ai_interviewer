@@ -13,11 +13,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class ImplAiProfileService implements AiProfileService {
+public class AiProfileServiceImpl implements AiProfileService {
 
     private final AiProfileRepository aiProfileRepository;
 
-    public ImplAiProfileService(AiProfileRepository aiProfileRepository) {
+    public AiProfileServiceImpl(AiProfileRepository aiProfileRepository) {
         this.aiProfileRepository = aiProfileRepository;
     }
 
@@ -283,6 +283,13 @@ public class ImplAiProfileService implements AiProfileService {
     @Transactional(readOnly = true)
     @Override
     public AiProfile getByLanguage(String language){
-        return aiProfileRepository.findByLanguage(language);
+        if (language == null || language.isBlank()) {
+            throw new BadRequestException("Язык AI-профиля не должен быть пустым.");
+        }
+
+        String normalizedLanguage = language.trim();
+
+        return aiProfileRepository.findFirstByLanguage(normalizedLanguage)
+                .orElseThrow(() -> new NotFoundException("AI-профиль с языком (" + normalizedLanguage + ") не найден."));
     }
 }

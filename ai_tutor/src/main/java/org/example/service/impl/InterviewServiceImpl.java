@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ImplInterviewService implements InterviewService {
+public class InterviewServiceImpl implements InterviewService {
 
     private final AiQuestionGenerator aiQuestionGenerator;
     private final AiAnswerEvaluator aiAnswerEvaluator;
@@ -21,7 +21,7 @@ public class ImplInterviewService implements InterviewService {
     private final AiProfileRepository aiProfileRepository;
     private final AnswerRepository answerRepository;
 
-    public ImplInterviewService(
+    public InterviewServiceImpl(
                                 AiQuestionGenerator aiQuestionGenerator,
                                 AiAnswerEvaluator aiAnswerEvaluator,
                                 QuestionRepository questionRepository,
@@ -50,7 +50,8 @@ public class ImplInterviewService implements InterviewService {
         Topic topic = topicRepository.findById(topicId)
                 .orElseThrow(() -> new NotFoundException("Тема не найдена."));
 
-        AiProfile aiProfile = aiProfileRepository.findByActive();
+        AiProfile aiProfile = aiProfileRepository.findFirstByActiveTrue()
+                .orElseThrow(() -> new NotFoundException("Активный AI-профиль не найден."));
 
         String questionText = aiQuestionGenerator.generatedQuestion(topic, aiProfile);
 
@@ -101,7 +102,8 @@ public class ImplInterviewService implements InterviewService {
             throw new BadRequestException("Ответ не может быть пустой.");
         }
 
-        AiProfile aiProfile = aiProfileRepository.findByActive();
+        AiProfile aiProfile = aiProfileRepository.findFirstByActiveTrue()
+                .orElseThrow(() -> new NotFoundException("Активный AI-профиль не найден."));
 
         Answer answer = new Answer();
 

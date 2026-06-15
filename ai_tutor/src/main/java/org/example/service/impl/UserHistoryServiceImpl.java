@@ -12,12 +12,12 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class ImplUserHistoryService implements UserHistoryService {
+public class UserHistoryServiceImpl implements UserHistoryService {
 
     private final UserHistoryRepository userHistoryRepository;
     private final UserRepository userRepository;
 
-    public ImplUserHistoryService(UserHistoryRepository userHistoryRepository
+    public UserHistoryServiceImpl(UserHistoryRepository userHistoryRepository
                                  ,UserRepository userRepository
     ) {
         this.userHistoryRepository = userHistoryRepository;
@@ -29,7 +29,7 @@ public class ImplUserHistoryService implements UserHistoryService {
         if(userId == null || userId <= 0){
             throw new BadRequestException("Некорректный id.");
         }
-        if(userRepository.existsById(userId)){
+        if(!userRepository.existsById(userId)){
            throw  new NotFoundException("Пользователя с таким id не существует.");
         }
 

@@ -17,14 +17,14 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class ImplQuestionService implements QuestionService {
+public class QuestionServiceImpl implements QuestionService {
 
     private final QuestionRepository questionRepository;
     private final TopicRepository topicRepository;
     private final UserRepository userRepository;
     private final QuestionMapper questionMapper;
 
-    public ImplQuestionService(QuestionRepository questionRepository,
+    public QuestionServiceImpl(QuestionRepository questionRepository,
                                TopicRepository topicRepository,
                                UserRepository userRepository,
                                QuestionMapper questionMapper) {
@@ -37,6 +37,15 @@ public class ImplQuestionService implements QuestionService {
     @Transactional
     @Override
     public QuestionResponse addQuestion(Long userId, Long topicId, String textQuestion) {
+        if(textQuestion == null || textQuestion.isBlank()){
+            throw new BadRequestException("Текст вопроса не может быть пустым.");
+        }
+
+        String normalizedTextQuestion = textQuestion.trim();
+
+        if (normalizedTextQuestion.length() < 3 || normalizedTextQuestion.length() > 1000) {
+            throw new BadRequestException("Длина вопроса должна быть от 3 до 1000 символов.");
+        }
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден."));
@@ -48,7 +57,7 @@ public class ImplQuestionService implements QuestionService {
 
         question.setTopic(topic);
         question.setUser(user);
-        question.setTextQuestion(textQuestion.trim());
+        question.setTextQuestion(normalizedTextQuestion);
         question.setSource("manual");
         question.setLanguage("ru");
 
@@ -94,8 +103,21 @@ public class ImplQuestionService implements QuestionService {
     @Override
     public QuestionResponse updateQuestion(Long id, String newTextQuestion, String source, String language) {
 
+        if(newTextQuestion == null || newTextQuestion.isBlank()){
+            throw new BadRequestException("Новый текст вопроса не может быть пустым.");
+        }
+
+        if(source == null || source.isBlank()){
+            throw new BadRequestException("Source вопроса не может быть пустым.");
+        }
+
+        if(language == null || language.isBlank()){
+            throw new BadRequestException("Language вопроса не может быть пустым.");
+        }
 
         newTextQuestion = newTextQuestion.trim();
+        source = source.trim();
+        language = language.trim();
 
         Question oldQuestion = questionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Вопрос с id = " + id + " не найден."));

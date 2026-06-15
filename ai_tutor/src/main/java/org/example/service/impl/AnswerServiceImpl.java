@@ -15,13 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-public class ImplAnswerService implements AnswerService {
+public class AnswerServiceImpl implements AnswerService {
 
     private final AnswerRepository answerRepository;
     private final QuestionRepository questionRepository;
     private final AiProfileRepository aiProfileRepository;
 
-    public ImplAnswerService(AnswerRepository answerRepository
+    public AnswerServiceImpl(AnswerRepository answerRepository
                             ,QuestionRepository questionRepository
                             ,AiProfileRepository aiProfileRepository
     ) {

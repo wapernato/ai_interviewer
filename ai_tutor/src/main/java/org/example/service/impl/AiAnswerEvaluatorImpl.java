@@ -5,12 +5,10 @@ import org.example.model.AiProfile;
 import org.example.model.Question;
 import org.example.service.AiAnswerEvaluator;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ImplAiAnswerEvaluator implements AiAnswerEvaluator {
+public class AiAnswerEvaluatorImpl implements AiAnswerEvaluator {
 
-    @Transactional
     @Override
     public String evaluateAnswer(Question question, AiProfile aiProfile, String userAnswerText) {
         if (question == null) {
