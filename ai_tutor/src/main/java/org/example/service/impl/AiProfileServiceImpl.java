@@ -1,8 +1,10 @@
 package org.example.service.impl;
 
+import org.example.dto.response.AiProfileResponse;
 import org.example.exception.AiProfileAlreadyExistsException;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
+import org.example.mapper.AiProfileMapper;
 import org.example.model.AiProfile;
 import org.example.repository.AiProfileRepository;
 import org.example.service.AiProfileService;
@@ -16,9 +18,13 @@ import java.util.Optional;
 public class AiProfileServiceImpl implements AiProfileService {
 
     private final AiProfileRepository aiProfileRepository;
+    private final AiProfileMapper aiProfileMapper;
 
-    public AiProfileServiceImpl(AiProfileRepository aiProfileRepository) {
+    public AiProfileServiceImpl(AiProfileRepository aiProfileRepository,
+                                AiProfileMapper aiProfileMapper
+    ) {
         this.aiProfileRepository = aiProfileRepository;
+        this.aiProfileMapper = aiProfileMapper;
     }
 
 
@@ -148,7 +154,7 @@ public class AiProfileServiceImpl implements AiProfileService {
 
     @Transactional
     @Override
-    public AiProfile addProfile(AiProfile aiProfile) {
+    public AiProfileResponse addProfile(AiProfile aiProfile) {
         if (aiProfile == null) {
             throw new BadRequestException("AI-профиль не должен быть null.");
         }
@@ -166,21 +172,25 @@ public class AiProfileServiceImpl implements AiProfileService {
             deactivateAll();
         }
 
-        return aiProfileRepository.save(aiProfile);
+        AiProfile savedAiProfile = aiProfileRepository.save(aiProfile);
+
+        return aiProfileMapper.toResponse(savedAiProfile);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public AiProfile getById(Long id) {
+    public AiProfileResponse getById(Long id) {
         validateId(id);
 
-        return aiProfileRepository.findById(id)
+        AiProfile savedAiProfile = aiProfileRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("AI-профиль по id=" + id + " не найден."));
+
+        return aiProfileMapper.toResponse(savedAiProfile);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public AiProfile getByMode(String mode) {
+    public AiProfileResponse getByMode(String mode) {
         if (mode == null || mode.isBlank()) {
             throw new BadRequestException("Mode AI-профиля не должен быть пустым.");
         }
@@ -188,20 +198,24 @@ public class AiProfileServiceImpl implements AiProfileService {
         mode = mode.trim();
 
         String finalMode = mode;
-        return aiProfileRepository.findByMode(mode)
+        AiProfile savedAiProfile = aiProfileRepository.findByMode(mode)
                 .orElseThrow(() -> new NotFoundException("Мод с названием (" + finalMode + ") не найден."));
+
+        return aiProfileMapper.toResponse(savedAiProfile);
 
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<AiProfile> getAllProfiles() {
-        return aiProfileRepository.findAll();
+    public List<AiProfileResponse> getAllProfiles() {
+        List<AiProfile> savedAiProfileList = aiProfileRepository.findAll();
+
+        return aiProfileMapper.toResponseList(savedAiProfileList);
     }
 
     @Transactional
     @Override
-    public AiProfile updateProfile(AiProfile aiProfile) {
+    public AiProfileResponse updateProfile(AiProfile aiProfile) {
         if (aiProfile == null) {
             throw new BadRequestException("AI-профиль не должен быть null.");
         }
@@ -238,7 +252,9 @@ public class AiProfileServiceImpl implements AiProfileService {
         oldProfile.setTemperature(aiProfile.getTemperature());
         oldProfile.setMaxTokens(aiProfile.getMaxTokens());
 
-        return aiProfileRepository.save(oldProfile);
+        AiProfile savedAiProfile = aiProfileRepository.save(oldProfile);;
+
+        return aiProfileMapper.toResponse(savedAiProfile);
     }
 
     @Transactional
@@ -254,14 +270,16 @@ public class AiProfileServiceImpl implements AiProfileService {
 
     @Transactional(readOnly = true)
     @Override
-    public AiProfile getActiveProfile() {
-        return aiProfileRepository.findFirstByActiveTrue()
+    public AiProfileResponse getActiveProfile() {
+        AiProfile savedAiProfile = aiProfileRepository.findFirstByActiveTrue()
                 .orElseThrow(() -> new NotFoundException("Активный AI-профиль не найден."));
+
+        return aiProfileMapper.toResponse(savedAiProfile);
     }
 
     @Transactional
     @Override
-    public AiProfile activateProfile(Long id) {
+    public AiProfileResponse activateProfile(Long id) {
         validateId(id);
 
         AiProfile aiProfile = aiProfileRepository.findById(id)
@@ -271,25 +289,31 @@ public class AiProfileServiceImpl implements AiProfileService {
 
         aiProfile.setActive(true);
 
-        return aiProfileRepository.save(aiProfile);
+        AiProfile savedAiProfile = aiProfileRepository.save(aiProfile);
+
+        return aiProfileMapper.toResponse(savedAiProfile);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<AiProfile> findAllProfiles(boolean active) {
-        return aiProfileRepository.findByActive(active);
+    public List<AiProfileResponse> findAllProfiles(boolean active) {
+
+        List<AiProfile> savedAiProfileList = aiProfileRepository.findByActive(active);
+        return aiProfileMapper.toResponseList(savedAiProfileList);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public AiProfile getByLanguage(String language){
+    public AiProfileResponse getByLanguage(String language){
         if (language == null || language.isBlank()) {
             throw new BadRequestException("Язык AI-профиля не должен быть пустым.");
         }
 
         String normalizedLanguage = language.trim();
 
-        return aiProfileRepository.findFirstByLanguage(normalizedLanguage)
+        AiProfile savedAiProfile = aiProfileRepository.findFirstByLanguage(normalizedLanguage)
                 .orElseThrow(() -> new NotFoundException("AI-профиль с языком (" + normalizedLanguage + ") не найден."));
+
+        return aiProfileMapper.toResponse(savedAiProfile);
     }
 }

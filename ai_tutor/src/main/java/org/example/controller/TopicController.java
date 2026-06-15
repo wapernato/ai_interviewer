@@ -4,9 +4,9 @@ package org.example.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import org.example.dto.response.TopicResponse;
 import org.example.dto.topic.CreateTopicRequest;
 import org.example.dto.topic.UpdateTopicRequest;
-import org.example.model.Topic;
 import org.example.service.TopicService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,24 +27,24 @@ public class TopicController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Topic>> getAllTopics(){
-        List<Topic> topics = topicService.getAllTopics();
+    public ResponseEntity<List<TopicResponse>> getAllTopics(){
+        List<TopicResponse> topics = topicService.getAllTopics();
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(topics);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Topic> getTopicById(@PathVariable @Positive(message = "ID темы должен быть положительным числом.") Long id){
-        Topic topic = topicService.getByTopicId(id);
+    public ResponseEntity<TopicResponse> getTopicById(@PathVariable @Positive(message = "ID темы должен быть положительным числом.") Long id){
+        TopicResponse topic = topicService.getByTopicId(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(topic);
     }
 
     @PostMapping
-    public ResponseEntity<Topic> createTopic(@Valid @RequestBody CreateTopicRequest createTopicRequest){
-        Topic topic = topicService.addTopic(createTopicRequest.getName());
+    public ResponseEntity<TopicResponse> createTopic(@Valid @RequestBody CreateTopicRequest createTopicRequest){
+        TopicResponse topic = topicService.addTopic(createTopicRequest.getName());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(topic);
@@ -57,8 +57,8 @@ public class TopicController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Topic> updateTopicById(@PathVariable @Positive(message = "ID темы должен быть положительным числом.") Long id, @Valid @RequestBody UpdateTopicRequest updateTopicRequest){
-        Topic topic = topicService.updateTopic(id, updateTopicRequest.getName());
+    public ResponseEntity<TopicResponse> updateTopicById(@PathVariable @Positive(message = "ID темы должен быть положительным числом.") Long id, @Valid @RequestBody UpdateTopicRequest updateTopicRequest){
+        TopicResponse topic = topicService.updateTopic(id, updateTopicRequest.getName());
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(topic);
@@ -66,8 +66,8 @@ public class TopicController {
 
 
     @GetMapping("/search")
-    public ResponseEntity<Topic> findByName(@NotBlank(message = "Имя не должно быть пустое.") @Size(min = 2, max = 50) @RequestParam String topicName){
-        Topic topic = topicService.getByTopicName(topicName);
+    public ResponseEntity<TopicResponse> findByName(@NotBlank(message = "Имя не должно быть пустое.") @Size(min = 2, max = 50) @RequestParam String topicName){
+        TopicResponse topic = topicService.getByTopicName(topicName);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(topic);

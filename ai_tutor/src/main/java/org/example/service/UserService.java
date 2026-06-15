@@ -1,15 +1,15 @@
 package org.example.service;
 
-import org.example.model.User;
+import org.example.dto.response.UserResponse;
 
 import java.util.List;
 
 public interface UserService {
-    User register(String username);
-    User getById(Long id);
-    User findByName(String username);
-    List<User> getAllUsers();
-    User updateUsername(Long id, String newUsername);
+    UserResponse register(String username);
+    UserResponse getById(Long id);
+    UserResponse findByName(String username);
+    List<UserResponse> getAllUsers();
+    UserResponse updateUsername(Long id, String newUsername);
     void deleteById(Long id);
 
 }

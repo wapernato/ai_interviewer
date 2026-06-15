@@ -1,7 +1,7 @@
 package org.example.console;
 
 import org.example.dto.interview.InterviewQuestionResult;
-import org.example.model.Topic;
+import org.example.dto.response.TopicResponse;
 import org.example.service.AiProfileService;
 import org.example.service.InterviewService;
 import org.example.service.TopicService;
@@ -75,7 +75,7 @@ public class DevConsoleApp {
 
 
     public void printAllTopics(){
-        List<Topic> topicList = topicService.getAllTopics();
+        List<TopicResponse> topicList = topicService.getAllTopics();
         System.out.println("========================");
         System.out.println("ВСЕ ТЕМЫ ИЗ БАЗЫ ДАННЫХ");
         System.out.println("========================");
@@ -88,7 +88,7 @@ public class DevConsoleApp {
 
     public void generateQuestion() {
 
-        List<Topic> topics = topicService.getAllTopics();
+        List<TopicResponse> topics = topicService.getAllTopics();
 
         if (topics.isEmpty()) {
             System.out.println("Тем пока нет.");
@@ -107,7 +107,7 @@ public class DevConsoleApp {
             return;
         }
 
-        Topic selectedTopic = topics.get(choice - 1);
+        TopicResponse selectedTopic = topics.get(choice - 1);
         Long topicId = selectedTopic.getId();
 
         InterviewQuestionResult result = interviewService.generateQuestion(currentUserId, topicId);

@@ -1,28 +1,29 @@
 package org.example.service;
 
+import org.example.dto.response.AiProfileResponse;
 import org.example.model.AiProfile;
 
 import java.util.List;
 
 public interface AiProfileService {
 
-    AiProfile addProfile(AiProfile aiProfile);
+    AiProfileResponse addProfile(AiProfile aiProfile);
 
-    AiProfile getById(Long id);
+    AiProfileResponse getById(Long id);
 
-    AiProfile getByMode(String mode);
+    AiProfileResponse getByMode(String mode);
 
-    List<AiProfile> getAllProfiles();
+    List<AiProfileResponse> getAllProfiles();
 
-    AiProfile updateProfile(AiProfile aiProfile);
+    AiProfileResponse updateProfile(AiProfile aiProfile);
 
     void deleteById(Long id);
 
-    AiProfile getActiveProfile();
+    AiProfileResponse getActiveProfile();
 
-    AiProfile activateProfile(Long id);
+    AiProfileResponse activateProfile(Long id);
 
-    List<AiProfile> findAllProfiles(boolean active);
+    List<AiProfileResponse> findAllProfiles(boolean active);
 
-    AiProfile getByLanguage(String language);
+    AiProfileResponse getByLanguage(String language);
 }

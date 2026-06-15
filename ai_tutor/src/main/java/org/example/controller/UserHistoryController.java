@@ -2,7 +2,6 @@ package org.example.controller;
 
 import jakarta.validation.constraints.Positive;
 import org.example.dto.user.UserHistoryItem;
-import org.example.model.User;
 import org.example.service.UserHistoryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

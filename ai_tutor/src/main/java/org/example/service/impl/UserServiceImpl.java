@@ -1,8 +1,10 @@
 package org.example.service.impl;
 
+import org.example.dto.response.UserResponse;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
 import org.example.exception.UserAlreadyExistsException;
+import org.example.mapper.UserMapper;
 import org.example.model.User;
 import org.example.repository.UserRepository;
 import org.example.service.UserService;
@@ -16,14 +18,17 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository,
+                           UserMapper userMapper) {
         this.userRepository = userRepository;
+        this.userMapper = userMapper;
     }
 
     @Transactional
     @Override
-    public User register(String userName){
+    public UserResponse register(String userName){
 
         if(userName == null || userName.isBlank()){
             throw new BadRequestException("Имя пользователя не должно быть пустым.");
@@ -49,28 +54,31 @@ public class UserServiceImpl implements UserService {
         }
 
         User newUser = new User(username);
-        return userRepository.save(newUser);
+        User savedUser = userRepository.save(newUser);
+        return userMapper.toResponse(savedUser);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public User getById(Long id){
+    public UserResponse getById(Long id){
         if(id == null || id <= 0){
             throw new BadRequestException("id должен быть больше 0.");
         }
-        return userRepository.findById(id)
+        User savedUser = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден."));
+
+        return userMapper.toResponse(savedUser);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<User> getAllUsers(){
-        return userRepository.findAll();
+    public List<UserResponse> getAllUsers(){
+        return userMapper.toResponseList(userRepository.findAll());
     }
 
     @Transactional
     @Override
-    public User updateUsername(Long id, String newusername){
+    public UserResponse updateUsername(Long id, String newusername){
 
         if(id == null || id <= 0){
             throw new BadRequestException("id должен быть больше 0.");
@@ -103,7 +111,8 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setUsername(newUsername);
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        return userMapper.toResponse(savedUser);
     }
 
     @Transactional
@@ -122,7 +131,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional(readOnly = true)
     @Override
-    public User findByName(String userName){
+    public UserResponse findByName(String userName){
 
         if(userName == null){
             throw new BadRequestException("Имя пользователя не должно быть null.");
@@ -141,7 +150,9 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Длина имени должна быть от 2 до 50.");
         }
 
-        return userRepository.findByUsername(username)
+        User savedUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("Пользователь с именем (" + username + ") не найден."));
+
+        return userMapper.toResponse(savedUser);
     }
 }

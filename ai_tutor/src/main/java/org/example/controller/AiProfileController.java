@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import org.example.dto.aiprofile.CreateAiProfileRequest;
+import org.example.dto.response.AiProfileResponse;
 import org.example.model.AiProfile;
 import org.example.service.AiProfileService;
 import org.springframework.http.HttpStatus;
@@ -25,23 +26,23 @@ public class AiProfileController {
     public AiProfileController(AiProfileService aiProfileService) { this.aiProfileService = aiProfileService; }
 
     @GetMapping
-    public ResponseEntity<List<AiProfile>> getAllAiProfile(){
-        List<AiProfile> aiProfiles = aiProfileService.getAllProfiles();
+    public ResponseEntity<List<AiProfileResponse>> getAllAiProfile(){
+        List<AiProfileResponse> aiProfiles = aiProfileService.getAllProfiles();
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(aiProfiles);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AiProfile> getAiProfileById(@PathVariable @Positive(message = "ID AI-профиля должен быть положительным числом.") Long id){
-        AiProfile aiProfile = aiProfileService.getById(id);
+    public ResponseEntity<AiProfileResponse> getAiProfileById(@PathVariable @Positive(message = "ID AI-профиля должен быть положительным числом.") Long id){
+        AiProfileResponse aiProfile = aiProfileService.getById(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(aiProfile);
     }
 
     @PostMapping
-    public ResponseEntity<AiProfile> addNewProfile(@Valid @RequestBody CreateAiProfileRequest request) {
+    public ResponseEntity<AiProfileResponse> addNewProfile(@Valid @RequestBody CreateAiProfileRequest request) {
         AiProfile aiProfile = new AiProfile();
 
         aiProfile.setMode(request.getMode());
@@ -61,7 +62,7 @@ public class AiProfileController {
         aiProfile.setTemperature(request.getTemperature());
         aiProfile.setMaxTokens(request.getMaxTokens());
 
-        AiProfile savedProfile = aiProfileService.addProfile(aiProfile);
+        AiProfileResponse savedProfile = aiProfileService.addProfile(aiProfile);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(savedProfile);
@@ -74,9 +75,10 @@ public class AiProfileController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AiProfile> updateAiProfile(@PathVariable @Positive(message = "ID AI-профиля должен быть положительным числом.") Long id,@Valid @RequestBody CreateAiProfileRequest request) {
+    public ResponseEntity<AiProfileResponse> updateAiProfile(@PathVariable @Positive(message = "ID AI-профиля должен быть положительным числом.") Long id,@Valid @RequestBody CreateAiProfileRequest request) {
 
-        AiProfile aiProfile = aiProfileService.getById(id);
+        AiProfile aiProfile = new AiProfile();
+        aiProfile.setId(id);
 
         aiProfile.setMode(request.getMode());
         aiProfile.setDescriptionMode(request.getDescriptionMode());
@@ -95,7 +97,7 @@ public class AiProfileController {
         aiProfile.setTemperature(request.getTemperature());
         aiProfile.setMaxTokens(request.getMaxTokens());
 
-        AiProfile updatedProfile = aiProfileService.updateProfile(aiProfile);
+        AiProfileResponse updatedProfile = aiProfileService.updateProfile(aiProfile);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -103,32 +105,32 @@ public class AiProfileController {
     }
 
     @PutMapping("/{id}/activate")
-    public ResponseEntity<AiProfile> activeAiProfile(@PathVariable @Positive(message = "ID AI-профиля должен быть положительным числом.") Long id){
-        AiProfile aiProfile = aiProfileService.activateProfile(id);
+    public ResponseEntity<AiProfileResponse> activeAiProfile(@PathVariable @Positive(message = "ID AI-профиля должен быть положительным числом.") Long id){
+        AiProfileResponse aiProfile = aiProfileService.activateProfile(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(aiProfile);
     }
 
     @GetMapping("/search")
-    public ResponseEntity<AiProfile> findByMode(@NotBlank(message = "Мод должен быть указан.") @Size(min = 2, max = 100) @RequestParam String mode){
-        AiProfile aiProfile = aiProfileService.getByMode(mode);
+    public ResponseEntity<AiProfileResponse> findByMode(@NotBlank(message = "Мод должен быть указан.") @Size(min = 2, max = 100) @RequestParam String mode){
+        AiProfileResponse aiProfile = aiProfileService.getByMode(mode);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(aiProfile);
     }
 
     @GetMapping("/filter")
-    public ResponseEntity<List<AiProfile>> findByActive(@RequestParam boolean active){
-        List<AiProfile> aiProfiles = aiProfileService.findAllProfiles(active);
+    public ResponseEntity<List<AiProfileResponse>> findByActive(@RequestParam boolean active){
+        List<AiProfileResponse> aiProfiles = aiProfileService.findAllProfiles(active);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(aiProfiles);
     }
 
     @GetMapping("/language")
-    public ResponseEntity<AiProfile> findByLanguage(@NotBlank(message = "Язык должен быть указан.") @RequestParam String language){
-        AiProfile aiProfile = aiProfileService.getByLanguage(language);
+    public ResponseEntity<AiProfileResponse> findByLanguage(@NotBlank(message = "Язык должен быть указан.") @RequestParam String language){
+        AiProfileResponse aiProfile = aiProfileService.getByLanguage(language);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(aiProfile);

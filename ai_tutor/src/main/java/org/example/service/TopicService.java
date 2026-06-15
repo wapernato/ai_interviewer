@@ -1,15 +1,15 @@
 package org.example.service;
 
-import org.example.model.Topic;
+import org.example.dto.response.TopicResponse;
 
 
 import java.util.List;
 
 public interface TopicService {
-    Topic addTopic(String topicName);
-    Topic getByTopicId(Long id);
-    List<Topic> getAllTopics();
-    Topic getByTopicName(String topicName);
-    Topic updateTopic(Long id, String newTopicName);
+    TopicResponse addTopic(String topicName);
+    TopicResponse getByTopicId(Long id);
+    List<TopicResponse> getAllTopics();
+    TopicResponse getByTopicName(String topicName);
+    TopicResponse updateTopic(Long id, String newTopicName);
     void deleteByTopicId(Long id);
 }
