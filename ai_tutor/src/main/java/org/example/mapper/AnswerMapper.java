@@ -18,6 +18,7 @@ public class AnswerMapper {
         AnswerResponse answerResponse = new AnswerResponse();
 
         answerResponse.setId(answer.getId());
+
         if(answer.getAiProfile() == null){
             answerResponse.setAiProfileId(null);
         }else {
@@ -32,12 +33,12 @@ public class AnswerMapper {
         return answerResponse;
     }
 
-    public List<AnswerResponse> toResponseList(List<Answer> answer){
-        if(answer == null){
-            return null;
+    public List<AnswerResponse> toResponseList(List<Answer> answers){
+        if(answers == null){
+            return List.of();
         }
 
-        return answer.stream()
+        return answers.stream()
                 .map(this::toResponse)
                 .toList();
     }

@@ -17,13 +17,13 @@ public class Question {
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
-    @Column(name = "text_question", nullable = false)
+    @Column(name = "text_question", nullable = false, columnDefinition = "text")
     private String textQuestion;
 
-    @Column(name = "source", nullable = false)
+    @Column(name = "source", length = 30)
     private String source;
 
-    @Column(name = "language", nullable = false)
+    @Column(name = "language", length = 20)
     private String language;
 
     public Question() {};

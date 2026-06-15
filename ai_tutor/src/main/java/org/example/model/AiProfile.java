@@ -12,21 +12,21 @@ public class AiProfile {
 
     @Column(name = "mode", nullable = false, unique = true, length = 100)
     private String mode;
-    @Column(name = "description_mode")
+    @Column(name = "description_mode", columnDefinition = "text")
     private String descriptionMode;
-    @Column(name = "instruction_mode")
+    @Column(name = "instruction_mode", nullable = false, columnDefinition = "text")
     private String instructionMode;
 
-    @Column(name = "model_name")
+    @Column(name = "model_name", length = 100)
     private String modelName;
-    @Column(name = "language")
+    @Column(name = "language", length = 20)
     private String language;
-    @Column(name = "answer_style")
+    @Column(name = "answer_style", length = 50)
     private String answerStyle;
 
-    @Column(name = "difficulty")
+    @Column(name = "difficulty", length = 30)
     private String difficulty;
-    @Column(name = "feedback_mode")
+    @Column(name = "feedback_mode", length = 50)
     private String feedbackMode;
 
     @Column(name = "hint_mode")
@@ -34,7 +34,7 @@ public class AiProfile {
     @Column(name = "active")
     private Boolean active;
 
-    @Column(name = "temperature")
+    @Column(name = "temperature", precision = 3, scale = 2)
     private Double temperature;
     @Column(name = "max_tokens")
     private Integer maxTokens;

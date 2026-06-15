@@ -1,17 +1,17 @@
 package org.example.service;
 
-import org.example.model.Answer;
+import org.example.dto.response.AnswerResponse;
 
 import java.util.List;
 
 public interface AnswerService {
-    Answer addAnswer(Long questionId, Long aiProfileId, String answerText, String modelName);
-    Answer updateAnswer(Long id, String answerText, String modelName);
+    AnswerResponse addAnswer(Long questionId, Long aiProfileId, String answerText, String modelName);
+    AnswerResponse updateAnswer(Long id, String answerText, String modelName);
 
-    Answer getById(Long id);
-    List<Answer> getByQuestionId(Long questionId);
-    List<Answer> getByProfileId(Long profileId);
-    List<Answer> getAllAnswers();
+    AnswerResponse getById(Long id);
+    List<AnswerResponse> getByQuestionId(Long questionId);
+    List<AnswerResponse> getByProfileId(Long profileId);
+    List<AnswerResponse> getAllAnswers();
 
     void deleteById(Long id);
 }

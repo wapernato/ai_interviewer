@@ -1,9 +1,5 @@
 package org.example.dto.response;
 
-
-import org.example.model.AiProfile;
-import org.example.model.Question;
-
 public class AnswerResponse {
 
 

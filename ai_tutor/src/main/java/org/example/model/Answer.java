@@ -15,9 +15,9 @@ public class Answer {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ai_profile_id")
     private AiProfile aiProfile;
-    @Column(name = "answer_text", nullable = false)
+    @Column(name = "answer_text", nullable = false, columnDefinition = "text")
     private String answerText;
-    @Column(name = "model_name")
+    @Column(name = "model_name", nullable = false, length = 100)
     private String modelName;
 
     public Answer() {}
