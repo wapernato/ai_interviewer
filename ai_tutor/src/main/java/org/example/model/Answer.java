@@ -9,14 +9,18 @@ public class Answer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ai_profile_id")
     private AiProfile aiProfile;
+
     @Column(name = "answer_text", nullable = false, columnDefinition = "text")
     private String answerText;
+
     @Column(name = "model_name", nullable = false, length = 100)
     private String modelName;
 
