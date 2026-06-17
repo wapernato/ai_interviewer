@@ -1,6 +1,5 @@
 package org.example.service.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import org.example.dto.response.TopicResponse;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
@@ -18,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -148,7 +147,7 @@ public class TopicServiceImplTest {
 
         List<TopicResponse> result = topicService.getAllTopics();
 
-        assertThat(result);
+        assertThat(result).isEmpty();
     }
 
     @Test
@@ -164,12 +163,26 @@ public class TopicServiceImplTest {
         assertThat(topicResponse.getName()).isEqualTo("Java");
         assertThat(topicResponse.getId()).isEqualTo(1L);
     }
+
+    @Test
+    void getByTopicName_shouldThrowBadRequest_whenNameIsNull(){
+        assertThatThrownBy(() -> topicService.getByTopicName(null))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Название темы не должно быть null.");
+    }
+
+    @Test
+    void getByTopicName_shouldThrowBadRequest_whenNameIsBlank(){
+        assertThatThrownBy(() -> topicService.getByTopicName(""))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Название темы не должно быть пустым.");
+    }
 }
 
 //  getByTopicName
 //
-//        getByTopicName_shouldThrowBadRequest_whenNameIsNull
-//        getByTopicName_shouldThrowBadRequest_whenNameIsBlank
+//
+//
 //        getByTopicName_shouldThrowBadRequest_whenNameIsTooShort
 //        getByTopicName_shouldThrowBadRequest_whenNameIsTooLong
 //        getByTopicName_shouldThrowNotFound_whenTopicDoesNotExist
