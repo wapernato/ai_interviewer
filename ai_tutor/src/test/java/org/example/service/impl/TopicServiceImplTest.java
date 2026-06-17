@@ -177,27 +177,128 @@ public class TopicServiceImplTest {
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Название темы не должно быть пустым.");
     }
-}
 
-//  getByTopicName
-//
-//
-//
-//        getByTopicName_shouldThrowBadRequest_whenNameIsTooShort
-//        getByTopicName_shouldThrowBadRequest_whenNameIsTooLong
-//        getByTopicName_shouldThrowNotFound_whenTopicDoesNotExist
-//  updateTopic
-//        updateTopic_shouldUpdateTopic_whenDataIsValid
-//        updateTopic_shouldThrowBadRequest_whenIdIsNull
-//        updateTopic_shouldThrowBadRequest_whenIdIsNotPositive
-//        updateTopic_shouldThrowBadRequest_whenNameIsNull
-//        updateTopic_shouldThrowBadRequest_whenNameIsBlank
-//        updateTopic_shouldThrowBadRequest_whenNameIsTooShort
-//        updateTopic_shouldThrowBadRequest_whenNameIsTooLong
-//        updateTopic_shouldThrowNotFound_whenTopicDoesNotExist
-//        updateTopic_shouldThrowTopicAlreadyExists_whenNameBelongsToAnotherTopic
-//   deleteByTopicId
-//        deleteByTopicId_shouldDeleteTopic_whenTopicExists
-//        deleteByTopicId_shouldThrowBadRequest_whenIdIsNull
-//        deleteByTopicId_shouldThrowBadRequest_whenIdIsNotPositive
-//        deleteByTopicId_shouldThrowNotFound_whenTopicDoesNotExist
+    @Test
+    void getByTopicName_shouldThrowBadRequest_whenNameIsTooShort(){
+        assertThatThrownBy(() -> topicService.getByTopicName("a"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Длина названия темы должна быть от 2 до 100 символов.");
+    }
+
+    @Test
+    void getByTopicName_shouldThrowBadRequest_whenNameIsTooLong(){
+        assertThatThrownBy(() -> topicService.getByTopicName("a".repeat(101)))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Длина названия темы должна быть от 2 до 100 символов.");
+    }
+
+    @Test
+    void getByTopicName_shouldThrowNotFound_whenTopicDoesNotExist(){
+        Optional<Topic> optionalTopic = Optional.empty();
+        when(topicRepository.findByName("Java")).thenReturn(optionalTopic);
+
+        assertThatThrownBy(() -> topicService.getByTopicName("Java"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Тема с именем - Java - не найдена.");
+    }
+
+    @Test
+    void updateTopic_shouldThrowBadRequest_whenIdIsNull(){
+        assertThatThrownBy(() -> topicService.updateTopic(0L, "Java"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Id темы должен быть больше 0.");
+    }
+
+    @Test
+    void updateTopic_shouldThrowBadRequest_whenIdIsNotPositive(){
+        assertThatThrownBy(() -> topicService.updateTopic(-1L, "Java"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Id темы должен быть больше 0.");
+    }
+
+    @Test
+    void updateTopic_shouldThrowBadRequest_whenNameIsBlank(){
+        assertThatThrownBy(() -> topicService.updateTopic(1L, ""))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Название темы не должно быть пустым.");
+    }
+
+    @Test
+    void updateTopic_shouldThrowBadRequest_whenNameIsNull(){
+        assertThatThrownBy(() -> topicService.updateTopic(1L, null))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Название темы не должно быть null.");
+    }
+
+    @Test
+    void updateTopic_shouldThrowBadRequest_whenNameIsTooShort(){
+        assertThatThrownBy(() -> topicService.updateTopic(1L, "a"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Длина названия темы должна быть от 2 до 100 символов.");
+    }
+
+    @Test
+    void updateTopic_shouldThrowBadRequest_whenNameIsTooLong(){
+        assertThatThrownBy(() -> topicService.updateTopic(1L, "a".repeat(101)))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Длина названия темы должна быть от 2 до 100 символов.");
+    }
+
+    @Test
+    void updateTopic_shouldThrowNotFound_whenTopicDoesNotExist(){
+        when(topicRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> topicService.updateTopic(1L, "Java"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Тема с id = 1 не найдена.");
+
+    }
+
+    @Test
+    void updateTopic_shouldThrowTopicAlreadyExists_whenNameBelongsToAnotherTopic() {
+        // arrange
+        Topic updatedTopic = new Topic("Spring");
+        updatedTopic.setId(1L);
+
+        Topic existingTopic = new Topic("Java");
+        existingTopic.setId(2L);
+
+        when(topicRepository.findById(1L))
+                .thenReturn(Optional.of(updatedTopic));
+
+        when(topicRepository.findByName("Java"))
+                .thenReturn(Optional.of(existingTopic));
+
+        // act + assert
+        assertThatThrownBy(() -> topicService.updateTopic(1L, "Java"))
+                .isInstanceOf(TopicAlreadyExistsException.class)
+                .hasMessage("Тема с таким названием уже существует.");
+
+        verify(topicRepository, never()).save(any(Topic.class));
+        assertThat(updatedTopic.getName()).isEqualTo("Spring");
+    }
+
+    @Test
+    void deleteByTopicId_shouldDeleteTopic_whenTopicExists(){
+
+        Topic savedTopic = new Topic("Java");
+        savedTopic.setId(1L);
+
+        when(topicRepository.findById(1L)).thenReturn(Optional.of(savedTopic));
+
+        topicService.deleteByTopicId(1L);
+
+        verify(topicRepository).deleteById(1L);
+    }
+
+    @Test
+    void deleteByTopicId_shouldThrowNotFound_whenTopicDoesNotExist(){
+
+        when(topicRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> topicService.deleteByTopicId(1L))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Тема с id = 1 не найдена.");
+
+    }
+}
