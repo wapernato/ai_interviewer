@@ -13,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -204,9 +203,11 @@ public class TopicServiceImplTest {
 
     @Test
     void updateTopic_shouldThrowBadRequest_whenIdIsNull(){
-        assertThatThrownBy(() -> topicService.updateTopic(0L, "Java"))
+        assertThatThrownBy(() -> topicService.updateTopic(null, "Java"))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Id темы должен быть больше 0.");
+
+        verifyNoInteractions(topicRepository);
     }
 
     @Test
@@ -292,6 +293,24 @@ public class TopicServiceImplTest {
     }
 
     @Test
+    void deleteByTopicId_shouldThrowBadRequest_whenIdIsNull(){
+        assertThatThrownBy(() -> topicService.deleteByTopicId(null))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Id темы должен быть больше 0.");
+
+        verifyNoInteractions(topicRepository);
+    }
+
+    @Test
+    void deleteByTopicId_shouldThrowBadRequest_whenIdIsNotPositive(){
+        assertThatThrownBy(() -> topicService.deleteByTopicId(0L))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Id темы должен быть больше 0.");
+
+        verifyNoInteractions(topicRepository);
+    }
+
+    @Test
     void deleteByTopicId_shouldThrowNotFound_whenTopicDoesNotExist(){
 
         when(topicRepository.findById(1L)).thenReturn(Optional.empty());
@@ -300,5 +319,6 @@ public class TopicServiceImplTest {
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Тема с id = 1 не найдена.");
 
+        verify(topicRepository, never()).deleteById(anyLong());
     }
 }
