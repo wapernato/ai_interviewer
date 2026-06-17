@@ -150,10 +150,24 @@ public class TopicServiceImplTest {
 
         assertThat(result);
     }
+
+    @Test
+    void getByTopicName_shouldReturnTopic_whenTopicExists(){
+        Topic savedTopic = new Topic("Java");
+        savedTopic.setId(1L);
+
+        when(topicRepository.findByName("Java")).thenReturn(Optional.of(savedTopic));
+
+        TopicResponse topicResponse = topicService.getByTopicName("Java");
+
+        assertThat(topicResponse).isNotNull();
+        assertThat(topicResponse.getName()).isEqualTo("Java");
+        assertThat(topicResponse.getId()).isEqualTo(1L);
+    }
 }
 
 //  getByTopicName
-//        getByTopicName_shouldReturnTopic_whenTopicExists
+//
 //        getByTopicName_shouldThrowBadRequest_whenNameIsNull
 //        getByTopicName_shouldThrowBadRequest_whenNameIsBlank
 //        getByTopicName_shouldThrowBadRequest_whenNameIsTooShort
