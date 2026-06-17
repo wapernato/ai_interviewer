@@ -56,7 +56,6 @@ public class    TopicServiceImpl implements TopicService {
             throw new BadRequestException("id должен быть больше 0.");
         }
 
-
         Topic savedTopic = topicRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Тема с id = " + id + " не найдена."));
 
