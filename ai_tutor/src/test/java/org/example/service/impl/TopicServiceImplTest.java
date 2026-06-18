@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 
@@ -54,6 +55,7 @@ public class TopicServiceImplTest {
         assertThat(topicResponse).isNotNull();
         assertThat(topicResponse.getName()).isEqualTo("Java");
         assertThat(topicResponse.getId()).isEqualTo(1L);
+        verify(topicRepository).save(argThat(topic -> "Java".equals(topic.getName())));
     }
 
     @Test
@@ -101,17 +103,35 @@ public class TopicServiceImplTest {
     }
 
     @Test
-    void getByTopicId_shouldReturnTopic_whenIdIsNotPositive(){
-        assertThatThrownBy(() -> topicService.getByTopicId(0L))
-                .isInstanceOf(BadRequestException.class)
-                .hasMessage("id должен быть больше 0.");
+    void getByTopicId_shouldReturnTopic_whenTopicExists(){
+        Topic savedTopic = new Topic("Java");
+        savedTopic.setId(1L);
+
+        when(topicRepository.findById(1L)).thenReturn(Optional.of(savedTopic));
+
+        TopicResponse topicResponse = topicService.getByTopicId(1L);
+
+        assertThat(topicResponse).isNotNull();
+        assertThat(topicResponse.getId()).isEqualTo(1L);
+        assertThat(topicResponse.getName()).isEqualTo("Java");
     }
 
     @Test
-    void getByTopicId_shouldReturnTopic_whenIdIsNull(){
+    void getByTopicId_shouldThrowBadRequest_whenIdIsNotPositive(){
+        assertThatThrownBy(() -> topicService.getByTopicId(0L))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("id должен быть больше 0.");
+
+        verifyNoInteractions(topicRepository);
+    }
+
+    @Test
+    void getByTopicId_shouldThrowBadRequest_whenIdIsNull(){
         assertThatThrownBy(() -> topicService.getByTopicId(null))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("id должен быть больше 0.");
+
+        verifyNoInteractions(topicRepository);
     }
 
     @Test
@@ -156,7 +176,7 @@ public class TopicServiceImplTest {
 
         when(topicRepository.findByName("Java")).thenReturn(Optional.of(savedTopic));
 
-        TopicResponse topicResponse = topicService.getByTopicName("Java");
+        TopicResponse topicResponse = topicService.getByTopicName(" Java ");
 
         assertThat(topicResponse).isNotNull();
         assertThat(topicResponse.getName()).isEqualTo("Java");
@@ -199,6 +219,39 @@ public class TopicServiceImplTest {
         assertThatThrownBy(() -> topicService.getByTopicName("Java"))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Тема с именем - Java - не найдена.");
+    }
+
+    @Test
+    void updateTopic_shouldUpdateTopic_whenDataIsValid(){
+        Topic topicToUpdate = new Topic("Spring");
+        topicToUpdate.setId(1L);
+
+        when(topicRepository.findById(1L)).thenReturn(Optional.of(topicToUpdate));
+        when(topicRepository.findByName("Java")).thenReturn(Optional.empty());
+        when(topicRepository.save(topicToUpdate)).thenReturn(topicToUpdate);
+
+        TopicResponse topicResponse = topicService.updateTopic(1L, " Java ");
+
+        assertThat(topicResponse).isNotNull();
+        assertThat(topicResponse.getId()).isEqualTo(1L);
+        assertThat(topicResponse.getName()).isEqualTo("Java");
+        verify(topicRepository).save(topicToUpdate);
+    }
+
+    @Test
+    void updateTopic_shouldUpdateTopic_whenNameBelongsToSameTopic(){
+        Topic topicToUpdate = new Topic("Java");
+        topicToUpdate.setId(1L);
+
+        when(topicRepository.findById(1L)).thenReturn(Optional.of(topicToUpdate));
+        when(topicRepository.findByName("Java")).thenReturn(Optional.of(topicToUpdate));
+        when(topicRepository.save(topicToUpdate)).thenReturn(topicToUpdate);
+
+        TopicResponse topicResponse = topicService.updateTopic(1L, "Java");
+
+        assertThat(topicResponse.getId()).isEqualTo(1L);
+        assertThat(topicResponse.getName()).isEqualTo("Java");
+        verify(topicRepository).save(topicToUpdate);
     }
 
     @Test
@@ -253,6 +306,7 @@ public class TopicServiceImplTest {
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Тема с id = 1 не найдена.");
 
+        verify(topicRepository, never()).save(any(Topic.class));
     }
 
     @Test
