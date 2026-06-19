@@ -1,12 +1,10 @@
 package org.example.service.impl;
 
+import org.example.dto.interview.InterviewAnswerResult;
 import org.example.dto.interview.InterviewQuestionResult;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
-import org.example.model.AiProfile;
-import org.example.model.Question;
-import org.example.model.Topic;
-import org.example.model.User;
+import org.example.model.*;
 import org.example.repository.*;
 import org.example.service.AiAnswerEvaluator;
 import org.example.service.AiQuestionGenerator;
@@ -159,7 +157,7 @@ public class InterviewServiceImplTest {
     }
 
     @Test
-    void generateQuestion_shouldGenerationQuestion_whenAllCorrect(){
+    void generateQuestion_shouldReturnGeneratedQuestion_whenAllDataIsValid(){
         User savedUser = new User("Yakov");
         savedUser.setId(1L);
 
@@ -201,9 +199,195 @@ public class InterviewServiceImplTest {
         assertThat(result).isNotNull();
         assertThat(result.getQuestionId()).isEqualTo(1L);
         assertThat(result.getTopicId()).isEqualTo(1L);
+        assertThat(result.getUserId()).isEqualTo(1L);
+        assertThat(result.getAiProfileId()).isEqualTo(1L);
+        assertThat(result.getTopicName()).isEqualTo("Java Core");
+        assertThat(result.getQuestionText()).isEqualTo("Вопрос успешно создан.");
+        assertThat(result.getAiMode()).isEqualTo("mode");
+        assertThat(result.getDifficulty()).isEqualTo("difficulty");
 
-        verify(questionRepository)
-                .save(argThat(question -> "Вопрос успешно создан.".equals(question.getTextQuestion())));
-
+        verify(aiQuestionGenerator).generatedQuestion(savedTopic, savedAiProfile);
+        verify(questionRepository).save(argThat(question ->
+                "Вопрос успешно создан.".equals(question.getTextQuestion())
+                        && question.getUser().equals(savedUser)
+                        && question.getTopic().equals(savedTopic)
+                        && "ai".equals(question.getSource())
+                        && "ru".equals(question.getLanguage())
+        ));
     }
+
+    @Test
+    void submitUserAnswer_shouldThrowNotFound_whenUserDoesNotExist(){
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> interviewService.submitUserAnswer(1L, 1L, "It is algo quick sort"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Пользователь не найден.");
+
+        verifyNoInteractions(questionRepository);
+        verifyNoInteractions(aiProfileRepository);
+        verifyNoInteractions(aiAnswerEvaluator);
+        verifyNoInteractions(answerRepository);
+    }
+
+    @Test
+    void submitUserAnswer_shouldThrowNotFound_whenQuestionDoesNotExist(){
+        User savedUser = new User("Yakov");
+        savedUser.setId(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
+        when(questionRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> interviewService.submitUserAnswer(1L, 1L, "It is algo quick sort" ))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Вопрос не найден.");
+
+        verifyNoInteractions(aiProfileRepository);
+        verifyNoInteractions(aiAnswerEvaluator);
+        verifyNoInteractions(answerRepository);
+    }
+
+    @Test
+    void submitUserAnswer_shouldThrowBadRequest_whenQuestionBelongsToAnotherUser(){
+        User savedUser1 = new User("Yakov");
+        savedUser1.setId(1L);
+
+        User savedUser2 = new User("Rodion");
+        savedUser2.setId(2L);
+
+        Question savedQuestion = new Question();
+        savedQuestion.setId(1L);
+        savedQuestion.setUser(savedUser2);
+        savedQuestion.setTextQuestion("Java Core");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser1));
+        when(questionRepository.findById(1L)).thenReturn(Optional.of(savedQuestion));
+
+        assertThatThrownBy(() -> interviewService.submitUserAnswer(1L, 1L, "It is algo quick sort"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Нельзя ответить на вопрос другого пользователя.");
+
+        verifyNoInteractions(aiProfileRepository, aiAnswerEvaluator, answerRepository);
+    }
+
+    @Test
+    void submitUserAnswer_shouldThrowBadRequest_whenAnswerIsBlank(){
+        User savedUser = new User("Yakov");
+        savedUser.setId(1L);
+
+        Question savedQuestion = new Question();
+        savedQuestion.setId(1L);
+        savedQuestion.setUser(savedUser);
+        savedQuestion.setTextQuestion("Java Core");
+
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
+        when(questionRepository.findById(1L)).thenReturn(Optional.of(savedQuestion));
+
+        assertThatThrownBy(() -> interviewService.submitUserAnswer(1L, 1L, "   "))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Ответ не может быть пустой.");
+    }
+
+    @Test
+    void submitUserAnswer_shouldThrowBadRequest_whenAnswerIsNull(){
+        User savedUser = new User("Yakov");
+        savedUser.setId(1L);
+
+        Question savedQuestion = new Question();
+        savedQuestion.setId(1L);
+        savedQuestion.setUser(savedUser);
+        savedQuestion.setTextQuestion("Java Core");
+
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
+        when(questionRepository.findById(1L)).thenReturn(Optional.of(savedQuestion));
+
+        assertThatThrownBy(() -> interviewService.submitUserAnswer(1L, 1L, null))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Ответ не может быть пустой.");
+    }
+
+    @Test
+    void submitUserAnswer_shouldThrowNotFound_whenAiProfileDoesNotExist(){
+        User savedUser = new User("Yakov");
+        savedUser.setId(1L);
+
+        Question savedQuestion = new Question();
+        savedQuestion.setId(1L);
+        savedQuestion.setUser(savedUser);
+        savedQuestion.setTextQuestion("Java Core");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
+        when(questionRepository.findById(1L)).thenReturn(Optional.of(savedQuestion));
+        when(aiProfileRepository.findFirstByActiveTrue()).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> interviewService.submitUserAnswer(1L, 1L, "It is algo quick sort"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Активный AI-профиль не найден.");
+    }
+
+    @Test
+    void submitUserAnswer_shouldReturnInterviewAnswerResult_whenDataIsValid(){
+        User savedUser = new User("Yakov");
+        savedUser.setId(1L);
+
+        Question savedQuestion = new Question();
+        savedQuestion.setId(1L);
+        savedQuestion.setUser(savedUser);
+        savedQuestion.setTextQuestion("Java Core");
+
+        AiProfile savedAiProfile = new AiProfile(
+                1L,
+                "mode",
+                "description mode",
+                "instruction mode",
+                "model name",
+                "language",
+                "answer style",
+                "difficulty",
+                "feedback mode",
+                true,
+                true,
+                0.7,
+                2000
+
+        );
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
+        when(questionRepository.findById(1L)).thenReturn(Optional.of(savedQuestion));
+        when(aiProfileRepository.findFirstByActiveTrue()).thenReturn(Optional.of(savedAiProfile));
+
+        String userAnswerText = "Answer is saluki 06.09.2026";
+        String feedbackText = "Good answer.";
+
+        Answer savedAnswer = new Answer();
+        savedAnswer.setId(1L);
+        savedAnswer.setAnswerText(userAnswerText);
+        savedAnswer.setQuestion(savedQuestion);
+        savedAnswer.setAiProfile(savedAiProfile);
+        savedAnswer.setModelName(savedAiProfile.getModelName());
+
+        when(aiAnswerEvaluator.evaluateAnswer(savedQuestion, savedAiProfile, userAnswerText.trim()))
+                .thenReturn(feedbackText);
+        when(answerRepository.save(any(Answer.class))).thenReturn(savedAnswer);
+
+        InterviewAnswerResult result = interviewService.submitUserAnswer(1L, 1L, userAnswerText);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getAnswerId()).isEqualTo(1L);
+        assertThat(result.getQuestionId()).isEqualTo(1L);
+        assertThat(result.getUserId()).isEqualTo(1L);
+        assertThat(result.getUserAnswerText()).isEqualTo(userAnswerText);
+        assertThat(result.getQuestionText()).isEqualTo("Java Core");
+        assertThat(result.getFeedback()).isEqualTo(feedbackText);
+
+        verify(aiAnswerEvaluator).evaluateAnswer(savedQuestion, savedAiProfile, userAnswerText.trim());
+        verify(answerRepository).save(argThat(answer ->
+                userAnswerText.equals(answer.getAnswerText())
+                        && savedQuestion.equals(answer.getQuestion())
+                        && savedAiProfile.equals(answer.getAiProfile())
+                        && savedAiProfile.getModelName().equals(answer.getModelName())
+        ));
+    }
+
 }
