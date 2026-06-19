@@ -4,7 +4,7 @@ AI Interviewer — учебный fullstack-проект для трениров
 
 Пользователь выбирает пользователя и тему собеседования, получает вопрос, пишет ответ, после чего система сохраняет вопрос и ответ в PostgreSQL и возвращает предварительный feedback. Также пользователь может посмотреть историю своих вопросов и ответов.
 
-Проект разрабатывается как учебный проект для ознакомительной практики.
+Проект разрабатывается как учебный backend-проект для последовательного изучения Java, Spring Boot, REST, JPA/Hibernate и тестирования.
 
 ---
 
@@ -33,13 +33,17 @@ AI Interviewer — учебный fullstack-проект для трениров
 - Spring Boot REST API;
 - React frontend;
 - PostgreSQL database;
-- JDBC DAO layer;
+- Spring Data JPA repository layer;
+- Hibernate ORM и JPA-связи между сущностями;
 - service layer с бизнес-логикой;
+- DTO и mapper-слой для API-ответов;
+- Bean Validation и централизованная обработка ошибок;
 - генерация вопросов по теме;
 - сохранение вопросов и ответов;
 - feedback по ответу пользователя;
 - история пользователя;
 - активный AI-профиль;
+- unit-тесты сервисного слоя на JUnit 5, Mockito и AssertJ;
 - автоматическое создание таблиц через `schema.sql`;
 - автоматическое добавление demo-данных через `data.sql`.
 
@@ -52,16 +56,21 @@ AI Interviewer — учебный fullstack-проект для трениров
 ### Backend
 
 - Java 17
-- Spring Boot
-- Spring Web
-- Spring JDBC
+- Spring Boot 3.5.12
+- Spring Web / REST
+- Spring Data JPA
+- Hibernate ORM
+- Jakarta Validation
 - PostgreSQL Driver
 - Maven
+- JUnit 5
+- Mockito
+- AssertJ
 
 ### Frontend
 
-- React
-- Vite
+- React 19
+- Vite 8
 - JavaScript
 - CSS
 
@@ -79,7 +88,14 @@ AI Interviewer — учебный fullstack-проект для трениров
 Основная цепочка работы приложения:
 
 ```text
-React Frontend → Spring Controller → Service → DAO → PostgreSQL
+React Frontend → Spring Controller → Service → Repository → Hibernate → PostgreSQL
+```
+
+Объекты API отделены от JPA-сущностей:
+
+```text
+HTTP Request DTO → Controller → Service → Entity → Repository
+Repository → Entity → Mapper → Response DTO → HTTP Response
 ```
 
 ### Controller
@@ -90,7 +106,7 @@ React Frontend → Spring Controller → Service → DAO → PostgreSQL
 
 - `GET /api/users` — получить пользователей;
 - `GET /api/topics` — получить темы;
-- `GET /api/aiProfile` — получить AI-профили;
+- `GET /api/ai-profiles` — получить AI-профили;
 - `POST /api/interview/question` — сгенерировать вопрос;
 - `POST /api/interview/answer` — отправить ответ;
 - `GET /api/users/{userId}/history` — получить историю пользователя.
@@ -107,9 +123,17 @@ Service layer содержит основную бизнес-логику:
 - формирование feedback;
 - получение истории пользователя.
 
-### DAO
+Изменяющие операции выполняются в транзакциях через `@Transactional`, а операции чтения используют `@Transactional(readOnly = true)`.
 
-DAO layer отвечает за работу с PostgreSQL через JDBC.
+### Repository
+
+Repository layer построен на Spring Data JPA. Репозитории наследуются от `JpaRepository`, а Hibernate преобразует операции с Java-сущностями в SQL-запросы к PostgreSQL.
+
+### Entity и Mapper
+
+Таблицы представлены JPA-сущностями `User`, `Topic`, `Question`, `Answer` и `AiProfile`. Связи вопроса с пользователем и темой, а также ответа с вопросом и AI-профилем описаны через `@ManyToOne` с ленивой загрузкой.
+
+Mapper-классы преобразуют сущности в Response DTO. Благодаря этому структура REST-ответа не зависит напрямую от структуры таблиц и Hibernate-сущностей.
 
 ---
 
@@ -134,6 +158,8 @@ ai_tutor/src/main/resources/schema.sql
 ```text
 ai_tutor/src/main/resources/data.sql
 ```
+
+На текущем этапе схема управляется SQL-скриптами, а JPA/Hibernate используется для работы с сущностями и запросами. Миграции Flyway или Liquibase пока не подключены.
 
 ---
 
@@ -244,6 +270,39 @@ Backend использует переменные окружения для по
 
 Пароль от базы данных не должен храниться в репозитории.
 
+Пример конфигурации находится в:
+
+```text
+ai_tutor/src/main/resources/application-example.properties
+```
+
+---
+
+## Тестирование
+
+Сервисный слой покрыт unit-тестами с использованием JUnit 5, Mockito и AssertJ.
+
+Проверяются:
+
+- валидация входных данных;
+- сценарии `NotFound` и конфликтов;
+- успешные CRUD-операции;
+- формирование Response DTO;
+- взаимодействия с репозиториями через `verify`, `argThat` и `verifyNoInteractions`;
+- генерация вопросов и оценка ответов;
+- активация AI-профиля и деактивация остальных профилей.
+
+Всего в проекте находится 198 unit-тестов сервисного слоя.
+
+Запуск тестов:
+
+```bash
+cd ai_tutor
+mvn test
+```
+
+Проект собирается для Java 17. При запуске Mockito на более новых JDK может потребоваться явное подключение Mockito Java Agent.
+
 ---
 
 ## Демонстрационный сценарий
@@ -267,7 +326,11 @@ Backend использует переменные окружения для по
 ## Что уже реализовано
 
 - REST API на Spring Boot;
-- разделение на controller / service / DAO;
+- разделение на controller / service / repository;
+- JPA-сущности и связи Hibernate;
+- DTO и mapper-слой;
+- транзакционная бизнес-логика;
+- Bean Validation и `GlobalExceptionHandler`;
 - DTO для interview-flow;
 - PostgreSQL-схема;
 - demo-data для локального запуска;
@@ -278,7 +341,8 @@ Backend использует переменные окружения для по
 - отправка ответа;
 - feedback;
 - история пользователя;
-- локальная конфигурация через переменные окружения.
+- локальная конфигурация через переменные окружения;
+- unit-тесты всех реализаций сервисного слоя.
 
 ---
 
@@ -291,7 +355,9 @@ Backend использует переменные окружения для по
 - добавить статистику по слабым темам пользователя;
 - добавить Docker Compose для PostgreSQL;
 - добавить миграции через Flyway или Liquibase;
-- добавить больше тестов;
+- добавить `@DataJpaTest` для JPA-репозиториев;
+- добавить `@WebMvcTest` для REST-контроллеров;
+- добавить интеграционные тесты с Testcontainers и PostgreSQL;
 - улучшить обработку ошибок;
 - добавить отдельную страницу администрирования тем и AI-профилей.
 
@@ -299,4 +365,4 @@ Backend использует переменные окружения для по
 
 ## Назначение проекта
 
-Проект создан как учебный fullstack-проект для практики Java Backend, Spring Boot, PostgreSQL, JDBC, REST API и React.
+Проект создан как учебный fullstack-проект с backend-фокусом для практики Java 17, Spring Boot, REST API, Spring Data JPA, Hibernate, PostgreSQL, DTO, Bean Validation, JUnit 5, Mockito и React.
