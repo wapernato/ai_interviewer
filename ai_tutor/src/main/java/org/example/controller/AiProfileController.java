@@ -11,12 +11,10 @@ import org.example.model.AiProfile;
 import org.example.service.AiProfileService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Validated
 @RestController
 @RequestMapping("/api/ai-profiles")
 public class AiProfileController {
