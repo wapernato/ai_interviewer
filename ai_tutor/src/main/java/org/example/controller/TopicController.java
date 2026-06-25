@@ -10,12 +10,10 @@ import org.example.dto.topic.UpdateTopicRequest;
 import org.example.service.TopicService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Validated
 @RestController
 @RequestMapping("/api/topics")
 public class TopicController {
