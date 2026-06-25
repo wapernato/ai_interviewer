@@ -25,7 +25,7 @@ public class InterviewController {
     public ResponseEntity<InterviewAnswerResult> answerResult(@Valid @RequestBody AnswerRequest request){
         InterviewAnswerResult interviewAnswerResult = interviewService.submitUserAnswer(request.getUserId(), request.getQuestionId(), request.getTextAnswer());
         return ResponseEntity
-                .status(HttpStatus.OK)
+                .status(HttpStatus.CREATED)
                 .body(interviewAnswerResult);
     }
 
@@ -33,7 +33,7 @@ public class InterviewController {
     public ResponseEntity<InterviewQuestionResult> questionResult(@Valid @RequestBody QuestionRequest request){
         InterviewQuestionResult interviewQuestionResult = interviewService.generateQuestion(request.getUserId(), request.getTopicId());
         return ResponseEntity
-                .status(HttpStatus.OK)
+                .status(HttpStatus.CREATED)
                 .body(interviewQuestionResult);
     }
 
