@@ -1,0 +1,28 @@
+services:
+  backend:
+    image: ai-interviewer-backend:latest
+    container_name: ai-interviewer-backend
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/ai_interviewer
+      DB_USERNAME: postgres
+      DB_PASSWORD: 2773
+      SERVER_PORT: 8080
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16
+    container_name: ai-interviewer-postgres
+    environment:
+      POSTGRES_DB: ai_interviewer
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 2773
+    ports:
+      - "5433:5432"
+    volumes:
+      - ai_interviewer_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  ai_interviewer_postgres_data:
