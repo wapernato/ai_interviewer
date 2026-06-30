@@ -34,7 +34,7 @@ public class AiProfile {
     @Column(name = "active")
     private Boolean active;
 
-    @Column(name = "temperature", precision = 3, scale = 2)
+    @Column(name = "temperature", columnDefinition = "numeric(3,2)")
     private Double temperature;
     @Column(name = "max_tokens")
     private Integer maxTokens;
