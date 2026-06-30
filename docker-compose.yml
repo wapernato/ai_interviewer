@@ -23,6 +23,14 @@ services:
       - "5433:5432"
     volumes:
       - ai_interviewer_postgres_data:/var/lib/postgresql/data
-
+  frontend:
+    build:
+      context: ./frontend
+    container_name: ai-interviewer-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+      
 volumes:
   ai_interviewer_postgres_data:
