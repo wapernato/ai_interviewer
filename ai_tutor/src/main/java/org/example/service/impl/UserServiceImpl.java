@@ -26,15 +26,18 @@ public class UserServiceImpl implements UserService {
         this.userMapper = userMapper;
     }
 
-    @Transactional
-    @Override
-    public UserResponse register(String userName){
+    private void validateId(Long id) {
+        if (id == null || id <= 0) {
+            throw new BadRequestException("Id пользователя должен быть больше 0.");
+        }
+    }
 
-        if(userName == null || userName.isBlank()){
-            throw new BadRequestException("Имя пользователя не должно быть пустым.");
+    private String normalizeAndValidateUsername(String name) {
+        if(name == null){
+            throw new BadRequestException("Имя пользователя не должно быть null.");
         }
 
-        String username = userName.trim();
+        String username = name.trim();
 
         if(username.isBlank()){
             throw new BadRequestException("Имя пользователя не должно быть пустым.");
@@ -43,9 +46,18 @@ public class UserServiceImpl implements UserService {
         if(username.contains(" ")){
             throw new BadRequestException("Имя не должно содержать пробелы.");
         }
+
         if(username.length() < 2 || username.length() > 50){
             throw new BadRequestException("Длина имени должна быть от 2 до 50.");
         }
+
+        return username;
+    }
+
+    @Transactional
+    @Override
+    public UserResponse register(String userName){
+        String username = normalizeAndValidateUsername(userName);
 
         Optional<User> userFromData = userRepository.findByUsername(username);
 
@@ -61,9 +73,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @Override
     public UserResponse getById(Long id){
-        if(id == null || id <= 0){
-            throw new BadRequestException("id должен быть больше 0.");
-        }
+        validateId(id);
         User savedUser = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден."));
 
@@ -78,39 +88,21 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public UserResponse updateUsername(Long id, String newusername){
+    public UserResponse updateUsername(Long id, String newUsername){
 
-        if(id == null || id <= 0){
-            throw new BadRequestException("id должен быть больше 0.");
-        }
-
-        if(newusername == null){
-            throw new BadRequestException("Имя пользователя не должно быть null.");
-        }
-
-        String newUsername = newusername.trim();
-
-        if(newUsername.isBlank()){
-            throw new BadRequestException("Имя пользователя не должно быть пустым.");
-        }
-        if(newUsername.contains(" ")){
-            throw new BadRequestException("Имя не должно содержать пробелы.");
-        }
-        if(newUsername.length() < 2 || newUsername.length() > 50){
-            throw new BadRequestException("Длина имени должна быть от 2 до 50.");
-        }
+        validateId(id);
+        String username = normalizeAndValidateUsername(newUsername);
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден."));
 
-
-        Optional<User> existingUser = userRepository.findByUsername(newUsername);
+        Optional<User> existingUser = userRepository.findByUsername(username);
 
         if(existingUser.isPresent() && !existingUser.get().getId().equals(id)){
             throw new UserAlreadyExistsException("Пользователь с таким именем уже существует.");
         }
 
-        user.setUsername(newUsername);
+        user.setUsername(username);
         User savedUser = userRepository.save(user);
         return userMapper.toResponse(savedUser);
     }
@@ -118,13 +110,11 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void deleteById(Long id){
-        if(id == null || id <= 0){
-            throw new BadRequestException("Такой id некорректный.");
-        }
+
+        validateId(id);
 
         userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден."));
-
 
         userRepository.deleteById(id);
     }
@@ -133,22 +123,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse findByName(String userName){
 
-        if(userName == null){
-            throw new BadRequestException("Имя пользователя не должно быть null.");
-        }
-
-        String username = userName.trim();
-
-        if(username.isBlank()){
-            throw new BadRequestException("Имя пользователя не должно быть пустым.");
-        }
-
-        if(username.contains(" ")){
-            throw new BadRequestException("Имя не должно содержать пробелы.");
-        }
-        if(username.length() < 2 || username.length() > 50){
-            throw new BadRequestException("Длина имени должна быть от 2 до 50.");
-        }
+        String username = normalizeAndValidateUsername(userName);
 
         User savedUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("Пользователь с именем (" + username + ") не найден."));

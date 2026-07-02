@@ -34,24 +34,44 @@ public class QuestionServiceImpl implements QuestionService {
         this.questionMapper = questionMapper;
     }
 
+    private String normalizeRequiredText(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new BadRequestException(message);
+        }
+
+        return value.trim();
+    }
+
+    private void validateQuestionLength(String textQuestion) {
+        if (textQuestion.length() < 3 || textQuestion.length() > 1000) {
+            throw new BadRequestException("Длина вопроса должна быть от 3 до 1000 символов.");
+        }
+    }
+
+    private User findUserOrThrow(Long userId, String message) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(message));
+    }
+
+    private Topic findTopicOrThrow(Long topicId, String message) {
+        return topicRepository.findById(topicId)
+                .orElseThrow(() -> new NotFoundException(message));
+    }
+
+    private Question findQuestionOrThrow(Long id, String message) {
+        return questionRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(message));
+    }
+
     @Transactional
     @Override
     public QuestionResponse addQuestion(Long userId, Long topicId, String textQuestion) {
-        if(textQuestion == null || textQuestion.isBlank()){
-            throw new BadRequestException("Текст вопроса не может быть пустым.");
-        }
+        String normalizedTextQuestion = normalizeRequiredText(textQuestion, "Текст вопроса не может быть пустым.");
+        validateQuestionLength(normalizedTextQuestion);
 
-        String normalizedTextQuestion = textQuestion.trim();
+        User user = findUserOrThrow(userId, "Пользователь с id = " + userId + " не найден.");
 
-        if (normalizedTextQuestion.length() < 3 || normalizedTextQuestion.length() > 1000) {
-            throw new BadRequestException("Длина вопроса должна быть от 3 до 1000 символов.");
-        }
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден."));
-
-        Topic topic = topicRepository.findById(topicId)
-                .orElseThrow(()-> new NotFoundException("Тема с таким id=" + topicId + " не существует."));
+        Topic topic = findTopicOrThrow(topicId, "Тема с таким id=" + topicId + " не существует.");
 
         Question question = new Question();
 
@@ -69,16 +89,14 @@ public class QuestionServiceImpl implements QuestionService {
     @Transactional(readOnly = true)
     @Override
     public QuestionResponse getById(Long id) {
-        Question question = questionRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Вопрос с таким id = " + id + " не найден."));
+        Question question = findQuestionOrThrow(id, "Вопрос с таким id = " + id + " не найден.");
         return questionMapper.toResponse(question);
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<QuestionResponse> getByTopicId(Long topicId) {
-        topicRepository.findById(topicId)
-                .orElseThrow(() -> new NotFoundException("Тема с id=" + topicId + " не найдена."));
+        findTopicOrThrow(topicId, "Тема с id=" + topicId + " не найдена.");
 
         return questionMapper.toResponseList(questionRepository.findByTopic_Id(topicId));
     }
@@ -86,8 +104,7 @@ public class QuestionServiceImpl implements QuestionService {
     @Transactional(readOnly = true)
     @Override
     public List<QuestionResponse> getByUserId(Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден."));
+        findUserOrThrow(userId, "Пользователь с id=" + userId + " не найден.");
 
         return questionMapper.toResponseList(questionRepository.findByUser_Id(userId));
     }
@@ -103,40 +120,24 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     public QuestionResponse updateQuestion(Long id, String newTextQuestion, String source, String language) {
 
-        if(newTextQuestion == null || newTextQuestion.isBlank()){
-            throw new BadRequestException("Новый текст вопроса не может быть пустым.");
-        }
+        String normalizedTextQuestion = normalizeRequiredText(newTextQuestion, "Новый текст вопроса не может быть пустым.");
+        String normalizedSource = normalizeRequiredText(source, "Source вопроса не может быть пустым.");
+        String normalizedLanguage = normalizeRequiredText(language, "Language вопроса не может быть пустым.");
 
-        if(source == null || source.isBlank()){
-            throw new BadRequestException("Source вопроса не может быть пустым.");
-        }
+        Question oldQuestion = findQuestionOrThrow(id, "Вопрос с id = " + id + " не найден.");
 
-        if(language == null || language.isBlank()){
-            throw new BadRequestException("Language вопроса не может быть пустым.");
-        }
-
-        newTextQuestion = newTextQuestion.trim();
-        source = source.trim();
-        language = language.trim();
-
-        Question oldQuestion = questionRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Вопрос с id = " + id + " не найден."));
-
-
-        if (newTextQuestion.length() < 3 || newTextQuestion.length() > 1000) {
-            throw new BadRequestException("Длина вопроса должна быть от 3 до 1000 символов.");
-        }
+        validateQuestionLength(normalizedTextQuestion);
 
         String oldText = oldQuestion.getTextQuestion().trim();
 
-        if(newTextQuestion.equals(oldText)){
+        if(normalizedTextQuestion.equals(oldText)){
             throw new BadRequestException("Текст не должен совпадать со старым текстом.");
         }
 
 
-        oldQuestion.setLanguage(language);
-        oldQuestion.setTextQuestion(newTextQuestion);
-        oldQuestion.setSource(source);
+        oldQuestion.setLanguage(normalizedLanguage);
+        oldQuestion.setTextQuestion(normalizedTextQuestion);
+        oldQuestion.setSource(normalizedSource);
 
         Question question = questionRepository.save(oldQuestion);
 
@@ -146,8 +147,7 @@ public class QuestionServiceImpl implements QuestionService {
     @Transactional
     @Override
     public void deleteById(Long id) {
-        questionRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Указанный Id=" + id + " не найден в базе данных."));
+        findQuestionOrThrow(id, "Указанный Id=" + id + " не найден в базе данных.");
 
         questionRepository.deleteById(id);
     }
