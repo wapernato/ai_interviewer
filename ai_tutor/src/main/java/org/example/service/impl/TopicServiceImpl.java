@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class    TopicServiceImpl implements TopicService {
+public class TopicServiceImpl implements TopicService {
 
     private final TopicRepository topicRepository;
     private final TopicMapper topicMapper;
@@ -26,19 +26,35 @@ public class    TopicServiceImpl implements TopicService {
         this.topicMapper = topicMapper;
     }
 
+    private void validateId(Long id) {
+        if (id == null || id <= 0) {
+            throw new BadRequestException("Id темы должен быть больше 0.");
+        }
+    }
+
+    private String normalizeAndValidateTopicName(String name) {
+        if (name == null) {
+            throw new BadRequestException("Название темы не должно быть null.");
+        }
+
+        String topicName = name.trim();
+
+        if (topicName.isBlank()) {
+            throw new BadRequestException("Название темы не должно быть пустым.");
+        }
+
+        if(topicName.length() < 2 || topicName.length() > 100){
+            throw new BadRequestException("Длина названия новой темы должно быть от 2 до 100 символов.");
+        }
+
+        return topicName;
+    }
+
+
     @Transactional
     @Override
     public TopicResponse addTopic(String newTopicName){
-
-        if(newTopicName == null || newTopicName.isBlank()){
-            throw new BadRequestException("Название новой темы не может быть пустой.");
-        }
-
-        String topicName = newTopicName.trim();
-
-        if(topicName.length() < 2 || topicName.length() > 100){
-            throw new BadRequestException("Название новой темы должно быть от 2 до 100 символов.");
-        }
+        String topicName = normalizeAndValidateTopicName(newTopicName);
 
         if (topicRepository.existsByName(topicName)) {
             throw new TopicAlreadyExistsException("Тема с названием '" + topicName + "' уже существует.");
@@ -52,9 +68,7 @@ public class    TopicServiceImpl implements TopicService {
     @Transactional(readOnly = true)
     @Override
     public TopicResponse getByTopicId(Long id) {
-        if(id == null || id <= 0){
-            throw new BadRequestException("id должен быть больше 0.");
-        }
+        validateId(id);
 
         Topic savedTopic = topicRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Тема с id = " + id + " не найдена."));
@@ -71,23 +85,9 @@ public class    TopicServiceImpl implements TopicService {
     @Transactional(readOnly = true)
     @Override
     public TopicResponse getByTopicName(String topicName){
-        if (topicName == null) {
-            throw new BadRequestException("Название темы не должно быть null.");
-        }
 
-        topicName = topicName.trim();
-
-        if (topicName.isBlank()) {
-            throw new BadRequestException("Название темы не должно быть пустым.");
-        }
-
-        if (topicName.length() < 2 || topicName.length() > 100) {
-            throw new BadRequestException("Длина названия темы должна быть от 2 до 100 символов.");
-        }
-
-
-        String finalTopicName = topicName;
-        Topic savedTopic = topicRepository.findByName(topicName)
+        String finalTopicName = normalizeAndValidateTopicName(topicName);
+        Topic savedTopic = topicRepository.findByName(finalTopicName)
                 .orElseThrow(() -> new NotFoundException("Тема с именем - " + finalTopicName + " - не найдена."));
 
         return topicMapper.toResponse(savedTopic);
@@ -96,34 +96,19 @@ public class    TopicServiceImpl implements TopicService {
     @Transactional
     @Override
     public TopicResponse updateTopic(Long id, String newTopicName) {
-        if (id == null || id <= 0) {
-            throw new BadRequestException("Id темы должен быть больше 0.");
-        }
-
-        if (newTopicName == null) {
-            throw new BadRequestException("Название темы не должно быть null.");
-        }
-
-        newTopicName = newTopicName.trim();
-
-        if (newTopicName.isBlank()) {
-            throw new BadRequestException("Название темы не должно быть пустым.");
-        }
-
-        if (newTopicName.length() < 2 || newTopicName.length() > 100) {
-            throw new BadRequestException("Длина названия темы должна быть от 2 до 100 символов.");
-        }
+        validateId(id);
+        String topicName = normalizeAndValidateTopicName(newTopicName);
 
         Topic topic = topicRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Тема с id = " + id + " не найдена."));
 
-        Optional<Topic> existingTopic = topicRepository.findByName(newTopicName);
+        Optional<Topic> existingTopic = topicRepository.findByName(topicName);
 
         if (existingTopic.isPresent() && !existingTopic.get().getId().equals(id)) {
             throw new TopicAlreadyExistsException("Тема с таким названием уже существует.");
         }
 
-        topic.setName(newTopicName);
+        topic.setName(topicName);
 
         Topic savedTopic = topicRepository.save(topic);
         return topicMapper.toResponse(savedTopic);
@@ -132,10 +117,7 @@ public class    TopicServiceImpl implements TopicService {
     @Transactional
     @Override
     public void deleteByTopicId(Long id) {
-        if (id == null || id <= 0) {
-            throw new BadRequestException("Id темы должен быть больше 0.");
-        }
-
+        validateId(id);
         topicRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Тема с id = " + id + " не найдена."));
 

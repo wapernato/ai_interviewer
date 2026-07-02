@@ -62,7 +62,7 @@ public class TopicServiceImplTest {
     void addTopic_shouldThrowBadRequest_whenNameIsNull(){
         assertThatThrownBy(() -> topicService.addTopic(null))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("Название новой темы не может быть пустой.");
+                .hasMessage("Название темы не должно быть null.");
 
         verifyNoInteractions(topicRepository);
     }
@@ -71,7 +71,7 @@ public class TopicServiceImplTest {
     void addTopic_shouldThrowBadRequest_whenNameIsBlank(){
         assertThatThrownBy(() -> topicService.addTopic("   "))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("Название новой темы не может быть пустой.");
+                .hasMessage("Название темы не должно быть пустым.");
 
         verifyNoInteractions(topicRepository);
     }
@@ -80,14 +80,14 @@ public class TopicServiceImplTest {
     void addTopic_shouldBadRequest_whenNameIsTooShort(){
         assertThatThrownBy(() -> topicService.addTopic("s"))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("Название новой темы должно быть от 2 до 100 символов.");
+                .hasMessage("Длина названия новой темы должно быть от 2 до 100 символов.");
     }
 
     @Test
     void addTopic_shouldBadRequest_whenNameIsTooLong(){
         assertThatThrownBy(() -> topicService.addTopic("s".repeat(101)))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("Название новой темы должно быть от 2 до 100 символов.");
+                .hasMessage("Длина названия новой темы должно быть от 2 до 100 символов.");
     }
 
     @Test
@@ -120,7 +120,7 @@ public class TopicServiceImplTest {
     void getByTopicId_shouldThrowBadRequest_whenIdIsNotPositive(){
         assertThatThrownBy(() -> topicService.getByTopicId(0L))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("id должен быть больше 0.");
+                .hasMessage("Id темы должен быть больше 0.");
 
         verifyNoInteractions(topicRepository);
     }
@@ -129,7 +129,7 @@ public class TopicServiceImplTest {
     void getByTopicId_shouldThrowBadRequest_whenIdIsNull(){
         assertThatThrownBy(() -> topicService.getByTopicId(null))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("id должен быть больше 0.");
+                .hasMessage("Id темы должен быть больше 0.");
 
         verifyNoInteractions(topicRepository);
     }
@@ -201,14 +201,14 @@ public class TopicServiceImplTest {
     void getByTopicName_shouldThrowBadRequest_whenNameIsTooShort(){
         assertThatThrownBy(() -> topicService.getByTopicName("a"))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("Длина названия темы должна быть от 2 до 100 символов.");
+                .hasMessage("Длина названия новой темы должно быть от 2 до 100 символов.");
     }
 
     @Test
     void getByTopicName_shouldThrowBadRequest_whenNameIsTooLong(){
         assertThatThrownBy(() -> topicService.getByTopicName("a".repeat(101)))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("Длина названия темы должна быть от 2 до 100 символов.");
+                .hasMessage("Длина названия новой темы должно быть от 2 до 100 символов.");
     }
 
     @Test
@@ -288,14 +288,14 @@ public class TopicServiceImplTest {
     void updateTopic_shouldThrowBadRequest_whenNameIsTooShort(){
         assertThatThrownBy(() -> topicService.updateTopic(1L, "a"))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("Длина названия темы должна быть от 2 до 100 символов.");
+                .hasMessage("Длина названия новой темы должно быть от 2 до 100 символов.");
     }
 
     @Test
     void updateTopic_shouldThrowBadRequest_whenNameIsTooLong(){
         assertThatThrownBy(() -> topicService.updateTopic(1L, "a".repeat(101)))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("Длина названия темы должна быть от 2 до 100 символов.");
+                .hasMessage("Длина названия новой темы должно быть от 2 до 100 символов.");
     }
 
     @Test
