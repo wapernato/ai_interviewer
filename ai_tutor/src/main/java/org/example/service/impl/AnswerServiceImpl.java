@@ -35,36 +35,53 @@ public class AnswerServiceImpl implements AnswerService {
         this.answerMapper = answerMapper;
     }
 
+    private void validateId(Long id, String message) {
+        if (id == null || id <= 0) {
+            throw new BadRequestException(message);
+        }
+    }
+
+    private String normalizeRequiredText(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new BadRequestException(message);
+        }
+
+        return value.trim();
+    }
+
+    private Question findQuestionOrThrow(Long questionId) {
+        return questionRepository.findById(questionId)
+                .orElseThrow(() -> new NotFoundException("Вопрос с id=" + questionId + " не найден."));
+    }
+
+    private AiProfile findAiProfileOrThrow(Long aiProfileId) {
+        return aiProfileRepository.findById(aiProfileId)
+                .orElseThrow(() -> new NotFoundException("AI-профиль с id=" + aiProfileId + " не найден."));
+    }
+
+    private Answer findAnswerOrThrow(Long id) {
+        return answerRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Ответ с id=" + id + " не найден."));
+    }
+
     @Transactional
     @Override
     public AnswerResponse addAnswer(Long questionId, Long aiProfileId, String answerText, String modelName) {
-        if (questionId == null || questionId <= 0) {
-            throw new BadRequestException("Id вопроса не может быть null.");
-        }
+        validateId(questionId, "Id вопроса не может быть null.");
+        validateId(aiProfileId, "Id профиля не может быть null.");
 
-        if (aiProfileId == null || aiProfileId <= 0) {
-            throw new BadRequestException("Id профиля не может быть null.");
-        }
-
-        if (answerText == null || answerText.isBlank()) {
-            throw new BadRequestException("Текст ответа не может быть пустым.");
-        }
-
-        if (modelName == null || modelName.isBlank()) {
-            throw new BadRequestException("Название модели не может быть пустым.");
-        }
+        String normalizedAnswerText = normalizeRequiredText(answerText, "Текст ответа не может быть пустым.");
+        String normalizedModelName = normalizeRequiredText(modelName, "Название модели не может быть пустым.");
 
         Answer answer = new Answer();
 
-        Question question = questionRepository.findById(questionId)
-                        .orElseThrow(() -> new NotFoundException("Вопрос с id=" + questionId + " не найден."));
-        AiProfile aiProfile = aiProfileRepository.findById(aiProfileId)
-                        .orElseThrow(() -> new NotFoundException("AI-профиль с id=" + aiProfileId + " не найден."));
+        Question question = findQuestionOrThrow(questionId);
+        AiProfile aiProfile = findAiProfileOrThrow(aiProfileId);
 
         answer.setQuestion(question);
         answer.setAiProfile(aiProfile);
-        answer.setAnswerText(answerText.trim());
-        answer.setModelName(modelName.trim());
+        answer.setAnswerText(normalizedAnswerText);
+        answer.setModelName(normalizedModelName);
 
         Answer savedAnswer = answerRepository.save(answer);
 
@@ -74,23 +91,15 @@ public class AnswerServiceImpl implements AnswerService {
     @Transactional
     @Override
     public AnswerResponse updateAnswer(Long id, String answerText, String modelName) {
-        if (id == null || id <= 0) {
-            throw new BadRequestException("Id ответа не может быть null.");
-        }
+        validateId(id, "Id ответа не может быть null.");
 
-        if (answerText == null || answerText.isBlank()) {
-            throw new BadRequestException("Текст ответа не может быть пустым.");
-        }
+        String normalizedAnswerText = normalizeRequiredText(answerText, "Текст ответа не может быть пустым.");
+        String normalizedModelName = normalizeRequiredText(modelName, "Название модели не может быть пустым.");
 
-        if (modelName == null || modelName.isBlank()) {
-            throw new BadRequestException("Название модели не может быть пустым.");
-        }
+        Answer existingAnswer = findAnswerOrThrow(id);
 
-        Answer existingAnswer = answerRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Ответ с id=" + id + " не найден."));
-
-        existingAnswer.setAnswerText(answerText.trim());
-        existingAnswer.setModelName(modelName.trim());
+        existingAnswer.setAnswerText(normalizedAnswerText);
+        existingAnswer.setModelName(normalizedModelName);
 
         Answer savedAnswer =  answerRepository.save(existingAnswer);
 
@@ -100,13 +109,9 @@ public class AnswerServiceImpl implements AnswerService {
     @Transactional
     @Override
     public void deleteById(Long id) {
-        if (id == null || id <= 0) {
-            throw new BadRequestException("Id ответа не может быть null.");
-        }
+        validateId(id, "Id ответа не может быть null.");
 
-       answerRepository.findById(id)
-               .orElseThrow(() -> new NotFoundException("Ответ с id=" + id + " не найден."));
-
+        findAnswerOrThrow(id);
 
         answerRepository.deleteById(id);
     }
@@ -114,12 +119,9 @@ public class AnswerServiceImpl implements AnswerService {
     @Transactional(readOnly = true)
     @Override
     public AnswerResponse getById(Long id) {
-        if (id == null || id <= 0) {
-            throw new BadRequestException("Id ответа не может быть null.");
-        }
+        validateId(id, "Id ответа не может быть null.");
 
-        Answer savedAnswer =  answerRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Ответ с id=" + id + " не найден."));
+        Answer savedAnswer = findAnswerOrThrow(id);
 
         return answerMapper.toResponse(savedAnswer);
     }
@@ -127,9 +129,7 @@ public class AnswerServiceImpl implements AnswerService {
     @Transactional(readOnly = true)
     @Override
     public List<AnswerResponse> getByQuestionId(Long questionId) {
-        if (questionId == null || questionId <= 0) {
-            throw new BadRequestException("Id вопроса не может быть null.");
-        }
+        validateId(questionId, "Id вопроса не может быть null.");
 
         if(!questionRepository.existsById(questionId)){
             throw new NotFoundException("Вопрос с id=" + questionId + " не найден.");
@@ -143,9 +143,7 @@ public class AnswerServiceImpl implements AnswerService {
     @Transactional(readOnly = true)
     @Override
     public List<AnswerResponse> getByProfileId(Long profileId) {
-        if (profileId == null || profileId <= 0) {
-            throw new BadRequestException("Id AI-профиля не может быть null.");
-        }
+        validateId(profileId, "Id AI-профиля не может быть null.");
 
         if(!aiProfileRepository.existsById(profileId)){
             throw new NotFoundException("AI-профиль с id=" + profileId + " не найден.");

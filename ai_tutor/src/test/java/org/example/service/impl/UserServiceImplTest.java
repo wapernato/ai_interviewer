@@ -39,7 +39,7 @@ class UserServiceImplTest {
     void register_shouldThrowBadRequest_whenUsernameIsNull() {
         assertThatThrownBy(() -> userService.register(null))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("Имя пользователя не должно быть пустым.");
+                .hasMessage("Имя пользователя не должно быть null.");
         verifyNoInteractions(userRepository);
     }
 
@@ -102,7 +102,7 @@ class UserServiceImplTest {
     void getById_shouldThrowBadRequest_whenIdIsInvalid() {
         assertThatThrownBy(() -> userService.getById(0L))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("id должен быть больше 0.");
+                .hasMessage("Id пользователя должен быть больше 0.");
         verifyNoInteractions(userRepository);
     }
 
@@ -145,7 +145,7 @@ class UserServiceImplTest {
     void updateUsername_shouldThrowBadRequest_whenIdIsInvalid() {
         assertThatThrownBy(() -> userService.updateUsername(null, "Yakov"))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("id должен быть больше 0.");
+                .hasMessage("Id пользователя должен быть больше 0.");
         verifyNoInteractions(userRepository);
     }
 
@@ -237,7 +237,7 @@ class UserServiceImplTest {
     void deleteById_shouldThrowBadRequest_whenIdIsInvalid() {
         assertThatThrownBy(() -> userService.deleteById(0L))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("Такой id некорректный.");
+                .hasMessage("Id пользователя должен быть больше 0.");
         verifyNoInteractions(userRepository);
     }
 
