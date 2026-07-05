@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import heroImage from "./assets/hero.png";
 import "./App.css";
 
 const API_URL = "http://localhost:8080";
@@ -13,24 +14,103 @@ async function readResponse(response) {
     return await response.text();
 }
 
+function ApiNotice({ type, text }) {
+    if (!text) {
+        return null;
+    }
+
+    return (
+        <div className={`api-notice ${type}`}>
+            <span className="notice-dot"></span>
+            <span>{text}</span>
+        </div>
+    );
+}
+
+function AppHeader({ apiStatus, usersCount, topicsCount, activeProfile }) {
+    return (
+        <header className="app-header">
+            <div className="header-copy">
+                <div className="product-mark">
+                    <img src={heroImage} alt="" />
+                    <div>
+                        <span>AI Interviewer</span>
+                        <strong>Java Backend Trainer</strong>
+                    </div>
+                </div>
+
+                <h1>Рабочий экран собеседования</h1>
+                <p>
+                    Здесь видно весь backend-сценарий: пользователь и тема, генерация вопроса,
+                    отправка ответа, feedback и история из PostgreSQL.
+                </p>
+            </div>
+
+            <div className="header-status">
+                <div className={`health-card ${apiStatus.ok ? "online" : "offline"}`}>
+                    <span>Backend</span>
+                    <strong>{apiStatus.label}</strong>
+                </div>
+
+                <div className="header-metrics">
+                    <div>
+                        <span>Users</span>
+                        <strong>{usersCount}</strong>
+                    </div>
+                    <div>
+                        <span>Topics</span>
+                        <strong>{topicsCount}</strong>
+                    </div>
+                    <div>
+                        <span>AI Profile</span>
+                        <strong>{activeProfile ? "Active" : "Missing"}</strong>
+                    </div>
+                </div>
+            </div>
+        </header>
+    );
+}
+
+function WorkflowStepper({ question, feedback }) {
+    const steps = [
+        { label: "Настройки", active: true },
+        { label: "Вопрос", active: Boolean(question) },
+        { label: "Ответ", active: Boolean(feedback) },
+        { label: "История", active: false }
+    ];
+
+    return (
+        <div className="workflow-stepper">
+            {steps.map((step, index) => (
+                <div className={`workflow-step ${step.active ? "active" : ""}`} key={step.label}>
+                    <span>{index + 1}</span>
+                    <strong>{step.label}</strong>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 function InterviewSettings({
     userId,
     topicId,
     users,
     topics,
+    selectedUser,
+    selectedTopic,
     setUserId,
     setTopicId,
     onGenerateQuestion,
     loading
 }) {
     return (
-        <section className="panel settings-panel">
-            <div className="section-header">
+        <section className="surface settings-surface">
+            <div className="surface-header">
                 <div>
-                    <p className="eyebrow">Step 1</p>
-                    <h2>Настройки интервью</h2>
+                    <span className="section-kicker">Interview setup</span>
+                    <h2>Параметры сессии</h2>
                 </div>
-                <span className="status-pill">Spring Boot API</span>
+                <span className="api-chip">POST /api/interview/question</span>
             </div>
 
             <div className="form-grid">
@@ -47,7 +127,7 @@ function InterviewSettings({
 
                         {users.map((user) => (
                             <option key={user.id} value={user.id}>
-                                {user.username} — ID {user.id}
+                                {user.username} · ID {user.id}
                             </option>
                         ))}
                     </select>
@@ -66,11 +146,22 @@ function InterviewSettings({
 
                         {topics.map((topic) => (
                             <option key={topic.id} value={topic.id}>
-                                {topic.name} — ID {topic.id}
+                                {topic.name} · ID {topic.id}
                             </option>
                         ))}
                     </select>
                 </label>
+            </div>
+
+            <div className="selected-context">
+                <div>
+                    <span>Current user</span>
+                    <strong>{selectedUser?.username || "Не выбран"}</strong>
+                </div>
+                <div>
+                    <span>Current topic</span>
+                    <strong>{selectedTopic?.name || "Не выбрана"}</strong>
+                </div>
             </div>
 
             <button
@@ -78,171 +169,192 @@ function InterviewSettings({
                 onClick={onGenerateQuestion}
                 disabled={loading || users.length === 0 || topics.length === 0}
             >
-                {loading ? "Загружаем..." : "Сгенерировать вопрос"}
+                {loading ? "Генерируем вопрос" : "Сгенерировать вопрос"}
             </button>
         </section>
     );
 }
 
 function QuestionCard({ question }) {
-    if (!question) {
-        return (
-            <section className="panel empty-state">
-                <p className="eyebrow">Step 2</p>
-                <h2>Вопрос появится здесь</h2>
-                <p>
-                    Выбери пользователя и тему, затем нажми кнопку генерации.
-                    Backend создаст вопрос и сохранит его в PostgreSQL.
-                </p>
-            </section>
-        );
-    }
-
     return (
-        <section className="panel question-panel">
-            <div className="section-header">
+        <section className="surface question-surface">
+            <div className="surface-header">
                 <div>
-                    <p className="eyebrow">Step 2</p>
-                    <h2>Сгенерированный вопрос</h2>
+                    <span className="section-kicker">Generated question</span>
+                    <h2>{question ? "Вопрос готов" : "Вопрос еще не создан"}</h2>
                 </div>
 
-                <div className="badge-row">
-                    <span className="badge">{question.topicName}</span>
-                    <span className="badge badge-dark">{question.difficulty}</span>
-                    <span className="badge badge-blue">{question.aiMode}</span>
-                </div>
+                {question && (
+                    <div className="badge-row">
+                        <span className="badge">{question.topicName}</span>
+                        <span className="badge neutral">{question.difficulty}</span>
+                        <span className="badge blue">{question.aiMode}</span>
+                    </div>
+                )}
             </div>
 
-            <div className="question-box">
-                {question.questionText}
+            <div className={question ? "question-box" : "question-box empty"}>
+                {question
+                    ? question.questionText
+                    : "Выбери пользователя и тему, затем запусти генерацию. Вопрос сохранится как Question в backend."}
             </div>
 
-            <div className="meta-grid">
+            <div className="entity-grid">
                 <div>
-                    <span>ID вопроса</span>
-                    <strong>{question.questionId}</strong>
+                    <span>Question ID</span>
+                    <strong>{question?.questionId || "-"}</strong>
                 </div>
-
                 <div>
                     <span>User ID</span>
-                    <strong>{question.userId}</strong>
+                    <strong>{question?.userId || "-"}</strong>
                 </div>
-
                 <div>
                     <span>Topic ID</span>
-                    <strong>{question.topicId}</strong>
+                    <strong>{question?.topicId || "-"}</strong>
                 </div>
-
                 <div>
                     <span>AI Profile ID</span>
-                    <strong>{question.aiProfileId}</strong>
+                    <strong>{question?.aiProfileId || "-"}</strong>
                 </div>
             </div>
         </section>
     );
 }
 
-function AnswerForm({ question, answerText, setAnswerText, onSubmitAnswer, loading }) {
-    return (
-        <section className="panel answer-panel">
-            <div className="section-header">
-                <div>
-                    <p className="eyebrow">Step 3</p>
-                    <h2>Ответ пользователя</h2>
-                </div>
+function AnswerWorkspace({ question, answerText, setAnswerText, onSubmitAnswer, loading }) {
+    const remaining = 3000 - answerText.length;
 
-                <span className="counter">{answerText.length} символов</span>
+    return (
+        <section className="surface answer-surface">
+            <div className="surface-header">
+                <div>
+                    <span className="section-kicker">Answer workspace</span>
+                    <h2>Ответ кандидата</h2>
+                </div>
+                <span className={remaining < 0 ? "counter danger" : "counter"}>
+                    {answerText.length}/3000
+                </span>
             </div>
 
             <textarea
                 value={answerText}
                 onChange={(event) => setAnswerText(event.target.value)}
-                placeholder="Напиши ответ так, как будто ты отвечаешь на техническом собеседовании..."
+                placeholder="Напиши ответ так, как будто отвечаешь интервьюеру..."
                 disabled={!question}
             />
 
-            <div className="actions-row">
+            <div className="action-bar">
                 <button
-                    className="primary-button"
+                    className="primary-button compact"
                     onClick={onSubmitAnswer}
-                    disabled={!question || loading}
+                    disabled={!question || loading || answerText.trim().length === 0 || remaining < 0}
                 >
-                    {loading ? "Отправляем ответ..." : "Отправить ответ"}
+                    {loading ? "Отправляем" : "Отправить ответ"}
                 </button>
 
-                {!question && (
-                    <span className="hint">
-                        Сначала нужно сгенерировать вопрос.
-                    </span>
-                )}
+                <span>
+                    {!question
+                        ? "Сначала нужен вопрос."
+                        : "Ответ сохранится как Answer и уйдет на AI evaluation."}
+                </span>
             </div>
         </section>
     );
 }
 
 function FeedbackCard({ feedback }) {
-    if (!feedback) {
-        return null;
-    }
-
     return (
-        <section className="panel feedback-panel">
-            <p className="eyebrow">Step 4</p>
-            <h2>AI Feedback</h2>
-            <p>{feedback}</p>
+        <section className="surface feedback-surface">
+            <div className="surface-header">
+                <div>
+                    <span className="section-kicker">AI feedback</span>
+                    <h2>{feedback ? "Результат проверки" : "Feedback появится после ответа"}</h2>
+                </div>
+            </div>
+
+            <div className={feedback ? "feedback-body" : "feedback-body empty"}>
+                {feedback || "Отправь ответ, и backend вернет обратную связь от выбранного AI-профиля."}
+            </div>
         </section>
     );
 }
 
-function AiProfileCard({ activeProfile }) {
-    if (!activeProfile) {
-        return (
-            <section className="panel ai-profile-panel">
-                <p className="eyebrow">AI Profile</p>
-                <h2>Активный профиль</h2>
-
-                <div className="history-empty">
-                    Активный AI-профиль не найден.
-                </div>
-            </section>
-        );
-    }
-
+function ActiveProfile({ activeProfile }) {
     return (
-        <section className="panel ai-profile-panel">
-            <p className="eyebrow">AI Profile</p>
-            <h2>Активный профиль</h2>
-
-            <div className="profile-card">
-                <div className="profile-main">
-                    <span className="profile-dot"></span>
-
-                    <div>
-                        <h3>{activeProfile.mode}</h3>
-                        <p>{activeProfile.descriptionMode || "Описание не указано"}</p>
-                    </div>
+        <section className="surface side-surface">
+            <div className="surface-header compact-header">
+                <div>
+                    <span className="section-kicker">AI profile</span>
+                    <h2>Активный профиль</h2>
                 </div>
+            </div>
 
-                <div className="profile-grid">
-                    <div>
-                        <span>Сложность</span>
-                        <strong>{activeProfile.difficulty || "—"}</strong>
+            {!activeProfile ? (
+                <div className="empty-panel">Активный AI-профиль не найден.</div>
+            ) : (
+                <div className="profile-summary">
+                    <div className="profile-title">
+                        <span className="status-dot"></span>
+                        <div>
+                            <strong>{activeProfile.mode}</strong>
+                            <p>{activeProfile.descriptionMode || "Описание не указано"}</p>
+                        </div>
                     </div>
 
-                    <div>
-                        <span>Feedback</span>
-                        <strong>{activeProfile.feedbackMode || "—"}</strong>
-                    </div>
+                    <dl>
+                        <div>
+                            <dt>Difficulty</dt>
+                            <dd>{activeProfile.difficulty || "-"}</dd>
+                        </div>
+                        <div>
+                            <dt>Feedback</dt>
+                            <dd>{activeProfile.feedbackMode || "-"}</dd>
+                        </div>
+                        <div>
+                            <dt>Model</dt>
+                            <dd>{activeProfile.modelName || "-"}</dd>
+                        </div>
+                        <div>
+                            <dt>Language</dt>
+                            <dd>{activeProfile.language || "-"}</dd>
+                        </div>
+                    </dl>
+                </div>
+            )}
+        </section>
+    );
+}
 
-                    <div>
-                        <span>Модель</span>
-                        <strong>{activeProfile.modelName || "—"}</strong>
-                    </div>
+function SessionSummary({ selectedUser, selectedTopic, question, answerText, feedback }) {
+    return (
+        <section className="surface side-surface">
+            <div className="surface-header compact-header">
+                <div>
+                    <span className="section-kicker">Session state</span>
+                    <h2>Текущее состояние</h2>
+                </div>
+            </div>
 
-                    <div>
-                        <span>Язык</span>
-                        <strong>{activeProfile.language || "—"}</strong>
-                    </div>
+            <div className="summary-list">
+                <div>
+                    <span>User</span>
+                    <strong>{selectedUser?.username || "-"}</strong>
+                </div>
+                <div>
+                    <span>Topic</span>
+                    <strong>{selectedTopic?.name || "-"}</strong>
+                </div>
+                <div>
+                    <span>Question</span>
+                    <strong>{question ? `#${question.questionId}` : "-"}</strong>
+                </div>
+                <div>
+                    <span>Answer</span>
+                    <strong>{answerText.trim() ? `${answerText.trim().length} chars` : "-"}</strong>
+                </div>
+                <div>
+                    <span>Feedback</span>
+                    <strong>{feedback ? "Received" : "-"}</strong>
                 </div>
             </div>
         </section>
@@ -251,63 +363,43 @@ function AiProfileCard({ activeProfile }) {
 
 function HistoryList({ history, onLoadHistory, loading }) {
     return (
-        <section className="panel history-panel">
-            <div className="section-header">
+        <section className="surface history-surface">
+            <div className="surface-header">
                 <div>
-                    <p className="eyebrow">Step 5</p>
-                    <h2>История пользователя</h2>
+                    <span className="section-kicker">User history</span>
+                    <h2>История</h2>
                 </div>
 
                 <button className="secondary-button" onClick={onLoadHistory} disabled={loading}>
-                    {loading ? "Загружаем..." : "Показать историю"}
+                    {loading ? "Загрузка" : "Обновить"}
                 </button>
             </div>
 
-            {history.length === 0 && (
-                <div className="history-empty">
-                    История пока не загружена или у пользователя ещё нет сохранённых ответов.
+            {history.length === 0 ? (
+                <div className="empty-panel">
+                    История не загружена или у пользователя еще нет вопросов.
+                </div>
+            ) : (
+                <div className="history-list">
+                    {history.map((item) => (
+                        <article className="history-item" key={item.questionId}>
+                            <div className="history-heading">
+                                <strong>{item.topicName || "Без темы"}</strong>
+                                <span>#{item.questionId}</span>
+                            </div>
+                            <p>{item.textQuestion}</p>
+                            <div className="history-answer">
+                                {item.answerText || "Ответ еще не сохранен"}
+                            </div>
+                            <div className="history-meta">
+                                <span>{item.username}</span>
+                                <span>{item.modelName || "model unknown"}</span>
+                            </div>
+                        </article>
+                    ))}
                 </div>
             )}
-
-            <div className="history-list">
-                {history.map((item) => (
-                    <article className="history-item" key={item.questionId}>
-                        <div className="history-top">
-                            <h3>{item.topicName || "Без темы"}</h3>
-                            <span>Question #{item.questionId}</span>
-                        </div>
-
-                        <p>
-                            <strong>Пользователь:</strong> {item.username}
-                        </p>
-
-                        <p>
-                            <strong>Вопрос:</strong> {item.textQuestion}
-                        </p>
-
-                        <p>
-                            <strong>Ответ:</strong> {item.answerText || "Ответ ещё не сохранён"}
-                        </p>
-
-                        <p>
-                            <strong>Модель:</strong> {item.modelName || "Не указана"}
-                        </p>
-                    </article>
-                ))}
-            </div>
         </section>
-    );
-}
-
-function Message({ type, text }) {
-    if (!text) {
-        return null;
-    }
-
-    return (
-        <div className={`message ${type}`}>
-            {text}
-        </div>
     );
 }
 
@@ -315,6 +407,7 @@ function App() {
     const [users, setUsers] = useState([]);
     const [topics, setTopics] = useState([]);
     const [activeProfile, setActiveProfile] = useState(null);
+    const [apiStatus, setApiStatus] = useState({ ok: false, label: "Checking" });
 
     const [userId, setUserId] = useState("");
     const [topicId, setTopicId] = useState("");
@@ -332,6 +425,16 @@ function App() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
+    const selectedUser = useMemo(
+        () => users.find((user) => String(user.id) === String(userId)),
+        [users, userId]
+    );
+
+    const selectedTopic = useMemo(
+        () => topics.find((topic) => String(topic.id) === String(topicId)),
+        [topics, topicId]
+    );
+
     useEffect(() => {
         async function loadInitialData() {
             setLoadingInitialData(true);
@@ -339,6 +442,18 @@ function App() {
             setSuccess("");
 
             try {
+                const healthResponse = await fetch(`${API_URL}/api/health`);
+                const healthData = await readResponse(healthResponse);
+
+                if (!healthResponse.ok) {
+                    throw new Error("Backend не отвечает.");
+                }
+
+                setApiStatus({
+                    ok: true,
+                    label: typeof healthData === "string" ? "Online" : "Online"
+                });
+
                 const usersResponse = await fetch(`${API_URL}/api/users`);
                 const topicsResponse = await fetch(`${API_URL}/api/topics`);
                 const aiProfilesResponse = await fetch(`${API_URL}/api/aiProfile`);
@@ -348,27 +463,15 @@ function App() {
                 const aiProfilesData = await readResponse(aiProfilesResponse);
 
                 if (!usersResponse.ok) {
-                    throw new Error(
-                        typeof usersData === "string"
-                            ? usersData
-                            : "Ошибка при загрузке пользователей."
-                    );
+                    throw new Error(typeof usersData === "string" ? usersData : "Ошибка при загрузке пользователей.");
                 }
 
                 if (!topicsResponse.ok) {
-                    throw new Error(
-                        typeof topicsData === "string"
-                            ? topicsData
-                            : "Ошибка при загрузке тем."
-                    );
+                    throw new Error(typeof topicsData === "string" ? topicsData : "Ошибка при загрузке тем.");
                 }
 
                 if (!aiProfilesResponse.ok) {
-                    throw new Error(
-                        typeof aiProfilesData === "string"
-                            ? aiProfilesData
-                            : "Ошибка при загрузке AI-профилей."
-                    );
+                    throw new Error(typeof aiProfilesData === "string" ? aiProfilesData : "Ошибка при загрузке AI-профилей.");
                 }
 
                 setUsers(usersData);
@@ -385,6 +488,7 @@ function App() {
                     setTopicId(String(topicsData[0].id));
                 }
             } catch (error) {
+                setApiStatus({ ok: false, label: "Offline" });
                 setError(error.message || "Не удалось загрузить начальные данные.");
             } finally {
                 setLoadingInitialData(false);
@@ -437,11 +541,7 @@ function App() {
             const data = await readResponse(response);
 
             if (!response.ok) {
-                throw new Error(
-                    typeof data === "string"
-                        ? data
-                        : "Ошибка при генерации вопроса."
-                );
+                throw new Error(typeof data === "string" ? data : "Ошибка при генерации вопроса.");
             }
 
             setQuestion(data);
@@ -486,15 +586,11 @@ function App() {
             const data = await readResponse(response);
 
             if (!response.ok) {
-                throw new Error(
-                    typeof data === "string"
-                        ? data
-                        : "Ошибка при отправке ответа."
-                );
+                throw new Error(typeof data === "string" ? data : "Ошибка при отправке ответа.");
             }
 
             setFeedback(data.feedback);
-            setSuccess("Ответ успешно отправлен и сохранён.");
+            setSuccess("Ответ отправлен и сохранен.");
         } catch (error) {
             setError(error.message || "Не удалось отправить ответ.");
         } finally {
@@ -514,19 +610,14 @@ function App() {
 
         try {
             const response = await fetch(`${API_URL}/api/users/${Number(userId)}/history`);
-
             const data = await readResponse(response);
 
             if (!response.ok) {
-                throw new Error(
-                    typeof data === "string"
-                        ? data
-                        : "Ошибка при загрузке истории."
-                );
+                throw new Error(typeof data === "string" ? data : "Ошибка при загрузке истории.");
             }
 
             setHistory(data);
-            setSuccess("История успешно загружена.");
+            setSuccess("История обновлена.");
         } catch (error) {
             setError(error.message || "Не удалось загрузить историю.");
         } finally {
@@ -535,91 +626,66 @@ function App() {
     }
 
     return (
-        <div className="page">
-            <div className="background-glow background-glow-one"></div>
-            <div className="background-glow background-glow-two"></div>
+        <main className="app-shell">
+            <AppHeader
+                apiStatus={apiStatus}
+                usersCount={users.length}
+                topicsCount={topics.length}
+                activeProfile={activeProfile}
+            />
 
-            <main className="app">
-                <header className="hero">
-                    <div className="hero-badge">
-                        Java Backend · Spring Boot · PostgreSQL · React
-                    </div>
+            <WorkflowStepper question={question} feedback={feedback} />
 
-                    <h1>AI Interviewer</h1>
+            <ApiNotice type="error" text={error} />
+            <ApiNotice type="success" text={success} />
 
-                    <p>
-                        Персональный тренажёр технических собеседований.
-                        Выбери пользователя и тему, получи вопрос, отправь ответ
-                        и посмотри feedback с историей.
-                    </p>
-                </header>
+            <div className="workspace-layout">
+                <section className="primary-column">
+                    <InterviewSettings
+                        userId={userId}
+                        topicId={topicId}
+                        users={users}
+                        topics={topics}
+                        selectedUser={selectedUser}
+                        selectedTopic={selectedTopic}
+                        setUserId={setUserId}
+                        setTopicId={setTopicId}
+                        onGenerateQuestion={generateQuestion}
+                        loading={loadingInitialData || loadingQuestion}
+                    />
 
-                <Message type="error" text={error} />
-                <Message type="success" text={success} />
+                    <QuestionCard question={question} />
 
-                <div className="layout">
-                    <div className="main-column">
-                        <InterviewSettings
-                            userId={userId}
-                            topicId={topicId}
-                            users={users}
-                            topics={topics}
-                            setUserId={setUserId}
-                            setTopicId={setTopicId}
-                            onGenerateQuestion={generateQuestion}
-                            loading={loadingInitialData || loadingQuestion}
-                        />
+                    <AnswerWorkspace
+                        question={question}
+                        answerText={answerText}
+                        setAnswerText={setAnswerText}
+                        onSubmitAnswer={submitAnswer}
+                        loading={loadingAnswer}
+                    />
 
-                        <QuestionCard question={question} />
+                    <FeedbackCard feedback={feedback} />
+                </section>
 
-                        <AnswerForm
-                            question={question}
-                            answerText={answerText}
-                            setAnswerText={setAnswerText}
-                            onSubmitAnswer={submitAnswer}
-                            loading={loadingAnswer}
-                        />
+                <aside className="secondary-column">
+                    <SessionSummary
+                        selectedUser={selectedUser}
+                        selectedTopic={selectedTopic}
+                        question={question}
+                        answerText={answerText}
+                        feedback={feedback}
+                    />
 
-                        <FeedbackCard feedback={feedback} />
-                    </div>
+                    <ActiveProfile activeProfile={activeProfile} />
 
-                    <aside className="side-column">
-                        <section className="panel summary-panel">
-                            <p className="eyebrow">Current session</p>
-                            <h2>Состояние</h2>
-
-                            <div className="summary-row">
-                                <span>User ID</span>
-                                <strong>{userId || "—"}</strong>
-                            </div>
-
-                            <div className="summary-row">
-                                <span>Topic ID</span>
-                                <strong>{topicId || "—"}</strong>
-                            </div>
-
-                            <div className="summary-row">
-                                <span>Question</span>
-                                <strong>{question ? `#${question.questionId}` : "—"}</strong>
-                            </div>
-
-                            <div className="summary-row">
-                                <span>Answer length</span>
-                                <strong>{answerText.length}</strong>
-                            </div>
-                        </section>
-
-                        <AiProfileCard activeProfile={activeProfile} />
-
-                        <HistoryList
-                            history={history}
-                            onLoadHistory={loadHistory}
-                            loading={loadingHistory}
-                        />
-                    </aside>
-                </div>
-            </main>
-        </div>
+                    <HistoryList
+                        history={history}
+                        onLoadHistory={loadHistory}
+                        loading={loadingHistory}
+                    />
+                </aside>
+            </div>
+        </main>
     );
 }
 
