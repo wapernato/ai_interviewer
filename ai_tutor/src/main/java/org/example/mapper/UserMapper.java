@@ -18,6 +18,10 @@ public class UserMapper {
 
         userResponse.setId(user.getId());
         userResponse.setUsername(user.getUsername());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setRole(user.getRole());
+        userResponse.setEnabled(user.getEnabled());
+        userResponse.setCreatedAt(user.getCreatedAt());
 
         return userResponse;
     }
