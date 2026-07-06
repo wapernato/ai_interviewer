@@ -1,7 +1,19 @@
-insert into users(id, username)
-values (1, 'gnazem')
+insert into users(id, username, email, password_hash, role, enabled)
+values (
+    1,
+    'gnazem',
+    'gnazem@example.com',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    'USER',
+    true
+)
 on conflict (id) do update
-set username = excluded.username;
+set
+    username = excluded.username,
+    email = excluded.email,
+    password_hash = excluded.password_hash,
+    role = excluded.role,
+    enabled = excluded.enabled;
 
 insert into topics(id, name)
 values
