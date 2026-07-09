@@ -40,24 +40,53 @@ public class InterviewServiceImpl implements InterviewService {
         this.answerRepository = answerRepository;
     }
 
+    private User findUserOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден."));
+    }
+
+    private Topic findTopicOrThrow(Long topicId) {
+        return topicRepository.findById(topicId)
+                .orElseThrow(() -> new NotFoundException("Тема не найдена."));
+    }
+
+    private Question findQuestionOrThrow(Long questionId) {
+        return questionRepository.findById(questionId)
+                .orElseThrow(() -> new NotFoundException("Вопрос не найден."));
+    }
+
+    private AiProfile findActiveAiProfileOrThrow() {
+        return aiProfileRepository.findFirstByActiveTrue()
+                .orElseThrow(() -> new NotFoundException("Активный AI-профиль не найден."));
+    }
+
+    private String normalizeGeneratedQuestion(String questionText) {
+        if (questionText == null || questionText.isBlank()) {
+            throw new BadRequestException("AI не смог сгенерировать вопрос.");
+        }
+
+        return questionText.trim();
+    }
+
+    private String normalizeUserAnswer(String userAnswerText) {
+        if (userAnswerText == null || userAnswerText.isBlank()) {
+            throw new BadRequestException("Ответ не может быть пустой.");
+        }
+
+        return userAnswerText.trim();
+    }
+
     @Transactional
     @Override
     public InterviewQuestionResult generateQuestion(Long userId, Long topicId){
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден."));
+        User user = findUserOrThrow(userId);
 
-        Topic topic = topicRepository.findById(topicId)
-                .orElseThrow(() -> new NotFoundException("Тема не найдена."));
+        Topic topic = findTopicOrThrow(topicId);
 
-        AiProfile aiProfile = aiProfileRepository.findFirstByActiveTrue()
-                .orElseThrow(() -> new NotFoundException("Активный AI-профиль не найден."));
+        AiProfile aiProfile = findActiveAiProfileOrThrow();
 
-        String questionText = aiQuestionGenerator.generatedQuestion(topic, aiProfile);
-
-        if (questionText == null || questionText.isBlank()) {
-            throw new BadRequestException("AI не смог сгенерировать вопрос.");
-        }
+        String questionText = normalizeGeneratedQuestion(aiQuestionGenerator.generatedQuestion(topic, aiProfile));
 
         Question newQuestion = new Question();
 
@@ -87,27 +116,22 @@ public class InterviewServiceImpl implements InterviewService {
     @Override
     public InterviewAnswerResult submitUserAnswer(Long userId, Long questionId, String userAnswerText){
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден."));
+        User user = findUserOrThrow(userId);
 
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new NotFoundException("Вопрос не найден."));
+        Question question = findQuestionOrThrow(questionId);
 
 
         if(!question.getUser().getId().equals(userId)){
             throw new BadRequestException("Нельзя ответить на вопрос другого пользователя.");
         }
 
-        if(userAnswerText == null || userAnswerText.isBlank()){
-            throw new BadRequestException("Ответ не может быть пустой.");
-        }
+        String normalizedUserAnswerText = normalizeUserAnswer(userAnswerText);
 
-        AiProfile aiProfile = aiProfileRepository.findFirstByActiveTrue()
-                .orElseThrow(() -> new NotFoundException("Активный AI-профиль не найден."));
+        AiProfile aiProfile = findActiveAiProfileOrThrow();
 
         Answer answer = new Answer();
 
-        answer.setAnswerText(userAnswerText);
+        answer.setAnswerText(normalizedUserAnswerText);
         answer.setModelName(aiProfile.getModelName());
         answer.setQuestion(question);
         answer.setAiProfile(aiProfile);
@@ -115,7 +139,7 @@ public class InterviewServiceImpl implements InterviewService {
         String feedbackText = aiAnswerEvaluator.evaluateAnswer(
                 question,
                 aiProfile,
-                userAnswerText.trim()
+                normalizedUserAnswerText
         );
 
         Answer savedAnswer = answerRepository.save(answer);

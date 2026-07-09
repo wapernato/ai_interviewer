@@ -8,19 +8,21 @@ import org.example.exception.UserAlreadyExistsException;
 import org.example.model.User;
 import org.example.model.UserRole;
 import org.example.repository.UserRepository;
+import org.example.security.JwtService;
 import org.example.service.AuthService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 public class AuthServiceImpl implements AuthService {
+
+    private final JwtService jwtService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthServiceImpl(UserRepository userRepository,
+    public AuthServiceImpl(JwtService jwtService, UserRepository userRepository,
                            PasswordEncoder passwordEncoder) {
+        this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -43,6 +45,18 @@ public class AuthServiceImpl implements AuthService {
     private AuthResponse createResponse(User user){
         AuthResponse response = new AuthResponse();
 
+        response.setId(user.getId());
+        response.setUsername(user.getUsername());
+        response.setEmail(user.getEmail());
+        response.setRole(user.getRole());
+
+        return response;
+    }
+
+    private AuthResponse createResponseWithToken(User user){
+        AuthResponse response = new AuthResponse();
+
+        response.setToken(jwtService.generateToken(user));
         response.setId(user.getId());
         response.setUsername(user.getUsername());
         response.setEmail(user.getEmail());
@@ -102,7 +116,6 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("Неверный email или пароль.");
         }
 
-        return createResponse(user);
-
+        return createResponseWithToken(user);
     }
 }
