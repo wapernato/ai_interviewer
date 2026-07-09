@@ -8,6 +8,7 @@ public class AuthResponse {
     private String username;
     private String email;
     private UserRole role;
+    private String token;
 
     public Long getId() {
         return id;
@@ -20,6 +21,10 @@ public class AuthResponse {
     public String getUsername() {
         return username;
     }
+
+    public String getToken() { return token; }
+
+    public void setToken(String token) { this.token = token; }
 
     public void setUsername(String username) {
         this.username = username;

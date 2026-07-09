@@ -21,8 +21,11 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/api/health").permitAll()
+                        .requestMatchers("/api/interview/**").authenticated()
                         .anyRequest().permitAll()
                 )
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}))
                 .build();
+
     }
 }
