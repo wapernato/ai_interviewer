@@ -357,17 +357,18 @@ public class InterviewServiceImplTest {
         when(questionRepository.findById(1L)).thenReturn(Optional.of(savedQuestion));
         when(aiProfileRepository.findFirstByActiveTrue()).thenReturn(Optional.of(savedAiProfile));
 
-        String userAnswerText = "Answer is saluki 06.09.2026";
+        String userAnswerText = "   Answer is saluki 06.09.2026   ";
+        String normalizedUserAnswerText = "Answer is saluki 06.09.2026";
         String feedbackText = "Good answer.";
 
         Answer savedAnswer = new Answer();
         savedAnswer.setId(1L);
-        savedAnswer.setAnswerText(userAnswerText);
+        savedAnswer.setAnswerText(normalizedUserAnswerText);
         savedAnswer.setQuestion(savedQuestion);
         savedAnswer.setAiProfile(savedAiProfile);
         savedAnswer.setModelName(savedAiProfile.getModelName());
 
-        when(aiAnswerEvaluator.evaluateAnswer(savedQuestion, savedAiProfile, userAnswerText.trim()))
+        when(aiAnswerEvaluator.evaluateAnswer(savedQuestion, savedAiProfile, normalizedUserAnswerText))
                 .thenReturn(feedbackText);
         when(answerRepository.save(any(Answer.class))).thenReturn(savedAnswer);
 
@@ -377,13 +378,13 @@ public class InterviewServiceImplTest {
         assertThat(result.getAnswerId()).isEqualTo(1L);
         assertThat(result.getQuestionId()).isEqualTo(1L);
         assertThat(result.getUserId()).isEqualTo(1L);
-        assertThat(result.getUserAnswerText()).isEqualTo(userAnswerText);
+        assertThat(result.getUserAnswerText()).isEqualTo(normalizedUserAnswerText);
         assertThat(result.getQuestionText()).isEqualTo("Java Core");
         assertThat(result.getFeedback()).isEqualTo(feedbackText);
 
-        verify(aiAnswerEvaluator).evaluateAnswer(savedQuestion, savedAiProfile, userAnswerText.trim());
+        verify(aiAnswerEvaluator).evaluateAnswer(savedQuestion, savedAiProfile, normalizedUserAnswerText);
         verify(answerRepository).save(argThat(answer ->
-                userAnswerText.equals(answer.getAnswerText())
+                normalizedUserAnswerText.equals(answer.getAnswerText())
                         && savedQuestion.equals(answer.getQuestion())
                         && savedAiProfile.equals(answer.getAiProfile())
                         && savedAiProfile.getModelName().equals(answer.getModelName())
