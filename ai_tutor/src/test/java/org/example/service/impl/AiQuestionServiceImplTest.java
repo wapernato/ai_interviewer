@@ -18,6 +18,14 @@ class AiQuestionServiceImplTest {
         aiQuestionService = new AiQuestionServiceImpl();
     }
 
+
+    private AiProfile createProfile(String difficulty, String mode) {
+        AiProfile profile = new AiProfile();
+        profile.setDifficulty(difficulty);
+        profile.setMode(mode);
+        return profile;
+    }
+
     @Test
     void generatedQuestion_shouldThrowBadRequest_whenTopicIsNull() {
         assertThatThrownBy(() -> aiQuestionService.generatedQuestion(null, createProfile("middle", "strict")))
@@ -91,12 +99,5 @@ class AiQuestionServiceImplTest {
         assertThat(result)
                 .contains("Уровень сложности: junior")
                 .contains("Режим интервьюера: default");
-    }
-
-    private AiProfile createProfile(String difficulty, String mode) {
-        AiProfile profile = new AiProfile();
-        profile.setDifficulty(difficulty);
-        profile.setMode(mode);
-        return profile;
     }
 }
