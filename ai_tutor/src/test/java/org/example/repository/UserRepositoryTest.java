@@ -1,6 +1,7 @@
 package org.example.repository;
 
 import org.example.model.User;
+import org.example.model.UserRole;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -12,6 +13,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
@@ -32,14 +34,50 @@ class UserRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
+    private User createUser(String username, String email) {
+        User user = new User();
+
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPasswordHash("encoded-password");
+        user.setRole(UserRole.USER);
+        user.setEnabled(true);
+
+        return user;
+    }
+
     @Test
     void save_shouldThrowException_whenUsernameIsDuplicate() {
-        User firstUser = new User("Yakov");
-        User secondUser = new User("Yakov");
+        User firstUser = createUser("Yakov", "dygv@gmail.com");
+        User secondUser = createUser("Yakov", "kmsd@gmail.com");
 
         userRepository.saveAndFlush(firstUser);
 
         assertThatThrownBy(() -> userRepository.saveAndFlush(secondUser))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
+
+    @Test
+    void save_shouldThrowException_whenEmailIsDuplicate() {
+        User firstUser = createUser("Rodion", "kms@gmail.com");
+        User secondUser = createUser("Yakov", "kms@gmail.com");
+
+        userRepository.saveAndFlush(firstUser);
+
+        assertThatThrownBy(() -> userRepository.saveAndFlush(secondUser))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void save_shouldPersistUser_whenDataIsValid() {
+        User user = createUser("Yakov", "kms@yandex.ru");
+
+        User savedUser = userRepository.saveAndFlush(user);
+
+        assertThat(savedUser).isNotNull();
+        assertThat(savedUser.getUsername()).isEqualTo("Yakov");
+        assertThat(savedUser.getEmail()).isEqualTo("kms@yandex.ru");
+    }
+
+
 }

@@ -60,7 +60,7 @@ public class AuthControllerTest {
         RegisterRequest request = createRegisterRequest("ximeo", "zavod3433@yandex.ru", "88888888");
         AuthResponse response = createAuthResponse(1L, "ximeo", "zavod3433@yandex.ru", UserRole.USER);
 
-        when(authService.register(request)).thenReturn(response);
+        when(authService.register(any(RegisterRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -149,18 +149,88 @@ public class AuthControllerTest {
 
     @Test
     void register_shouldReturnUnsupportedMediaType_whenContentTypeIsTextPlain() throws Exception {
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
+        String body = """
                         {
                           "username": "ximeo",
                           "email": "zavod3433@yandex.ru",
                           "password": "88888888"
                         }
-                        """))
-                .andExpect(jsonPath("$.error").value(""))
+                """;
 
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.TEXT_PLAIN)
+                .content(body))
+                .andExpect(status().isUnsupportedMediaType());
 
+        verifyNoInteractions(authService);
+    }
+
+    @Test
+    void register_shouldReturnBadRequest_whenContentTypeIsJsonButBodyIsPlainText() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("hello"))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.message").value("Некорректное тело запроса."));
+
+        verifyNoInteractions(authService);
+    }
+
+    @Test
+    void register_shouldIgnoreUnknownJsonFields_whenRoleIsProvided() throws Exception {
+        AuthResponse response = createAuthResponse(1L, "ximeo", "zavod3433@yandex.ru", UserRole.USER);
+        String body = """
+                {
+                  "username": "ximeo",
+                  "email": "zavod3433@yandex.ru",
+                  "password": "88888888",
+                  "role": "ADMIN"
+                }
+                """;
+
+        when(authService.register(any(RegisterRequest.class))).thenReturn(response);
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.role").value("USER"));
+
+        verify(authService).register(argThat(req ->
+                "ximeo".equals(req.getUsername())
+                        && "zavod3433@yandex.ru".equals(req.getEmail())
+                        && "88888888".equals(req.getPassword())
+        ));
+    }
+
+    @Test
+    void register_shouldReturnBadRequest_whenRequestBodyIsEmptyJsonObject() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.validationErrors.username").value("Имя пользователя не должно быть пустым."))
+                .andExpect(jsonPath("$.validationErrors.email").value("Email не должен быть пустым."))
+                .andExpect(jsonPath("$.validationErrors.password").value("Пароль не должен быть пустым."));
+
+        verifyNoInteractions(authService);
+    }
+
+    @Test
+    void register_shouldReturnBadRequestWithMultipleValidationErrors_whenSeveralFieldsAreInvalid() throws Exception {
+        RegisterRequest request = createRegisterRequest("x", "bad-email", "123");
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(jsonPath("$.validationErrors.username").value("Имя пользователя должно быть от 2 до 50 символов."))
+                .andExpect(jsonPath("$.validationErrors.email").value("Email должен быть корректным."))
+                .andExpect(jsonPath("$.validationErrors.password").value("Пароль должен быть от 8 до 100 символов."));
+
+        verifyNoInteractions(authService);
     }
 }
 
