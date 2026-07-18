@@ -2,12 +2,13 @@ package org.example.service.impl;
 
 import org.example.dto.interview.InterviewAnswerResult;
 import org.example.dto.interview.InterviewQuestionResult;
+import org.example.dto.ai.QuestionGenerationResult;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
+import org.example.integration.ai.AiQuestionGenerator;
 import org.example.model.*;
 import org.example.repository.*;
 import org.example.service.AiAnswerEvaluator;
-import org.example.service.AiQuestionGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,31 +66,9 @@ public class InterviewServiceImplTest {
     void generateQuestion_shouldThrowNotFound_whenUserDoesNotExist(){
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> interviewService.generateQuestion(1L, 1L))
+        assertThatThrownBy(() -> interviewService.generateQuestion(1L, "Java Core"))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Пользователь не найден.");
-    }
-
-    @Test
-    void generateQuestion_shouldThrowNotFound_whenTopicDoesNotExist(){
-        User savedUser = new User("Yakov");
-        savedUser.setId(1L);
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
-        when(topicRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> interviewService.generateQuestion(1L, 1L))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("Тема не найдена.");
-
-        verify(userRepository).findById(1L);
-        verify(topicRepository).findById(1L);
-
-        verifyNoInteractions(
-                aiProfileRepository,
-                aiQuestionGenerator,
-                questionRepository
-        );
     }
 
     @Test
@@ -97,27 +76,21 @@ public class InterviewServiceImplTest {
         User savedUser = new User("Yakov");
         savedUser.setId(1L);
 
-        Topic savedTopic = new Topic("Java Core");
-        savedTopic.setId(1L);
-
         when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
-        when(topicRepository.findById(1L)).thenReturn(Optional.of(savedTopic));
         when(aiProfileRepository.findFirstByActiveTrue()).thenReturn(Optional.empty());
 
 
-        assertThatThrownBy(() -> interviewService.generateQuestion(1L, 1L))
+        assertThatThrownBy(() -> interviewService.generateQuestion(1L, "Java Core"))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Активный AI-профиль не найден.");
 
+        verifyNoInteractions(aiQuestionGenerator, topicRepository, questionRepository);
     }
 
     @Test
-    void generateQuestion_shouldThrowBadRequest_whenGeneratorReturnsBlankText(){
+    void generateQuestion_shouldThrowBadRequest_whenGeneratorRejectsTopic(){
         User savedUser = new User("Yakov");
         savedUser.setId(1L);
-
-        Topic savedTopic = new Topic("Java Core");
-        savedTopic.setId(1L);
 
         AiProfile savedAiProfile = new AiProfile(
                 1L,
@@ -137,23 +110,21 @@ public class InterviewServiceImplTest {
         );
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
-        when(topicRepository.findById(1L)).thenReturn(Optional.of(savedTopic));
         when(aiProfileRepository.findFirstByActiveTrue())
                 .thenReturn(Optional.of(savedAiProfile));
-        when(aiQuestionGenerator.generatedQuestion(savedTopic, savedAiProfile))
-                .thenReturn("   ");
+        when(aiQuestionGenerator.generate("   ", savedAiProfile))
+                .thenThrow(new BadRequestException("Текст темы не должен быть пустым."));
 
         assertThatThrownBy(() -> interviewService
-                .generateQuestion(1L, 1L))
+                .generateQuestion(1L, "   "))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessage("AI не смог сгенерировать вопрос.");
+                .hasMessage("Текст темы не должен быть пустым.");
 
         verify(userRepository).findById(1L);
-        verify(topicRepository).findById(1L);
         verify(aiProfileRepository).findFirstByActiveTrue();
-        verify(aiQuestionGenerator).generatedQuestion(savedTopic, savedAiProfile);
+        verify(aiQuestionGenerator).generate("   ", savedAiProfile);
 
-        verifyNoInteractions(questionRepository);
+        verifyNoInteractions(topicRepository, questionRepository);
     }
 
     @Test
@@ -182,19 +153,30 @@ public class InterviewServiceImplTest {
         );
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
-        when(topicRepository.findById(1L)).thenReturn(Optional.of(savedTopic));
         when(aiProfileRepository.findFirstByActiveTrue())
                 .thenReturn(Optional.of(savedAiProfile));
-        when(aiQuestionGenerator.generatedQuestion(savedTopic, savedAiProfile))
-                .thenReturn("Вопрос успешно создан.");
+
+        QuestionGenerationResult generationResult = new QuestionGenerationResult();
+        generationResult.setQuestionText("Вопрос успешно создан.");
+        generationResult.setNormalizedTopic("Java Core");
+        generationResult.setDifficulty(QuestionDifficulty.MEDIUM);
+
+        when(aiQuestionGenerator.generate(" Java Core ", savedAiProfile))
+                .thenReturn(generationResult);
+        when(topicRepository.findByName("Java Core"))
+                .thenReturn(Optional.of(savedTopic));
 
         Question savedQuestion = new Question();
         savedQuestion.setId(1L);
         savedQuestion.setTextQuestion("Вопрос успешно создан.");
+        savedQuestion.setCreatedByUser(savedUser);
+        savedQuestion.setTopic(savedTopic);
+        savedQuestion.setAiProfile(savedAiProfile);
+        savedQuestion.setDifficulty(QuestionDifficulty.MEDIUM);
 
         when(questionRepository.save(any(Question.class))).thenReturn(savedQuestion);
 
-        InterviewQuestionResult result = interviewService.generateQuestion(1L, 1L);
+        InterviewQuestionResult result = interviewService.generateQuestion(1L, " Java Core ");
 
         assertThat(result).isNotNull();
         assertThat(result.getQuestionId()).isEqualTo(1L);
@@ -204,16 +186,72 @@ public class InterviewServiceImplTest {
         assertThat(result.getTopicName()).isEqualTo("Java Core");
         assertThat(result.getQuestionText()).isEqualTo("Вопрос успешно создан.");
         assertThat(result.getAiMode()).isEqualTo("mode");
-        assertThat(result.getDifficulty()).isEqualTo("difficulty");
+        assertThat(result.getDifficulty()).isEqualTo(QuestionDifficulty.MEDIUM);
 
-        verify(aiQuestionGenerator).generatedQuestion(savedTopic, savedAiProfile);
+        verify(aiQuestionGenerator).generate(" Java Core ", savedAiProfile);
+        verify(topicRepository).findByName("Java Core");
         verify(questionRepository).save(argThat(question ->
                 "Вопрос успешно создан.".equals(question.getTextQuestion())
-                        && question.getUser().equals(savedUser)
+                        && question.getCreatedByUser().equals(savedUser)
                         && question.getTopic().equals(savedTopic)
+                        && question.getAiProfile().equals(savedAiProfile)
+                        && question.getDifficulty().equals(QuestionDifficulty.MEDIUM)
                         && "ai".equals(question.getSource())
                         && "ru".equals(question.getLanguage())
         ));
+    }
+
+    @Test
+    void generateQuestion_shouldCreateTopic_whenGeneratedTopicDoesNotExist(){
+        User savedUser = new User("Yakov");
+        savedUser.setId(1L);
+
+        AiProfile savedAiProfile = new AiProfile(
+                1L,
+                "mode",
+                "description mode",
+                "instruction mode",
+                "model name",
+                "language",
+                "answer style",
+                "difficulty",
+                "feedback mode",
+                true,
+                true,
+                0.7,
+                2000
+        );
+
+        QuestionGenerationResult generationResult = new QuestionGenerationResult();
+        generationResult.setQuestionText("Вопрос по Docker.");
+        generationResult.setNormalizedTopic("Docker");
+        generationResult.setDifficulty(QuestionDifficulty.EASY);
+
+        Topic savedTopic = new Topic("Docker");
+        savedTopic.setId(5L);
+
+        Question savedQuestion = new Question();
+        savedQuestion.setId(10L);
+        savedQuestion.setCreatedByUser(savedUser);
+        savedQuestion.setTopic(savedTopic);
+        savedQuestion.setAiProfile(savedAiProfile);
+        savedQuestion.setTextQuestion("Вопрос по Docker.");
+        savedQuestion.setDifficulty(QuestionDifficulty.EASY);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
+        when(aiProfileRepository.findFirstByActiveTrue()).thenReturn(Optional.of(savedAiProfile));
+        when(aiQuestionGenerator.generate("Docker", savedAiProfile)).thenReturn(generationResult);
+        when(topicRepository.findByName("Docker")).thenReturn(Optional.empty());
+        when(topicRepository.save(any(Topic.class))).thenReturn(savedTopic);
+        when(questionRepository.save(any(Question.class))).thenReturn(savedQuestion);
+
+        InterviewQuestionResult result = interviewService.generateQuestion(1L, "Docker");
+
+        assertThat(result.getTopicId()).isEqualTo(5L);
+        assertThat(result.getTopicName()).isEqualTo("Docker");
+        assertThat(result.getDifficulty()).isEqualTo(QuestionDifficulty.EASY);
+
+        verify(topicRepository).save(argThat(topic -> "Docker".equals(topic.getName())));
     }
 
     @Test
@@ -256,7 +294,7 @@ public class InterviewServiceImplTest {
 
         Question savedQuestion = new Question();
         savedQuestion.setId(1L);
-        savedQuestion.setUser(savedUser2);
+        savedQuestion.setCreatedByUser(savedUser2);
         savedQuestion.setTextQuestion("Java Core");
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser1));
@@ -276,7 +314,7 @@ public class InterviewServiceImplTest {
 
         Question savedQuestion = new Question();
         savedQuestion.setId(1L);
-        savedQuestion.setUser(savedUser);
+        savedQuestion.setCreatedByUser(savedUser);
         savedQuestion.setTextQuestion("Java Core");
 
 
@@ -295,7 +333,7 @@ public class InterviewServiceImplTest {
 
         Question savedQuestion = new Question();
         savedQuestion.setId(1L);
-        savedQuestion.setUser(savedUser);
+        savedQuestion.setCreatedByUser(savedUser);
         savedQuestion.setTextQuestion("Java Core");
 
 
@@ -314,7 +352,7 @@ public class InterviewServiceImplTest {
 
         Question savedQuestion = new Question();
         savedQuestion.setId(1L);
-        savedQuestion.setUser(savedUser);
+        savedQuestion.setCreatedByUser(savedUser);
         savedQuestion.setTextQuestion("Java Core");
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
@@ -333,7 +371,7 @@ public class InterviewServiceImplTest {
 
         Question savedQuestion = new Question();
         savedQuestion.setId(1L);
-        savedQuestion.setUser(savedUser);
+        savedQuestion.setCreatedByUser(savedUser);
         savedQuestion.setTextQuestion("Java Core");
 
         AiProfile savedAiProfile = new AiProfile(

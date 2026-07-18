@@ -7,15 +7,20 @@ import org.example.dto.interview.InterviewQuestionResult;
 import org.example.dto.interview.QuestionRequest;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
+import org.example.model.QuestionDifficulty;
+import org.example.security.JwtService;
 import org.example.service.InterviewService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -37,21 +42,25 @@ class InterviewControllerTest {
     @MockitoBean
     private InterviewService interviewService;
 
+    @MockitoBean
+    private JwtService jwtService;
+
     @Test
     void questionResult_shouldReturnQuestionResult_whenDataIsValid() throws Exception {
-        QuestionRequest request = new QuestionRequest(1L, 2L);
+        QuestionRequest request = new QuestionRequest("Java Core");
         InterviewQuestionResult response = new InterviewQuestionResult(
                 3L,
                 1L,
                 2L,
                 4L,
-                "Java",
+                "Java Core",
                 "Что такое JVM?",
                 "interview",
-                "medium"
+                QuestionDifficulty.MEDIUM
         );
 
-        when(interviewService.generateQuestion(1L, 2L)).thenReturn(response);
+        when(jwtService.extractUserId(isNull(Jwt.class))).thenReturn(1L);
+        when(interviewService.generateQuestion(1L, "Java Core")).thenReturn(response);
 
         mockMvc.perform(post("/api/interview/question")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -62,17 +71,18 @@ class InterviewControllerTest {
                 .andExpect(jsonPath("$.userId").value(1))
                 .andExpect(jsonPath("$.topicId").value(2))
                 .andExpect(jsonPath("$.aiProfileId").value(4))
-                .andExpect(jsonPath("$.topicName").value("Java"))
+                .andExpect(jsonPath("$.topicName").value("Java Core"))
                 .andExpect(jsonPath("$.questionText").value("Что такое JVM?"))
                 .andExpect(jsonPath("$.aiMode").value("interview"))
-                .andExpect(jsonPath("$.difficulty").value("medium"));
+                .andExpect(jsonPath("$.difficulty").value("MEDIUM"));
 
-        verify(interviewService).generateQuestion(1L, 2L);
+        verify(jwtService).extractUserId(isNull(Jwt.class));
+        verify(interviewService).generateQuestion(1L, "Java Core");
     }
 
     @Test
-    void questionResult_shouldReturnBadRequest_whenUserIdIsNull() throws Exception {
-        QuestionRequest request = new QuestionRequest(null, 2L);
+    void questionResult_shouldReturnBadRequest_whenTopicIsBlank() throws Exception {
+        QuestionRequest request = new QuestionRequest("   ");
 
         mockMvc.perform(post("/api/interview/question")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -81,15 +91,15 @@ class InterviewControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("BAD_REQUEST"))
-                .andExpect(jsonPath("$.validationErrors.userId")
-                        .value("ID пользователя не должен быть пустым."));
+                .andExpect(jsonPath("$.validationErrors.topic")
+                        .value("Тема не должна быть пустой."));
 
-        verifyNoInteractions(interviewService);
+        verifyNoInteractions(jwtService, interviewService);
     }
 
     @Test
-    void questionResult_shouldReturnBadRequest_whenTopicIdIsNotPositive() throws Exception {
-        QuestionRequest request = new QuestionRequest(1L, 0L);
+    void questionResult_shouldReturnBadRequest_whenTopicIsTooShort() throws Exception {
+        QuestionRequest request = new QuestionRequest("a");
 
         mockMvc.perform(post("/api/interview/question")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -98,18 +108,19 @@ class InterviewControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("BAD_REQUEST"))
-                .andExpect(jsonPath("$.validationErrors.topicId")
-                        .value("ID темы должно быть положительным числом"));
+                .andExpect(jsonPath("$.validationErrors.topic")
+                        .value("Тема должна содержать от 2 до 200 символов."));
 
-        verifyNoInteractions(interviewService);
+        verifyNoInteractions(jwtService, interviewService);
     }
 
     @Test
     void questionResult_shouldReturnNotFound_whenServiceThrowsNotFound() throws Exception {
-        QuestionRequest request = new QuestionRequest(1L, 2L);
+        QuestionRequest request = new QuestionRequest("Java Core");
 
-        when(interviewService.generateQuestion(1L, 2L))
-                .thenThrow(new NotFoundException("Тема не найдена."));
+        when(jwtService.extractUserId(isNull(Jwt.class))).thenReturn(1L);
+        when(interviewService.generateQuestion(1L, "Java Core"))
+                .thenThrow(new NotFoundException("Активный AI-профиль не найден."));
 
         mockMvc.perform(post("/api/interview/question")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -118,28 +129,28 @@ class InterviewControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.error").value("NOT_FOUND"))
-                .andExpect(jsonPath("$.message").value("Тема не найдена."));
+                .andExpect(jsonPath("$.message").value("Активный AI-профиль не найден."));
 
-        verify(interviewService).generateQuestion(1L, 2L);
+        verify(interviewService).generateQuestion(1L, "Java Core");
     }
 
     @Test
     void questionResult_shouldReturnBadRequest_whenJsonIsMalformed() throws Exception {
         mockMvc.perform(post("/api/interview/question")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":}"))
+                        .content("{\"topic\":}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("BAD_REQUEST"))
                 .andExpect(jsonPath("$.message").value("Некорректное тело запроса."));
 
-        verifyNoInteractions(interviewService);
+        verifyNoInteractions(jwtService, interviewService);
     }
 
     @Test
     void answerResult_shouldReturnAnswerResult_whenDataIsValid() throws Exception {
-        AnswerRequest request = new AnswerRequest(1L, 2L, "JVM выполняет байткод.");
+        AnswerRequest request = new AnswerRequest(999L, 2L, "JVM выполняет байткод.");
         InterviewAnswerResult response = new InterviewAnswerResult(
                 1L,
                 2L,
@@ -149,6 +160,7 @@ class InterviewControllerTest {
                 "Ответ принят."
         );
 
+        when(jwtService.extractUserId(isNull(Jwt.class))).thenReturn(1L);
         when(interviewService.submitUserAnswer(1L, 2L, "JVM выполняет байткод."))
                 .thenReturn(response);
 
@@ -164,6 +176,7 @@ class InterviewControllerTest {
                 .andExpect(jsonPath("$.userAnswerText").value("JVM выполняет байткод."))
                 .andExpect(jsonPath("$.feedback").value("Ответ принят."));
 
+        verify(jwtService).extractUserId(isNull(Jwt.class));
         verify(interviewService).submitUserAnswer(1L, 2L, "JVM выполняет байткод.");
     }
 
@@ -181,7 +194,7 @@ class InterviewControllerTest {
                 .andExpect(jsonPath("$.validationErrors.textAnswer")
                         .value("Текст ответа не может быть пустым."));
 
-        verifyNoInteractions(interviewService);
+        verifyNoInteractions(jwtService, interviewService);
     }
 
     @Test
@@ -198,13 +211,14 @@ class InterviewControllerTest {
                 .andExpect(jsonPath("$.validationErrors.questionId")
                         .value("ID вопроса должен быть положительным числом"));
 
-        verifyNoInteractions(interviewService);
+        verifyNoInteractions(jwtService, interviewService);
     }
 
     @Test
     void answerResult_shouldReturnBadRequest_whenServiceThrowsBadRequest() throws Exception {
         AnswerRequest request = new AnswerRequest(1L, 2L, "Ответ");
 
+        when(jwtService.extractUserId(isNull(Jwt.class))).thenReturn(1L);
         when(interviewService.submitUserAnswer(1L, 2L, "Ответ"))
                 .thenThrow(new BadRequestException("Нельзя ответить на вопрос другого пользователя."));
 

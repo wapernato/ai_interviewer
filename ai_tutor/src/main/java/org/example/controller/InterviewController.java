@@ -21,13 +21,15 @@ public class InterviewController {
     private final InterviewService interviewService;
     private final JwtService jwtService;
 
-    public InterviewController(InterviewService interviewService, JwtService jwtService) {
+    public InterviewController(InterviewService interviewService,
+                               JwtService jwtService) {
         this.interviewService = interviewService;
         this.jwtService = jwtService;
     }
 
     @PostMapping("/answer")
-    public ResponseEntity<InterviewAnswerResult> answerResult(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody AnswerRequest request){
+    public ResponseEntity<InterviewAnswerResult> answerResult(@AuthenticationPrincipal Jwt jwt,
+                                                              @Valid @RequestBody AnswerRequest request){
         Long currentUserId = jwtService.extractUserId(jwt);
 
         InterviewAnswerResult interviewAnswerResult = interviewService.submitUserAnswer(currentUserId, request.getQuestionId(), request.getTextAnswer());
@@ -38,8 +40,10 @@ public class InterviewController {
     }
 
     @PostMapping("/question")
-    public ResponseEntity<InterviewQuestionResult> questionResult(@Valid @RequestBody QuestionRequest request){
-        InterviewQuestionResult interviewQuestionResult = interviewService.generateQuestion(request.getUserId(), request.getTopicId());
+    public ResponseEntity<InterviewQuestionResult> questionResult(@AuthenticationPrincipal Jwt jwt,
+                                                                  @Valid @RequestBody QuestionRequest request){
+        Long currentUserId = jwtService.extractUserId(jwt);
+        InterviewQuestionResult interviewQuestionResult = interviewService.generateQuestion(currentUserId, request.getTopic());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(interviewQuestionResult);
