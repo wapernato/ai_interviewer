@@ -86,16 +86,16 @@ class AuthRegisterIntegrationTest {
         AuthResponse authResponse = objectMapper.readValue(response, AuthResponse.class);
 
         assertThat(authResponse.getUsername()).isEqualTo("ximeo");
-        assertThat(authResponse.getEmail()).isEqualTo("ximeo@gmail.com");
+        assertThat(authResponse.getEmail()).isEqualTo("ximeo@yandex.ru");
         assertThat(authResponse.getRole()).isEqualTo(UserRole.USER);
 
-        Optional<User> savedUser = userRepository.findByEmail("ximeo@gmail.com");
+        Optional<User> savedUser = userRepository.findByEmail("ximeo@yandex.ru");
 
         assertThat(savedUser).isPresent();
         assertThat(savedUser.get().getUsername()).isEqualTo("ximeo");
-        assertThat(savedUser.get().getEmail()).isEqualTo("ximeo@gmail.com");
+        assertThat(savedUser.get().getEmail()).isEqualTo("ximeo@yandex.ru");
         assertThat(savedUser.get().getPasswordHash()).isNotEqualTo("88888888");
-        assertThat(passwordEncoder.matches("888888888", savedUser.get().getPasswordHash())).isTrue();
+        assertThat(passwordEncoder.matches("88888888", savedUser.get().getPasswordHash())).isTrue();
     }
 
     @Test
