@@ -37,10 +37,19 @@ public class UserHistoryRepositoryTest {
     @Autowired QuestionRepository questionRepository;
     @Autowired AnswerRepository answerRepository;
 
+    private User createUser(String username, String email) {
+        User user = new User(username);
+
+        user.setEmail(email);
+        user.setPasswordHash("encoded-password");
+
+        return userRepository.save(user);
+    }
+
     private Question createQuestion(User user, Topic topic, String text) {
         Question question = new Question();
 
-        question.setUser(user);
+        question.setCreatedByUser(user);
         question.setTopic(topic);
         question.setTextQuestion(text);
         question.setSource("manual");
@@ -62,8 +71,8 @@ public class UserHistoryRepositoryTest {
 
     @Test
     void findHistoryByUserId_shouldReturnHistory_whenDataIsValid() {
-        User user1 = userRepository.save(new User("Yakov"));
-        User user2 = userRepository.save(new User("Rodion"));
+        User user1 = createUser("Yakov", "yakov@example.com");
+        User user2 = createUser("Rodion", "rodion@example.com");
 
         Topic topic1 = topicRepository.save(new Topic("Java Core"));
         Topic topic2 = topicRepository.save(new Topic("Spring"));
