@@ -17,7 +17,7 @@ public class QuestionMapper {
         QuestionResponse questionResponse = new QuestionResponse();
 
         questionResponse.setId(question.getId());
-        questionResponse.setUserId(question.getUser().getId());
+        questionResponse.setUserId(question.getCreatedByUser().getId());
 
         if(question.getTopic() == null){
             questionResponse.setTopicId(null);

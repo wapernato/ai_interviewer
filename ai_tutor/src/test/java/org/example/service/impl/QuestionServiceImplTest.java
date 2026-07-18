@@ -128,7 +128,7 @@ public class QuestionServiceImplTest {
 
         savedQuestion.setId(1L);
         savedQuestion.setTopic(savedTopic);
-        savedQuestion.setUser(savedUser);
+        savedQuestion.setCreatedByUser(savedUser);
         savedQuestion.setTextQuestion("What is JVM?");
         savedQuestion.setSource("manual");
         savedQuestion.setLanguage("ru");
@@ -146,7 +146,7 @@ public class QuestionServiceImplTest {
         assertThat(questionResponse.getLanguage()).isEqualTo("ru");
 
         verify(questionRepository).save(argThat(question ->
-                savedUser.equals(question.getUser())
+                savedUser.equals(question.getCreatedByUser())
                         && savedTopic.equals(question.getTopic())
                         && "What is JVM?".equals(question.getTextQuestion())
                         && "manual".equals(question.getSource())
@@ -236,7 +236,7 @@ public class QuestionServiceImplTest {
         );
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(questionRepository.findByUser_Id(1L)).thenReturn(questions);
+        when(questionRepository.findByCreatedByUser_Id(1L)).thenReturn(questions);
 
         List<QuestionResponse> result = questionService.getByUserId(1L);
 
@@ -248,7 +248,7 @@ public class QuestionServiceImplTest {
     @Test
     void getByUserId_shouldReturnEmptyList_whenUserHasNoQuestions(){
         when(userRepository.findById(1L)).thenReturn(Optional.of(createUser(1L)));
-        when(questionRepository.findByUser_Id(1L)).thenReturn(List.of());
+        when(questionRepository.findByCreatedByUser_Id(1L)).thenReturn(List.of());
 
         List<QuestionResponse> result = questionService.getByUserId(1L);
 
@@ -443,7 +443,7 @@ public class QuestionServiceImplTest {
     private Question createQuestion(Long id, String text){
         Question question = new Question();
         question.setId(id);
-        question.setUser(createUser(1L));
+        question.setCreatedByUser(createUser(1L));
         question.setTopic(createTopic(1L));
         question.setTextQuestion(text);
         question.setSource("manual");

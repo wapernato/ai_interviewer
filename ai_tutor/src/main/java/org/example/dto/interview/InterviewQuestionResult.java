@@ -3,32 +3,29 @@ package org.example.dto.interview;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.example.model.QuestionDifficulty;
 
 public class InterviewQuestionResult {
     @NotNull(message = "ID вопроса не должен быть пустым.")
     @Min(value = 1, message = "ID вопроса должен быть положительным числом")
     private Long questionId;
-
     @NotNull(message = "ID пользователя не должен быть пустым.")
     @Min(value = 1, message = "ID пользователя должен быть положительным числом")
     private Long userId;
-
     @NotNull(message = "ID темы не должен быть пустым.")
     @Min(value = 1, message = "ID темы должен быть положительным числом")
     private Long topicId;
-
     @NotNull(message = "ID AI-профиля не должен быть пустым.")
     @Min(value = 1, message = "ID AI-профиля должен быть положительным числом")
     private Long aiProfileId;
-
     @NotBlank(message = "Название темы не может быть пустое.")
     private String topicName;
     @NotBlank(message = "Текст вопроса не может быть пустым.")
     private String questionText;
     @NotBlank(message = "AI-мод не может быть пустым.")
     private String aiMode;
-    @NotBlank(message = "Сложность собеседования не может быть пустое.")
-    private String difficulty;
+    @NotNull(message = "Сложность вопроса не может быть пустой.")
+    private QuestionDifficulty difficulty;
 
     public InterviewQuestionResult() {
     }
@@ -40,7 +37,7 @@ public class InterviewQuestionResult {
                                    String topicName,
                                    String questionText,
                                    String aiMode,
-                                   String difficulty) {
+                                   QuestionDifficulty difficulty) {
         this.questionId = questionId;
         this.userId = userId;
         this.topicId = topicId;
@@ -107,11 +104,11 @@ public class InterviewQuestionResult {
         this.aiMode = aiMode;
     }
 
-    public String getDifficulty() {
+    public QuestionDifficulty getDifficulty() {
         return difficulty;
     }
 
-    public void setDifficulty(String difficulty) {
+    public void setDifficulty(QuestionDifficulty difficulty) {
         this.difficulty = difficulty;
     }
 
