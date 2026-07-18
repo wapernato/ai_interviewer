@@ -1,14 +1,18 @@
 package org.example.service.impl;
 
+import org.example.dto.ai.QuestionGenerationResult;
 import org.example.dto.interview.InterviewAnswerResult;
 import org.example.dto.interview.InterviewQuestionResult;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
+import org.example.integration.ai.AiQuestionGenerator;
 import org.example.model.*;
 import org.example.repository.*;
 import org.example.service.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 public class InterviewServiceImpl implements InterviewService {
@@ -45,11 +49,6 @@ public class InterviewServiceImpl implements InterviewService {
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден."));
     }
 
-    private Topic findTopicOrThrow(Long topicId) {
-        return topicRepository.findById(topicId)
-                .orElseThrow(() -> new NotFoundException("Тема не найдена."));
-    }
-
     private Question findQuestionOrThrow(Long questionId) {
         return questionRepository.findById(questionId)
                 .orElseThrow(() -> new NotFoundException("Вопрос не найден."));
@@ -60,12 +59,13 @@ public class InterviewServiceImpl implements InterviewService {
                 .orElseThrow(() -> new NotFoundException("Активный AI-профиль не найден."));
     }
 
-    private String normalizeGeneratedQuestion(String questionText) {
-        if (questionText == null || questionText.isBlank()) {
-            throw new BadRequestException("AI не смог сгенерировать вопрос.");
+    private Topic findOrCreateTopic(String topic) {
+        Optional<Topic> savedTopic = topicRepository.findByName(topic);
+        if(savedTopic.isPresent()){
+            return savedTopic.get();
         }
-
-        return questionText.trim();
+        Topic newTopic = new Topic(topic);
+        return topicRepository.save(newTopic);
     }
 
     private String normalizeUserAnswer(String userAnswerText) {
@@ -76,40 +76,46 @@ public class InterviewServiceImpl implements InterviewService {
         return userAnswerText.trim();
     }
 
+    private InterviewQuestionResult createInterviewQuestionResult(Question question) {
+        InterviewQuestionResult interviewQuestionResult = new InterviewQuestionResult();
+        interviewQuestionResult.setQuestionText(question.getTextQuestion());
+        interviewQuestionResult.setDifficulty(question.getDifficulty());
+        interviewQuestionResult.setAiMode(question.getAiProfile().getMode());
+        interviewQuestionResult.setTopicName(question.getTopic().getName());
+        interviewQuestionResult.setQuestionId(question.getId());
+        interviewQuestionResult.setUserId(question.getCreatedByUser().getId());
+        interviewQuestionResult.setTopicId(question.getTopic().getId());
+        interviewQuestionResult.setAiProfileId(question.getAiProfile().getId());
+
+        return interviewQuestionResult;
+    }
+
     @Transactional
     @Override
-    public InterviewQuestionResult generateQuestion(Long userId, Long topicId){
-
+    public InterviewQuestionResult generateQuestion(Long userId, String requestedTopic){
         User user = findUserOrThrow(userId);
-
-        Topic topic = findTopicOrThrow(topicId);
 
         AiProfile aiProfile = findActiveAiProfileOrThrow();
 
-        String questionText = normalizeGeneratedQuestion(aiQuestionGenerator.generatedQuestion(topic, aiProfile));
+        QuestionGenerationResult generationResult = aiQuestionGenerator.generate(requestedTopic, aiProfile);
 
-        Question newQuestion = new Question();
+        Topic topic = findOrCreateTopic(generationResult.getNormalizedTopic());
 
-        newQuestion.setUser(user);
-        newQuestion.setTopic(topic);
-        newQuestion.setTextQuestion(questionText);
-        newQuestion.setSource("ai");
-        newQuestion.setLanguage("ru");
+        Question question = new Question();
 
-        Question question = questionRepository.save(newQuestion);
+        question.setCreatedByUser(user);
+        question.setAiProfile(aiProfile);
+        question.setTopic(topic);
+        question.setTextQuestion(generationResult.getQuestionText());
+        question.setDifficulty(generationResult.getDifficulty());
+        // ======================
+        // ЭТИ ДАННЫЕ НАДО БУДЕТ ПОЛУЧАТЬ ОТ ИИ
+        question.setSource("ai");
+        question.setLanguage("ru");
+        // ======================
+        Question savedQuestion = questionRepository.save(question);
 
-        InterviewQuestionResult result = new InterviewQuestionResult();
-
-        result.setQuestionId(question.getId());
-        result.setUserId(user.getId());
-        result.setTopicId(topic.getId());
-        result.setAiProfileId(aiProfile.getId());
-        result.setTopicName(topic.getName());
-        result.setQuestionText(question.getTextQuestion());
-        result.setAiMode(aiProfile.getMode());
-        result.setDifficulty(aiProfile.getDifficulty());
-
-        return result;
+        return createInterviewQuestionResult(savedQuestion);
     }
 
     @Transactional
@@ -121,7 +127,7 @@ public class InterviewServiceImpl implements InterviewService {
         Question question = findQuestionOrThrow(questionId);
 
 
-        if(!question.getUser().getId().equals(userId)){
+        if(!question.getCreatedByUser().getId().equals(userId)){
             throw new BadRequestException("Нельзя ответить на вопрос другого пользователя.");
         }
 
