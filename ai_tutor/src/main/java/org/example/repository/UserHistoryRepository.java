@@ -19,7 +19,7 @@ public interface UserHistoryRepository extends JpaRepository<Question, Long> {
             a.modelName
         )
         from Question q
-        join q.user u
+        join q.createdByUser u
         left join q.topic t
         left join Answer a on a.question = q
         where u.id = :userId
