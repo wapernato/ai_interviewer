@@ -1,37 +1,25 @@
 package org.example.dto.interview;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class QuestionRequest {
-    @NotNull(message = "ID пользователя не должен быть пустым.")
-    @Min(value = 1, message = "ID пользователя должно быть положительным числом")
-    private Long userId;
-
-    @NotNull(message = "ID темы не должен быть пустым.")
-    @Min(value = 1, message = "ID темы должно быть положительным числом")
-    private Long topicId;
+    @NotBlank(message = "Тема не должна быть пустой.")
+    @Size(min = 2, max = 200, message = "Тема должна содержать от 2 до 200 символов.")
+    private String topic;
 
     public QuestionRequest() {}
 
-    public QuestionRequest(Long userId, Long topicId ){
-        this.userId = userId;
-        this.topicId = topicId;
+    public QuestionRequest(String topic){
+        this.topic = topic;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public String getTopic() {
+        return topic;
     }
 
-    public Long getTopicId() {
-        return topicId;
-    }
-
-    public void setTopicId(Long topicId) {
-        this.topicId = topicId;
-    }
-
-    public Long getUserId() {
-        return userId;
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 }

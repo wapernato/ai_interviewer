@@ -76,7 +76,7 @@ public class QuestionServiceImpl implements QuestionService {
         Question question = new Question();
 
         question.setTopic(topic);
-        question.setUser(user);
+        question.setCreatedByUser(user);
         question.setTextQuestion(normalizedTextQuestion);
         question.setSource("manual");
         question.setLanguage("ru");
@@ -106,7 +106,7 @@ public class QuestionServiceImpl implements QuestionService {
     public List<QuestionResponse> getByUserId(Long userId) {
         findUserOrThrow(userId, "Пользователь с id=" + userId + " не найден.");
 
-        return questionMapper.toResponseList(questionRepository.findByUser_Id(userId));
+        return questionMapper.toResponseList(questionRepository.findByCreatedByUser_Id(userId));
     }
 
     @Transactional(readOnly = true)

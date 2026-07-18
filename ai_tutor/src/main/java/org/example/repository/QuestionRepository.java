@@ -9,5 +9,5 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
 
     List<Question> findByTopic_Id(Long topicId);
 
-    List<Question> findByUser_Id(Long userId);
+    List<Question> findByCreatedByUser_Id(Long userId);
 }
