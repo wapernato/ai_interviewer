@@ -13,10 +13,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ai_tutor
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -29,5 +25,29 @@ jobs:
           cache: maven
           cache-dependency-path: ai_tutor/pom.xml
 
-      - name: Run tests
+      - name: Run backend tests
+        working-directory: ai_tutor
         run: mvn -B test
+
+      - name: Build Docker image
+        run: docker build -t ai-interviewer-backend:latest ./ai_tutor
+
+      - name: Start backend and database
+        run: docker compose up -d postgres backend
+
+      - name: Wait for backend
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:8080/api/ai-profiles > /dev/null; then
+              echo "Backend is ready"
+              exit 0
+            fi
+            echo "Waiting for backend..."
+            sleep 2
+          done
+          docker compose logs backend
+          exit 1
+
+      - name: Run Kotlin API tests
+        working-directory: api-tests-kotlin
+        run: ./gradlew test
