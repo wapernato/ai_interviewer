@@ -5,7 +5,6 @@ import dto.auth.RegisterRequest
 import org.junit.jupiter.api.Test
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType.JSON
-import io.restassured.response.Response
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.hasKey
 import org.hamcrest.Matchers.equalTo
@@ -37,7 +36,12 @@ class AuthRegisterApiTest {
         .then()
             .statusCode(201)
             .contentType(JSON)
+            .body("$", not(hasKey("password")))
+            .body("$", not(hasKey("passwordHash")))
             .body("id", notNullValue())
+            .body("username", equalTo(username))
+            .body("email", equalTo(email))
+            .body("role", equalTo("USER"))
             .extract()
             .response()
 
@@ -110,7 +114,34 @@ class AuthRegisterApiTest {
             .delete("/api/users/$ximeoId")
         .then()
             .statusCode(204)
-        
+    }
+
+    @Test
+    fun register_shouldReturnBadRequest_whenEmailIsBlank(){
+        val uniqueSuffix = System.currentTimeMillis()
+
+        val username = "ximeo_$uniqueSuffix"
+        val email = ""
+        val password = "12345678"
+
+        val body = RegisterRequest(
+            username = username,
+            email = email,
+            password = password
+        )
+
+        given()
+            .baseUri(ApiConfig.baseUrl)
+            .contentType(JSON)
+            .accept(JSON)
+            .body(body)
+        .`when`()
+            .post("/api/auth/register")
+        .then()
+            .statusCode(400)
+            .body("error", equalTo("BAD_REQUEST"))
+            .body("message", equalTo("Ошибка валидации данных."))
+            .body("validationErrors.email", equalTo("Email не должен быть пустым."))
     }
 
 
