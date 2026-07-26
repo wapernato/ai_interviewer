@@ -3,68 +3,54 @@ package org.example.controller;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.example.dto.response.UserResponse;
-import org.example.dto.user.CreateUserRequest;
 import org.example.dto.user.UpdateUserRequest;
+import org.example.security.JwtService;
 import org.example.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/me")
 public class UserController {
 
     private final UserService userService;
+    private final JwtService jwtService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService,
+                          JwtService jwtService) {
         this.userService = userService;
+        this.jwtService = jwtService;
     }
 
     @GetMapping
-    public ResponseEntity<List<UserResponse>> getAllUsers(){
-        List<UserResponse> users = userService.getAllUsers();
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(users);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable @Positive(message = "ID пользователя должен быть положительным числом.") Long id){
-        UserResponse user = userService.getById(id);
-        return  ResponseEntity
-                .status(HttpStatus.OK)
-                .body(user);
-    }
-
-    @PostMapping
-    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest createUserRequest){
-        UserResponse user = userService.register(createUserRequest.getUsername());
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(user);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUserById(@PathVariable @Positive(message = "ID пользователя должен быть положительным числом.") Long id){
-        userService.deleteById(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUserById(@PathVariable @Positive(message = "ID пользователя должен быть положительным числом.") Long id, @Valid @RequestBody UpdateUserRequest updateUserRequest){
-        UserResponse user = userService.updateUsername(id, updateUserRequest.getNewUsername());
+    public ResponseEntity<UserResponse> getMe(@AuthenticationPrincipal Jwt jwt){
+        Long currentId = jwtService.extractUserId(jwt);
+        UserResponse user = userService.getById(currentId);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(user);
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<UserResponse> findByUsername(@NotBlank(message = "Имя пользователя не должно быть пустым.") @Size(min = 2, max = 50) @RequestParam String username){
-        UserResponse user = userService.findByName(username);
+    @PutMapping
+    public ResponseEntity<UserResponse> updateMe(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody UpdateUserRequest updateUserRequest){
+        Long currentId = jwtService.extractUserId(jwt);
+        UserResponse user = userService.updateUsername(currentId, updateUserRequest.getNewUsername());
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(user);
     }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteMe(@AuthenticationPrincipal Jwt jwt){
+        Long currentId = jwtService.extractUserId(jwt);
+        userService.deleteById(currentId);
+        return ResponseEntity
+                .noContent()
+                .build();
+    }
+
+
 }
