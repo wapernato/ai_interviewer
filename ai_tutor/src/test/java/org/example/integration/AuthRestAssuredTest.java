@@ -280,5 +280,8 @@ class AuthRestAssuredTest {
 
     }
 
+    @Test
+    void question_shouldReturnBadRequest_whenTopicHasWrongType() {
 
+    }
 }

@@ -26,7 +26,7 @@ class AuthRegisterApiTest {
             password = password
         )
 
-        val response = given()
+        given()
             .baseUri(ApiConfig.baseUrl)
             .contentType(JSON)
             .accept(JSON)
@@ -42,17 +42,6 @@ class AuthRegisterApiTest {
             .body("username", equalTo(username))
             .body("email", equalTo(email))
             .body("role", equalTo("USER"))
-            .extract()
-            .response()
-
-        val userId = response.jsonPath().getLong("id")
-
-        given()
-            .baseUri(ApiConfig.baseUrl)
-        .`when`()
-            .delete("/api/users/$userId")
-        .then()
-            .statusCode(204)
     }
 
     @Test
@@ -78,7 +67,7 @@ class AuthRegisterApiTest {
             password = rodionPassword
         )
 
-        val ximeoResponse = given()
+        given()
             .baseUri(ApiConfig.baseUrl)
             .contentType(JSON)
             .accept(JSON)
@@ -87,10 +76,8 @@ class AuthRegisterApiTest {
             .post("/api/auth/register")
         .then()
             .statusCode(201)
-            .extract()
-            .response()
 
-        val rodionResponse = given()
+        given()
             .baseUri(ApiConfig.baseUrl)
             .contentType(JSON)
             .accept(JSON)
@@ -103,17 +90,6 @@ class AuthRegisterApiTest {
             .body("status", equalTo(409))
             .body("error", equalTo("CONFLICT"))
             .body("message", equalTo("Пользователь с таким email уже существует."))
-            .extract()
-            .response()
-
-        val ximeoId = ximeoResponse.jsonPath().getLong("id")
-
-        given()
-            .baseUri(ApiConfig.baseUrl)
-        .`when`()
-            .delete("/api/users/$ximeoId")
-        .then()
-            .statusCode(204)
     }
 
     @Test
