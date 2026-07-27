@@ -1,16 +1,55 @@
-# React + Vite
+# AI Interviewer Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript frontend for the AI Interviewer backend.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React
+- TypeScript
+- Vite
+- React Router
+- TanStack Query
+- Axios
+- React Hook Form
+- Zod
+- Vitest + Testing Library
 
-## React Compiler
+## Environment
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Create `.env` from `.env.example`:
 
-## Expanding the ESLint configuration
+```bash
+VITE_API_BASE_URL=http://localhost:8080/api
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Commands
+
+```bash
+npm install
+npm run dev
+npm run build
+npm run lint
+npm test
+```
+
+The backend should be available at `VITE_API_BASE_URL`.
+
+## Implemented Pages
+
+- `/login` - login
+- `/register` - registration
+- `/` - user dashboard
+- `/topics` - public topics list
+- `/interview` - interview flow
+- `/ai-profiles` - public AI profiles list
+- `/history` - current user's interview history
+- `/admin/topics` - admin topic management
+- `/admin/ai-profiles` - admin AI profile management
+- `*` - 404
+
+## API Notes
+
+The frontend uses a single Axios client from `src/api/client.ts`.
+The client reads `VITE_API_BASE_URL`, attaches a Bearer token from local storage, and converts backend error responses into readable messages.
+
+Backend remains the source of truth for authorization. UI routes and buttons are hidden by role only for user experience; protected backend endpoints must still reject invalid access.
