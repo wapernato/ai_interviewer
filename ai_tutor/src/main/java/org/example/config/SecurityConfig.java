@@ -25,9 +25,11 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/health").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/me/**").authenticated()
+                        .requestMatchers("/api/auth/**", "/api/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/ai-profiles", "/api/ai-profiles/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/topics", "/api/topics/**").permitAll()
+                        .requestMatchers("/api/me", "/api/me/**").authenticated()
                         .requestMatchers("/api/interview/**").authenticated()
                         .anyRequest().authenticated()
                 )
