@@ -28,7 +28,7 @@ AI Interviewer - учебный fullstack-проект с backend-фокусом
 - отдельный Kotlin-проект с black-box API-тестами на RestAssured;
 - GitHub Actions CI.
 
-Frontend в репозитории есть, но сейчас он частично отстает от новой backend-модели с JWT и `/api/me`. Его нужно синхронизировать отдельно.
+Frontend входит в поддерживаемый локальный стек и запускается вместе с backend и PostgreSQL через Docker Compose.
 
 ## Стек
 
@@ -193,92 +193,136 @@ ai_tutor/src/main/resources/db/migration
 
 `V6` добавляет дефолтный активный AI profile, чтобы API-тесты и локальный запуск не зависели от ручного создания профиля.
 
-## Локальный Запуск
+## Быстрый Старт
 
-### Backend через Docker Compose
+Для полного контейнерного запуска на компьютере нужны только:
 
-Сначала собрать backend image:
+- Git;
+- Docker Desktop с Docker Compose.
 
-```bash
-docker build -t ai-interviewer-backend:latest ./ai_tutor
-```
-
-Поднять PostgreSQL и backend:
+После клонирования репозитория:
 
 ```bash
-docker compose up -d postgres backend
+git clone <repository-url>
+cd ai_interviewer
+cp .env.example .env
+docker compose up --build
 ```
 
-Backend будет доступен на:
+Первый запуск скачает Docker images, Maven- и npm-зависимости, соберет backend и frontend, применит Flyway-миграции и поднимет PostgreSQL.
+
+Приложение будет доступно по адресам:
 
 ```text
-http://localhost:8080
+Frontend:   http://localhost:3000
+Backend:    http://localhost:8080
+Health:     http://localhost:8080/api/health
+PostgreSQL: localhost:5433
 ```
 
-PostgreSQL из Docker Compose доступен с host-машины на порту `5433`:
-
-```text
-jdbc:postgresql://localhost:5433/ai_interviewer
-```
-
-### Backend через Maven
-
-Если PostgreSQL уже запущен локально:
+Проверить состояние контейнеров:
 
 ```bash
+docker compose ps
+```
+
+Остановить приложение:
+
+```bash
+docker compose down
+```
+
+Удалить контейнеры вместе с локальными данными PostgreSQL:
+
+```bash
+docker compose down --volumes
+```
+
+Файл `.env` предназначен только для локальной машины и не коммитится. Для реального окружения обязательно замени пароли и `JWT_SECRET`.
+
+## Режим Разработки
+
+Полный Docker-запуск удобен для проверки всего приложения. Для ежедневной разработки быстрее запускать PostgreSQL в Docker, а backend и frontend - локально с hot reload.
+
+Требования для локального режима:
+
+- JDK 17;
+- Node.js 24;
+- Docker Desktop.
+
+Подготовить окружение и запустить PostgreSQL:
+
+```bash
+cp .env.example .env
+docker compose up -d postgres
+set -a
+source .env
+set +a
+```
+
+Запустить backend:
+
+```bash
+export DB_URL="jdbc:postgresql://localhost:${POSTGRES_PORT}/${POSTGRES_DB}"
+export DB_USERNAME="${POSTGRES_USER}"
+export DB_PASSWORD="${POSTGRES_PASSWORD}"
 cd ai_tutor
-
-export DB_URL="jdbc:postgresql://localhost:5432/ai_interviewer"
-export DB_USERNAME="postgres"
-export DB_PASSWORD="your_password"
-export JWT_SECRET="change-this-secret-key-must-be-at-least-32-characters-long"
-
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
-Если PostgreSQL поднят через `docker compose`, для Maven-запуска backend используй порт `5433`:
+Maven отдельно устанавливать не нужно: `./mvnw` скачает зафиксированную версию Maven.
 
-```bash
-export DB_URL="jdbc:postgresql://localhost:5433/ai_interviewer"
-```
-
-### Frontend
+В другом терминале запустить frontend:
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-Vite dev server обычно запускается на:
+Vite frontend будет доступен на `http://localhost:5173`.
 
-```text
-http://localhost:5173
-```
+## Dev Container
 
-Через Docker Compose frontend публикуется на:
+В репозитории есть готовая конфигурация `.devcontainer`. Она предоставляет JDK 17, Node.js 24 и доступ к Docker без установки Java, Maven и Node.js на host-машину.
 
-```text
-http://localhost:3000
+1. Установи Docker Desktop и IDE с поддержкой Dev Containers.
+2. Клонируй репозиторий.
+3. Открой проект в Dev Container.
+
+При первом создании контейнера автоматически:
+
+- создается локальный `.env`, если его еще нет;
+- Maven скачивает backend-зависимости;
+- `npm ci` устанавливает frontend-зависимости.
+
+После этого полный стек запускается из терминала Dev Container:
+
+```bash
+docker compose up --build
 ```
 
 ## Переменные Окружения
 
-Backend использует следующие переменные:
+Docker Compose использует следующие переменные из корневого `.env`:
 
 | Variable | Description | Example |
 |---|---|---|
-| `DB_URL` | JDBC URL PostgreSQL | `jdbc:postgresql://localhost:5432/ai_interviewer` |
-| `DB_USERNAME` | пользователь PostgreSQL | `postgres` |
-| `DB_PASSWORD` | пароль PostgreSQL | `your_password` |
-| `SERVER_PORT` | порт backend | `8080` |
+| `POSTGRES_DB` | имя локальной базы | `ai_interviewer` |
+| `POSTGRES_USER` | пользователь PostgreSQL | `postgres` |
+| `POSTGRES_PASSWORD` | локальный пароль PostgreSQL | `local-development-password` |
 | `JWT_SECRET` | секрет для подписи JWT | `change-this-secret-key-must-be-at-least-32-characters-long` |
+| `BACKEND_PORT` | host-порт backend | `8080` |
+| `FRONTEND_PORT` | host-порт frontend | `3000` |
+| `POSTGRES_PORT` | host-порт PostgreSQL | `5433` |
 
-Пример конфигурации:
+Шаблон конфигурации:
 
 ```text
-ai_tutor/src/main/resources/application-example.properties
+.env.example
 ```
+
+Внутри Compose значения PostgreSQL преобразуются в `DB_URL`, `DB_USERNAME` и `DB_PASSWORD`, которые читает Spring Boot.
 
 ## Тестирование
 
@@ -288,7 +332,7 @@ ai_tutor/src/main/resources/application-example.properties
 
 ```bash
 cd ai_tutor
-mvn test
+./mvnw test
 ```
 
 Покрываются:
@@ -309,8 +353,8 @@ Kotlin API tests - это отдельный black-box test project. Он ход
 Перед запуском нужно поднять backend:
 
 ```bash
-docker build -t ai-interviewer-backend:latest ./ai_tutor
-docker compose up -d postgres backend
+cp .env.example .env
+docker compose up -d --build postgres backend
 ```
 
 Потом запустить тесты:

@@ -27,7 +27,10 @@ jobs:
 
       - name: Run backend tests
         working-directory: ai_tutor
-        run: mvn -B test
+        run: ./mvnw -B test
+
+      - name: Prepare Docker environment
+        run: cp .env.example .env
 
       - name: Build Docker image
         run: docker build -t ai-interviewer-backend:latest ./ai_tutor
