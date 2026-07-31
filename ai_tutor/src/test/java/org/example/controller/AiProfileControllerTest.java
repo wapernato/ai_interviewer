@@ -1,6 +1,7 @@
 package org.example.controller;
 
 import org.example.dto.response.AiProfileResponse;
+import org.example.dto.response.AvailableAiProfileResponse;
 import org.example.exception.NotFoundException;
 import org.example.service.AiProfileService;
 import org.junit.jupiter.api.Test;
@@ -70,6 +71,36 @@ class AiProfileControllerTest {
                 .andExpect(jsonPath("$[1].active").value(false));
 
         verify(aiProfileService).getAllProfiles();
+    }
+
+    @Test
+    void getAvailableProfiles_shouldReturnOnlyPublicProfileFields() throws Exception {
+        List<AvailableAiProfileResponse> profiles = List.of(
+                new AvailableAiProfileResponse(
+                        1L,
+                        "strict-interviewer",
+                        "Строгое техническое интервью",
+                        "hard",
+                        false
+                )
+        );
+
+        when(aiProfileService.getAllAvailableAiProfileResponse()).thenReturn(profiles);
+
+        mockMvc.perform(get("/api/ai-profiles/available"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].name").value("strict-interviewer"))
+                .andExpect(jsonPath("$[0].description").value("Строгое техническое интервью"))
+                .andExpect(jsonPath("$[0].difficulty").value("hard"))
+                .andExpect(jsonPath("$[0].hintsEnable").value(false))
+                .andExpect(jsonPath("$[0].instructionMode").doesNotExist())
+                .andExpect(jsonPath("$[0].modelName").doesNotExist())
+                .andExpect(jsonPath("$[0].temperature").doesNotExist());
+
+        verify(aiProfileService).getAllAvailableAiProfileResponse();
     }
 
     @Test

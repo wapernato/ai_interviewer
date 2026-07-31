@@ -53,19 +53,19 @@ public class AiProfileRepositoryTest {
     }
 
     @Test
-    void save_shouldThrowException_whenSecondActiveProfileIsSaved() {
+    void save_shouldAllowManyActiveProfiles() {
         aiProfileRepository.findAll().forEach(profile -> profile.setActive(false));
         aiProfileRepository.flush();
 
         AiProfile aiProfile1 = createAiProfile("First", true);
         AiProfile aiProfile2 = createAiProfile("Second", true);
 
-        aiProfileRepository.saveAndFlush(aiProfile1);
+        AiProfile savedProfile1 = aiProfileRepository.saveAndFlush(aiProfile1);
+        AiProfile savedProfile2 = aiProfileRepository.saveAndFlush(aiProfile2);
 
-
-        assertThatThrownBy(() -> aiProfileRepository.saveAndFlush(aiProfile2))
-                .isInstanceOf(DataIntegrityViolationException.class);
-
+        assertThat(aiProfileRepository.findByActive(true))
+                .extracting(AiProfile::getId)
+                .containsExactlyInAnyOrder(savedProfile1.getId(), savedProfile2.getId());
     }
 
     @Test

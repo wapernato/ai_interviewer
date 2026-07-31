@@ -1,6 +1,7 @@
 package org.example.service.impl;
 
 import org.example.dto.response.AiProfileResponse;
+import org.example.dto.response.AvailableAiProfileResponse;
 import org.example.exception.AiProfileAlreadyExistsException;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
@@ -25,15 +26,6 @@ public class AiProfileServiceImpl implements AiProfileService {
     ) {
         this.aiProfileRepository = aiProfileRepository;
         this.aiProfileMapper = aiProfileMapper;
-    }
-
-
-    private void deactivateAll() {
-        List<AiProfile> profiles = aiProfileRepository.findAll();
-
-        for (AiProfile profile : profiles) {
-            profile.setActive(false);
-        }
     }
 
     private void validateId(Long id) {
@@ -152,6 +144,13 @@ public class AiProfileServiceImpl implements AiProfileService {
         }
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public List<AvailableAiProfileResponse> getAllAvailableAiProfileResponse(){
+        List<AiProfile> savedAiProfileList = aiProfileRepository.findByActive(true);
+        return aiProfileMapper.toAvailableResponseList(savedAiProfileList);
+    }
+
     @Transactional
     @Override
     public AiProfileResponse addProfile(AiProfile aiProfile) {
@@ -166,10 +165,6 @@ public class AiProfileServiceImpl implements AiProfileService {
 
         if (existingProfile.isPresent()) {
             throw new AiProfileAlreadyExistsException("AI-профиль с таким mode уже существует.");
-        }
-
-        if (Boolean.TRUE.equals(aiProfile.getActive())) {
-            deactivateAll();
         }
 
         AiProfile savedAiProfile = aiProfileRepository.save(aiProfile);
@@ -235,10 +230,6 @@ public class AiProfileServiceImpl implements AiProfileService {
             throw new AiProfileAlreadyExistsException("AI-профиль с таким mode уже существует.");
         }
 
-        if (Boolean.TRUE.equals(aiProfile.getActive())) {
-            deactivateAll();
-        }
-
         oldProfile.setMode(aiProfile.getMode());
         oldProfile.setDescriptionMode(aiProfile.getDescriptionMode());
         oldProfile.setInstructionMode(aiProfile.getInstructionMode());
@@ -285,7 +276,6 @@ public class AiProfileServiceImpl implements AiProfileService {
         AiProfile aiProfile = aiProfileRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("AI-профиль по id = " + id + " не найден."));
 
-        deactivateAll();
 
         aiProfile.setActive(true);
 

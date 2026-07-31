@@ -1,11 +1,14 @@
 package org.example.service;
 
 import org.example.dto.response.AiProfileResponse;
+import org.example.dto.response.AvailableAiProfileResponse;
 import org.example.model.AiProfile;
 
 import java.util.List;
 
 public interface AiProfileService {
+
+    List<AvailableAiProfileResponse> getAllAvailableAiProfileResponse();
 
     AiProfileResponse addProfile(AiProfile aiProfile);
 

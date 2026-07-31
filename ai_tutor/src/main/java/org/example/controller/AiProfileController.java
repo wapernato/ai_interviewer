@@ -5,9 +5,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import org.example.dto.response.AiProfileResponse;
+import org.example.dto.response.AvailableAiProfileResponse;
 import org.example.service.AiProfileService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,6 +44,14 @@ public class AiProfileController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(aiProfile);
+    }
+
+    @GetMapping("/available")
+    public ResponseEntity<List<AvailableAiProfileResponse>> getAvailableProfiles(){
+        List<AvailableAiProfileResponse> aiProfileResponses = aiProfileService.getAllAvailableAiProfileResponse();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(aiProfileResponses);
     }
 
     @GetMapping("/filter")
