@@ -236,6 +236,7 @@ class AuthRestAssuredTest {
 
         Map<String, Object> maliciousRequest = Map.of(
                 "topic", "Java",
+                "aiProfileId", aiProfile.getId(),
                 "userId", ximeoId
         );
 

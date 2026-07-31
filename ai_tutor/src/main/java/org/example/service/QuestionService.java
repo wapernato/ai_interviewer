@@ -1,7 +1,6 @@
 package org.example.service;
 
 import org.example.dto.response.QuestionResponse;
-import org.example.model.Question;
 
 import java.util.List;
 

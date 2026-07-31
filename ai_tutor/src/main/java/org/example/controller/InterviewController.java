@@ -31,7 +31,6 @@ public class InterviewController {
     public ResponseEntity<InterviewAnswerResult> answerResult(@AuthenticationPrincipal Jwt jwt,
                                                               @Valid @RequestBody AnswerRequest request){
         Long currentUserId = jwtService.extractUserId(jwt);
-
         InterviewAnswerResult interviewAnswerResult = interviewService.submitUserAnswer(currentUserId, request.getQuestionId(), request.getTextAnswer());
 
         return ResponseEntity
@@ -43,7 +42,8 @@ public class InterviewController {
     public ResponseEntity<InterviewQuestionResult> questionResult(@AuthenticationPrincipal Jwt jwt,
                                                                   @Valid @RequestBody QuestionRequest request){
         Long currentUserId = jwtService.extractUserId(jwt);
-        InterviewQuestionResult interviewQuestionResult = interviewService.generateQuestion(currentUserId, request.getTopic());
+        InterviewQuestionResult interviewQuestionResult = interviewService.generateQuestion(currentUserId, request.getAiProfileId(),  request.getTopic());
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(interviewQuestionResult);
