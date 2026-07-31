@@ -5,6 +5,6 @@ import org.example.dto.interview.InterviewQuestionResult;
 import org.example.model.AiProfile;
 
 public interface InterviewService {
-    InterviewQuestionResult generateQuestion(Long userId, String topic);
+    InterviewQuestionResult generateQuestion(Long userId, Long aiProfileId, String topic);
     InterviewAnswerResult submitUserAnswer(Long userId, Long questionId, String userAnswerText);
 }

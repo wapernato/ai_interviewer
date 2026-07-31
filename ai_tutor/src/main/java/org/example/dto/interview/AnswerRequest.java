@@ -6,9 +6,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public class AnswerRequest {
-    @NotNull(message = "ID пользователя не должен быть пустым.")
-    @Min(value = 1, message = "ID пользователя должен быть положительным числом")
-    private Long userId;
 
     @NotNull(message = "ID вопроса не должен быть пустым.")
     @Min(value = 1, message = "ID вопроса должен быть положительным числом")
@@ -20,14 +17,9 @@ public class AnswerRequest {
 
     public AnswerRequest() {}
 
-    public AnswerRequest(Long userId, Long questionId, String textAnswer){
-        this.userId = userId;
+    public AnswerRequest(Long questionId, String textAnswer){
         this.questionId = questionId;
         this.textAnswer = textAnswer;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
     }
 
     public Long getQuestionId() {
@@ -36,10 +28,6 @@ public class AnswerRequest {
 
     public void setQuestionId(Long questionId) {
         this.questionId = questionId;
-    }
-
-    public Long getUserId() {
-        return userId;
     }
 
     public String getTextAnswer() {

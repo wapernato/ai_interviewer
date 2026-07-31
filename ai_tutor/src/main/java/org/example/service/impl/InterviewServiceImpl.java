@@ -54,11 +54,6 @@ public class InterviewServiceImpl implements InterviewService {
                 .orElseThrow(() -> new NotFoundException("Вопрос не найден."));
     }
 
-    private AiProfile findActiveAiProfileOrThrow() {
-        return aiProfileRepository.findFirstByActiveTrue()
-                .orElseThrow(() -> new NotFoundException("Активный AI-профиль не найден."));
-    }
-
     private Topic findOrCreateTopic(String topic) {
         Optional<Topic> savedTopic = topicRepository.findByName(topic);
         if(savedTopic.isPresent()){
@@ -92,10 +87,14 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Transactional
     @Override
-    public InterviewQuestionResult generateQuestion(Long userId, String requestedTopic){
+    public InterviewQuestionResult generateQuestion(Long userId, Long aiProfileId, String requestedTopic){
         User user = findUserOrThrow(userId);
 
-        AiProfile aiProfile = findActiveAiProfileOrThrow();
+        AiProfile aiProfile = aiProfileRepository.findById(aiProfileId).orElseThrow(() -> new NotFoundException("AI-профиль не найден."));
+
+        if(!Boolean.TRUE.equals(aiProfile.getActive())){
+            throw new BadRequestException("Данный профиль недоступен.");
+        }
 
         QuestionGenerationResult generationResult = aiQuestionGenerator.generate(requestedTopic, aiProfile);
 
@@ -133,7 +132,7 @@ public class InterviewServiceImpl implements InterviewService {
 
         String normalizedUserAnswerText = normalizeUserAnswer(userAnswerText);
 
-        AiProfile aiProfile = findActiveAiProfileOrThrow();
+        AiProfile aiProfile = question.getAiProfile();
 
         Answer answer = new Answer();
 

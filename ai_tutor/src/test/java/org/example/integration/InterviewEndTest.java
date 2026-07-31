@@ -113,7 +113,7 @@ class InterviewEndTest {
 
     @Test
     void interview_shouldCompleteSuccessfully_whenAuthenticatedUserAnswersQuestion() {
-        createActiveAiProfile();
+        AiProfile aiProfile = createActiveAiProfile();
 
         RegisterRequest request = createRegisterRequest("ximeo", "ximeo@gmail.com",  "12345678");
 
@@ -138,6 +138,7 @@ class InterviewEndTest {
                 .response();
 
         QuestionRequest questionRequest = new QuestionRequest("Java");
+        questionRequest.setAiProfileId(aiProfile.getId());
 
         AuthResponse authResponse = responseLogin.as(AuthResponse.class);
         String jwt = authResponse.getToken();
@@ -158,7 +159,6 @@ class InterviewEndTest {
 
         AnswerRequest answerRequest = new AnswerRequest();
 
-        answerRequest.setUserId(authResponse.getId());
         answerRequest.setQuestionId(questionResult.getQuestionId());
         answerRequest.setTextAnswer("JVM исполняет Java-байткод и управляет памятью.");
 

@@ -66,23 +66,54 @@ public class InterviewServiceImplTest {
     void generateQuestion_shouldThrowNotFound_whenUserDoesNotExist(){
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> interviewService.generateQuestion(1L, "Java Core"))
+        assertThatThrownBy(() -> interviewService.generateQuestion(1L, 1L, "Java Core"))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("Пользователь не найден.");
     }
 
     @Test
-    void generateQuestion_shouldThrowNotFound_whenAiProfilesDoesNotExist(){
+    void generateQuestion_shouldThrowNotFound_whenSelectedAiProfileDoesNotExist(){
         User savedUser = new User("Yakov");
         savedUser.setId(1L);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
-        when(aiProfileRepository.findFirstByActiveTrue()).thenReturn(Optional.empty());
+        when(aiProfileRepository.findById(99L)).thenReturn(Optional.empty());
 
 
-        assertThatThrownBy(() -> interviewService.generateQuestion(1L, "Java Core"))
+        assertThatThrownBy(() -> interviewService.generateQuestion(1L, 99L, "Java Core"))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessage("Активный AI-профиль не найден.");
+                .hasMessage("AI-профиль не найден.");
+
+        verifyNoInteractions(aiQuestionGenerator, topicRepository, questionRepository);
+    }
+
+    @Test
+    void generateQuestion_shouldThrowBadRequest_whenSelectedAiProfileIsInactive(){
+        User savedUser = new User("Yakov");
+        savedUser.setId(1L);
+
+        AiProfile inactiveAiProfile = new AiProfile(
+                2L,
+                "inactive-mode",
+                "description mode",
+                "instruction mode",
+                "model name",
+                "language",
+                "answer style",
+                "difficulty",
+                "feedback mode",
+                true,
+                false,
+                0.7,
+                2000
+        );
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
+        when(aiProfileRepository.findById(2L)).thenReturn(Optional.of(inactiveAiProfile));
+
+        assertThatThrownBy(() -> interviewService.generateQuestion(1L, 2L, "Java Core"))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Данный профиль недоступен.");
 
         verifyNoInteractions(aiQuestionGenerator, topicRepository, questionRepository);
     }
@@ -110,18 +141,18 @@ public class InterviewServiceImplTest {
         );
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
-        when(aiProfileRepository.findFirstByActiveTrue())
+        when(aiProfileRepository.findById(1L))
                 .thenReturn(Optional.of(savedAiProfile));
         when(aiQuestionGenerator.generate("   ", savedAiProfile))
                 .thenThrow(new BadRequestException("Текст темы не должен быть пустым."));
 
         assertThatThrownBy(() -> interviewService
-                .generateQuestion(1L, "   "))
+                .generateQuestion(1L, 1L, "   "))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessage("Текст темы не должен быть пустым.");
 
         verify(userRepository).findById(1L);
-        verify(aiProfileRepository).findFirstByActiveTrue();
+        verify(aiProfileRepository).findById(1L);
         verify(aiQuestionGenerator).generate("   ", savedAiProfile);
 
         verifyNoInteractions(topicRepository, questionRepository);
@@ -153,7 +184,7 @@ public class InterviewServiceImplTest {
         );
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
-        when(aiProfileRepository.findFirstByActiveTrue())
+        when(aiProfileRepository.findById(1L))
                 .thenReturn(Optional.of(savedAiProfile));
 
         QuestionGenerationResult generationResult = new QuestionGenerationResult();
@@ -176,7 +207,7 @@ public class InterviewServiceImplTest {
 
         when(questionRepository.save(any(Question.class))).thenReturn(savedQuestion);
 
-        InterviewQuestionResult result = interviewService.generateQuestion(1L, " Java Core ");
+        InterviewQuestionResult result = interviewService.generateQuestion(1L, 1L, " Java Core ");
 
         assertThat(result).isNotNull();
         assertThat(result.getQuestionId()).isEqualTo(1L);
@@ -239,13 +270,13 @@ public class InterviewServiceImplTest {
         savedQuestion.setDifficulty(QuestionDifficulty.EASY);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
-        when(aiProfileRepository.findFirstByActiveTrue()).thenReturn(Optional.of(savedAiProfile));
+        when(aiProfileRepository.findById(1L)).thenReturn(Optional.of(savedAiProfile));
         when(aiQuestionGenerator.generate("Docker", savedAiProfile)).thenReturn(generationResult);
         when(topicRepository.findByName("Docker")).thenReturn(Optional.empty());
         when(topicRepository.save(any(Topic.class))).thenReturn(savedTopic);
         when(questionRepository.save(any(Question.class))).thenReturn(savedQuestion);
 
-        InterviewQuestionResult result = interviewService.generateQuestion(1L, "Docker");
+        InterviewQuestionResult result = interviewService.generateQuestion(1L, 1L, "Docker");
 
         assertThat(result.getTopicId()).isEqualTo(5L);
         assertThat(result.getTopicName()).isEqualTo("Docker");
@@ -346,25 +377,6 @@ public class InterviewServiceImplTest {
     }
 
     @Test
-    void submitUserAnswer_shouldThrowNotFound_whenAiProfileDoesNotExist(){
-        User savedUser = new User("Yakov");
-        savedUser.setId(1L);
-
-        Question savedQuestion = new Question();
-        savedQuestion.setId(1L);
-        savedQuestion.setCreatedByUser(savedUser);
-        savedQuestion.setTextQuestion("Java Core");
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
-        when(questionRepository.findById(1L)).thenReturn(Optional.of(savedQuestion));
-        when(aiProfileRepository.findFirstByActiveTrue()).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> interviewService.submitUserAnswer(1L, 1L, "It is algo quick sort"))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("Активный AI-профиль не найден.");
-    }
-
-    @Test
     void submitUserAnswer_shouldReturnInterviewAnswerResult_whenDataIsValid(){
         User savedUser = new User("Yakov");
         savedUser.setId(1L);
@@ -390,10 +402,10 @@ public class InterviewServiceImplTest {
                 2000
 
         );
+        savedQuestion.setAiProfile(savedAiProfile);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(savedUser));
         when(questionRepository.findById(1L)).thenReturn(Optional.of(savedQuestion));
-        when(aiProfileRepository.findFirstByActiveTrue()).thenReturn(Optional.of(savedAiProfile));
 
         String userAnswerText = "   Answer is saluki 06.09.2026   ";
         String normalizedUserAnswerText = "Answer is saluki 06.09.2026";
@@ -421,6 +433,7 @@ public class InterviewServiceImplTest {
         assertThat(result.getFeedback()).isEqualTo(feedbackText);
 
         verify(aiAnswerEvaluator).evaluateAnswer(savedQuestion, savedAiProfile, normalizedUserAnswerText);
+        verifyNoInteractions(aiProfileRepository);
         verify(answerRepository).save(argThat(answer ->
                 normalizedUserAnswerText.equals(answer.getAnswerText())
                         && savedQuestion.equals(answer.getQuestion())
