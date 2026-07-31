@@ -1,6 +1,7 @@
 package org.example.mapper;
 
 import org.example.dto.response.AiProfileResponse;
+import org.example.dto.response.AvailableAiProfileResponse;
 import org.example.model.AiProfile;
 import org.springframework.stereotype.Component;
 
@@ -32,6 +33,30 @@ public class AiProfileMapper {
         aiProfileResponse.setMaxTokens(aiProfile.getMaxTokens());
 
         return aiProfileResponse;
+    }
+
+    public AvailableAiProfileResponse toAvailableResponse(AiProfile aiProfile) {
+        if (aiProfile == null) {
+            return null;
+        }
+
+        return new AvailableAiProfileResponse(
+                aiProfile.getId(),
+                aiProfile.getMode(),
+                aiProfile.getDescriptionMode(),
+                aiProfile.getDifficulty(),
+                Boolean.TRUE.equals(aiProfile.getHintMode())
+        );
+    }
+
+    public List<AvailableAiProfileResponse> toAvailableResponseList(List<AiProfile> aiProfiles) {
+        if (aiProfiles == null) {
+            return List.of();
+        }
+
+        return aiProfiles.stream()
+                .map(this::toAvailableResponse)
+                .toList();
     }
 
     public List<AiProfileResponse> toResponseList(List<AiProfile> aiProfiles) {

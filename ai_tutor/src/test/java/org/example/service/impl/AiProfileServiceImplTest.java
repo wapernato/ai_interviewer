@@ -1,6 +1,7 @@
 package org.example.service.impl;
 
 import org.example.dto.response.AiProfileResponse;
+import org.example.dto.response.AvailableAiProfileResponse;
 import org.example.exception.AiProfileAlreadyExistsException;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
@@ -215,21 +216,20 @@ class AiProfileServiceImplTest {
     }
 
     @Test
-    void addProfile_shouldDeactivateOtherProfiles_whenNewProfileIsActive() {
+    void addProfile_shouldNotChangeOtherProfiles_whenNewProfileIsActive() {
         AiProfile newProfile = createAiProfile();
         newProfile.setActive(true);
         AiProfile activeProfile = createSavedProfile(2L, "old-mode");
         activeProfile.setActive(true);
 
         when(aiProfileRepository.findByMode("interview")).thenReturn(Optional.empty());
-        when(aiProfileRepository.findAll()).thenReturn(List.of(activeProfile));
         when(aiProfileRepository.save(newProfile)).thenReturn(newProfile);
 
         AiProfileResponse result = aiProfileService.addProfile(newProfile);
 
-        assertThat(activeProfile.getActive()).isFalse();
+        assertThat(activeProfile.getActive()).isTrue();
         assertThat(result.getActive()).isTrue();
-        verify(aiProfileRepository).findAll();
+        verify(aiProfileRepository, never()).findAll();
         verify(aiProfileRepository).save(newProfile);
     }
 
@@ -399,7 +399,7 @@ class AiProfileServiceImplTest {
     }
 
     @Test
-    void updateProfile_shouldDeactivateOthersAndReturnUpdatedProfile_whenProfileBecomesActive() {
+    void updateProfile_shouldNotChangeOthers_whenProfileBecomesActive() {
         AiProfile update = createSavedProfile(1L, "mentor");
         update.setActive(true);
         AiProfile oldProfile = createSavedProfile(1L, "interview");
@@ -408,15 +408,14 @@ class AiProfileServiceImplTest {
 
         when(aiProfileRepository.findById(1L)).thenReturn(Optional.of(oldProfile));
         when(aiProfileRepository.findByMode("mentor")).thenReturn(Optional.empty());
-        when(aiProfileRepository.findAll()).thenReturn(List.of(oldProfile, anotherProfile));
         when(aiProfileRepository.save(oldProfile)).thenReturn(oldProfile);
 
         AiProfileResponse result = aiProfileService.updateProfile(update);
 
         assertThat(result.getMode()).isEqualTo("mentor");
         assertThat(result.getActive()).isTrue();
-        assertThat(anotherProfile.getActive()).isFalse();
-        verify(aiProfileRepository).findAll();
+        assertThat(anotherProfile.getActive()).isTrue();
+        verify(aiProfileRepository, never()).findAll();
         verify(aiProfileRepository).save(oldProfile);
     }
 
@@ -491,12 +490,11 @@ class AiProfileServiceImplTest {
     }
 
     @Test
-    void activateProfile_shouldDeactivateOthersAndActivateSelectedProfile() {
+    void activateProfile_shouldActivateSelectedProfileWithoutChangingOthers() {
         AiProfile selectedProfile = createSavedProfile(1L, "interview");
         AiProfile anotherProfile = createSavedProfile(2L, "mentor");
         anotherProfile.setActive(true);
         when(aiProfileRepository.findById(1L)).thenReturn(Optional.of(selectedProfile));
-        when(aiProfileRepository.findAll()).thenReturn(List.of(selectedProfile, anotherProfile));
         when(aiProfileRepository.save(selectedProfile)).thenReturn(selectedProfile);
 
         AiProfileResponse result = aiProfileService.activateProfile(1L);
@@ -504,9 +502,29 @@ class AiProfileServiceImplTest {
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getActive()).isTrue();
         assertThat(selectedProfile.getActive()).isTrue();
-        assertThat(anotherProfile.getActive()).isFalse();
-        verify(aiProfileRepository).findAll();
+        assertThat(anotherProfile.getActive()).isTrue();
+        verify(aiProfileRepository, never()).findAll();
         verify(aiProfileRepository).save(selectedProfile);
+    }
+
+    @Test
+    void getAllAvailableAiProfileResponse_shouldReturnPublicDataForActiveProfiles() {
+        AiProfile activeProfile = createSavedProfile(1L, "interview");
+        activeProfile.setActive(true);
+        when(aiProfileRepository.findByActive(true)).thenReturn(List.of(activeProfile));
+
+        List<AvailableAiProfileResponse> result = aiProfileService.getAllAvailableAiProfileResponse();
+
+        assertThat(result).containsExactly(
+                new AvailableAiProfileResponse(
+                        activeProfile.getId(),
+                        activeProfile.getMode(),
+                        activeProfile.getDescriptionMode(),
+                        activeProfile.getDifficulty(),
+                        Boolean.TRUE.equals(activeProfile.getHintMode())
+                )
+        );
+        verify(aiProfileRepository).findByActive(true);
     }
 
     @Test
