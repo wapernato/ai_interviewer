@@ -8,13 +8,30 @@ import dto.interview.QuestionRequest
 import io.restassured.RestAssured.given
 import io.restassured.http.ContentType.JSON
 import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.greaterThan
+import org.hamcrest.Matchers.notNullValue
 import kotlin.test.Test
 
 class InterviewFlowApiTest {
 
+    private fun getAvailableAiProfileId(): Long =
+        given()
+            .baseUri(ApiConfig.baseUrl)
+            .accept(JSON)
+        .`when`()
+            .get("/api/ai-profiles/available")
+        .then()
+            .statusCode(200)
+            .contentType(JSON)
+            .body("size()", greaterThan(0))
+            .extract()
+            .jsonPath()
+            .getLong("[0].id")
+
     @Test
     fun `answer should return bad request when user A answers user B question`() {
         val uniqueSuffix = System.currentTimeMillis()
+        val aiProfileId = getAvailableAiProfileId()
 
         val userAUsername = "user_a_$uniqueSuffix"
         val userAEmail = "user_a_$uniqueSuffix@gmail.com"
@@ -92,11 +109,11 @@ class InterviewFlowApiTest {
             .extract()
             .response()
 
-        val userBId = userBLoginResponse.jsonPath().getLong("id")
         val userBToken = userBLoginResponse.jsonPath().getString("token")
 
         val questionRequest = QuestionRequest(
-            topic = "Java"
+            topic = "Java",
+            aiProfileId = aiProfileId
         )
 
         val questionResponse = given()
@@ -116,7 +133,6 @@ class InterviewFlowApiTest {
         val userBQuestionId = questionResponse.jsonPath().getLong("questionId")
 
         val answerRequest = AnswerRequest(
-            userId = userBId,
             questionId = userBQuestionId,
             textAnswer = "Раз, 2, три, 4, пять!"
         )
@@ -140,6 +156,7 @@ class InterviewFlowApiTest {
     @Test
     fun `answer should return ok when data is valid`() {
         val uniqueSuffix = System.currentTimeMillis()
+        val aiProfileId = getAvailableAiProfileId()
 
         val username = "user$uniqueSuffix"
         val email = "user$uniqueSuffix@gmail.com"
@@ -151,7 +168,7 @@ class InterviewFlowApiTest {
             password = password
         )
 
-        val registerResponse = given()
+        given()
             .baseUri(ApiConfig.baseUrl)
             .contentType(JSON)
             .accept(JSON)
@@ -160,8 +177,6 @@ class InterviewFlowApiTest {
             .post("/api/auth/register")
         .then()
             .statusCode(201)
-            .extract()
-            .response()
 
         val loginRequest = LoginRequest(
             email = email,
@@ -181,10 +196,12 @@ class InterviewFlowApiTest {
             .response()
 
         val questionRequest = QuestionRequest(
-            topic = "Алгоритмы"
+            topic = "Алгоритмы",
+            aiProfileId = aiProfileId
         )
 
         val jwt = loginResponse.jsonPath().getString("token")
+        val userId = loginResponse.jsonPath().getLong("id")
 
         val questionResponse = given()
             .auth().oauth2(jwt)
@@ -199,9 +216,10 @@ class InterviewFlowApiTest {
             .extract()
             .response()
 
+        val questionId = questionResponse.jsonPath().getLong("questionId")
+
         val answerRequest = AnswerRequest(
-            userId = loginResponse.jsonPath().getLong("id"),
-            questionId = questionResponse.jsonPath().getLong("questionId"),
+            questionId = questionId,
             textAnswer = "Бинарное дерево."
         )
 
@@ -215,5 +233,11 @@ class InterviewFlowApiTest {
             .post("/api/interview/answer")
         .then()
             .statusCode(201)
+            .contentType(JSON)
+            .body("answerId", notNullValue())
+            .body("userId", equalTo(userId.toInt()))
+            .body("questionId", equalTo(questionId.toInt()))
+            .body("userAnswerText", equalTo("Бинарное дерево."))
+            .body("feedback", notNullValue())
     }
 }
