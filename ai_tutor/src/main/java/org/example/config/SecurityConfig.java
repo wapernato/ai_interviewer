@@ -2,7 +2,6 @@ package org.example.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.security.InternalApiKeyFilter;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,7 +15,6 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import java.util.List;
 
-@EnableConfigurationProperties(InternalApiProperties.class)
 @Configuration
 public class SecurityConfig {
 

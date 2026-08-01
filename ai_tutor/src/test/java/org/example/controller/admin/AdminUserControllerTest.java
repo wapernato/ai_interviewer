@@ -2,6 +2,7 @@ package org.example.controller.admin;
 
 import org.example.dto.response.UserResponse;
 import org.example.exception.NotFoundException;
+import org.example.service.AdminUserService;
 import org.example.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ class AdminUserControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private AdminUserService adminUserService;
 
     private UserResponse createUserResponse(Long id, String username) {
         UserResponse response = new UserResponse();
