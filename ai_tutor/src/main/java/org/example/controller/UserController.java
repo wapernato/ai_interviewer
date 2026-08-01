@@ -1,11 +1,12 @@
 package org.example.controller;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
 import org.example.dto.response.UserResponse;
 import org.example.dto.user.UpdateUserRequest;
+import org.example.dto.user.UserStatisticsResponse;
 import org.example.security.JwtService;
 import org.example.service.UserService;
+import org.example.service.UserStatisticsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,11 +19,14 @@ public class UserController {
 
     private final UserService userService;
     private final JwtService jwtService;
+    private final UserStatisticsService userStatisticsService;
 
     public UserController(UserService userService,
-                          JwtService jwtService) {
+                          JwtService jwtService,
+                          UserStatisticsService userStatisticsService) {
         this.userService = userService;
         this.jwtService = jwtService;
+        this.userStatisticsService = userStatisticsService;
     }
 
     @GetMapping
@@ -50,6 +54,17 @@ public class UserController {
         return ResponseEntity
                 .noContent()
                 .build();
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<UserStatisticsResponse> getMyStatistics(@AuthenticationPrincipal Jwt jwt){
+        Long currentId = jwtService.extractUserId(jwt);
+        UserStatisticsResponse response = userStatisticsService.getUserStatistics(currentId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(response);
+
     }
 
 

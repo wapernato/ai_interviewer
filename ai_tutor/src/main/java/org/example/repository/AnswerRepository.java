@@ -11,4 +11,6 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
 
     List<Answer> findByAiProfile_Id(Long aiProfileId);
 
+    long countByQuestion_CreatedByUser_Id(Long userId);
+
 }

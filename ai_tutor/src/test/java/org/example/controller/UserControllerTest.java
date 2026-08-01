@@ -7,6 +7,7 @@ import org.example.exception.NotFoundException;
 import org.example.exception.UserAlreadyExistsException;
 import org.example.security.JwtService;
 import org.example.service.UserService;
+import org.example.service.UserStatisticsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -42,6 +43,9 @@ class UserControllerTest {
 
     @MockitoBean
     private JwtService jwtService;
+
+    @MockitoBean
+    private UserStatisticsService userStatisticsService;
 
     private UserResponse createUserResponse(Long id, String username) {
         UserResponse response = new UserResponse();
