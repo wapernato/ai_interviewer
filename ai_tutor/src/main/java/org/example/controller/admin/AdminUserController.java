@@ -1,9 +1,12 @@
 package org.example.controller.admin;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import org.example.dto.response.UserResponse;
+import org.example.dto.user.UpdateUserRoleRequest;
+import org.example.service.AdminUserService;
 import org.example.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +19,12 @@ import java.util.List;
 public class AdminUserController {
 
     private final UserService userService;
+    private final AdminUserService adminUserService;
 
-    public AdminUserController(UserService userService) {
+    public AdminUserController(UserService userService,
+                               AdminUserService adminUserService) {
         this.userService = userService;
+        this.adminUserService = adminUserService;
     }
 
     @GetMapping
@@ -48,6 +54,20 @@ public class AdminUserController {
     @GetMapping("/search")
     public ResponseEntity<UserResponse> findByUsername(@NotBlank(message = "Имя пользователя не должно быть пустым.") @Size(min = 2, max = 50) @RequestParam String username){
         UserResponse user = userService.findByName(username);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(user);
+    }
+
+    @PutMapping("/{id}/role")
+    public ResponseEntity<UserResponse> updateUserRole(
+            @PathVariable("id")
+            @Positive(message = "ID пользователя должен быть положительным числом.")
+            Long userId,
+            @Valid @RequestBody UpdateUserRoleRequest request
+    ) {
+        UserResponse user = adminUserService.updateUserRole(userId, request.role());
+
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(user);
