@@ -1,5 +1,6 @@
 package org.example.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.example.dto.auth.LoginRequest;
 import org.example.dto.auth.RegisterRequest;
@@ -31,8 +32,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request){
-        AuthResponse response = authService.login(request);
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
+                                              HttpServletRequest httpServletRequest){
+        AuthResponse response = authService.login(request, httpServletRequest.getRemoteAddr());
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
