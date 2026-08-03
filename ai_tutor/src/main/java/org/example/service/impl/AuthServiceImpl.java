@@ -9,6 +9,7 @@ import org.example.model.User;
 import org.example.model.UserRole;
 import org.example.repository.UserRepository;
 import org.example.security.JwtService;
+import org.example.security.LoginRateLimiter;
 import org.example.service.AuthService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,15 +20,19 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final LoginRateLimiter loginRateLimiter;
 
-    public AuthServiceImpl(JwtService jwtService, UserRepository userRepository,
-                           PasswordEncoder passwordEncoder) {
+    public AuthServiceImpl(JwtService jwtService,
+                           UserRepository userRepository,
+                           PasswordEncoder passwordEncoder,
+                           LoginRateLimiter loginRateLimiter) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.loginRateLimiter = loginRateLimiter;
     }
 
-    private String normalizedEmail(String email){
+    private String normalizedEmail(String email) {
 
         if(email == null){
             throw new BadRequestException("Почта не может быть null.");
@@ -42,7 +47,7 @@ public class AuthServiceImpl implements AuthService {
         return normalizedEmail;
     }
 
-    private AuthResponse createResponse(User user){
+    private AuthResponse createResponse(User user) {
         AuthResponse response = new AuthResponse();
 
         response.setId(user.getId());
@@ -53,7 +58,7 @@ public class AuthServiceImpl implements AuthService {
         return response;
     }
 
-    private AuthResponse createResponseWithToken(User user){
+    private AuthResponse createResponseWithToken(User user) {
         AuthResponse response = new AuthResponse();
 
         response.setToken(jwtService.generateToken(user));
@@ -66,7 +71,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse register(RegisterRequest request){
+    public AuthResponse register(RegisterRequest request) {
         String username = request.getUsername();
         if(username == null){
             throw new BadRequestException("Имя пользователя не может быть null.");
@@ -103,19 +108,24 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse login(LoginRequest request) {
-
+    public AuthResponse login(LoginRequest request, String clientIp) {
         String normalizedEmail = normalizedEmail(request.getEmail());
+        loginRateLimiter.checkLimit(clientIp, normalizedEmail);
 
         User user = userRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new BadRequestException("Неверный email или пароль."));
+                .orElseThrow(() -> {
+                    loginRateLimiter.registerFailedAttempt(clientIp, normalizedEmail);
+                    return new BadRequestException("Неверный email или пароль.");
+                });
 
         boolean passwordMatches = passwordEncoder.matches(request.getPassword(), user.getPasswordHash());
 
         if(!passwordMatches){
+            loginRateLimiter.registerFailedAttempt(clientIp, normalizedEmail);
             throw new BadRequestException("Неверный email или пароль.");
         }
 
+        loginRateLimiter.resetAttempts(clientIp, normalizedEmail);
         return createResponseWithToken(user);
     }
 }
