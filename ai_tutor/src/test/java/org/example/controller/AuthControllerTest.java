@@ -6,6 +6,7 @@ import org.example.dto.response.AuthResponse;
 import org.example.exception.BadRequestException;
 import org.example.exception.UserAlreadyExistsException;
 import org.example.model.UserRole;
+import org.example.security.ClientIpResolver;
 import org.example.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,8 @@ public class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+    @MockitoBean
+    private ClientIpResolver clientIpResolver;
 
     private RegisterRequest createRegisterRequest(String username, String email, String password) {
         RegisterRequest request = new RegisterRequest();
@@ -233,7 +236,6 @@ public class AuthControllerTest {
         verifyNoInteractions(authService);
     }
 }
-
 
 
 

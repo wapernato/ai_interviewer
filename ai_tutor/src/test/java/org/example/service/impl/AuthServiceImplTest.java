@@ -7,6 +7,7 @@ import org.example.model.UserRole;
 import org.example.repository.UserRepository;
 import org.example.security.JwtService;
 import org.example.security.LoginRateLimiter;
+import org.example.security.PasswordPolicyValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +32,8 @@ class AuthServiceImplTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private LoginRateLimiter loginRateLimiter;
+    @Mock
+    private PasswordPolicyValidator passwordPolicyValidator;
 
     private AuthServiceImpl authService;
 
@@ -40,7 +43,8 @@ class AuthServiceImplTest {
                 jwtService,
                 userRepository,
                 passwordEncoder,
-                loginRateLimiter
+                loginRateLimiter,
+                passwordPolicyValidator
         );
     }
 
