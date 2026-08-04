@@ -10,6 +10,7 @@ import org.example.model.UserRole;
 import org.example.repository.UserRepository;
 import org.example.security.JwtService;
 import org.example.security.LoginRateLimiter;
+import org.example.security.PasswordPolicyValidator;
 import org.example.service.AuthService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,15 +22,18 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final LoginRateLimiter loginRateLimiter;
+    private final PasswordPolicyValidator passwordPolicyValidator;
 
     public AuthServiceImpl(JwtService jwtService,
                            UserRepository userRepository,
                            PasswordEncoder passwordEncoder,
-                           LoginRateLimiter loginRateLimiter) {
+                           LoginRateLimiter loginRateLimiter,
+                           PasswordPolicyValidator passwordPolicyValidator) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.loginRateLimiter = loginRateLimiter;
+        this.passwordPolicyValidator = passwordPolicyValidator;
     }
 
     private String normalizedEmail(String email) {
@@ -92,6 +96,7 @@ public class AuthServiceImpl implements AuthService {
             throw new UserAlreadyExistsException("Пользователь с таким email уже существует.");
         }
 
+        passwordPolicyValidator.validate(request.getPassword());
         String passwordHash = passwordEncoder.encode(request.getPassword());
 
         User user = new User();
