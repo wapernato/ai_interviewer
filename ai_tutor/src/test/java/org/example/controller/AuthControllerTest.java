@@ -1,12 +1,15 @@
 package org.example.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.dto.auth.PasswordStrengthRequest;
 import org.example.dto.auth.RegisterRequest;
 import org.example.dto.response.AuthResponse;
-import org.example.exception.BadRequestException;
 import org.example.exception.UserAlreadyExistsException;
 import org.example.model.UserRole;
 import org.example.security.ClientIpResolver;
+import org.example.security.PasswordStrengthEvaluator;
+import org.example.security.PasswordStrengthLevel;
+import org.example.security.PasswordStrengthResult;
 import org.example.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +18,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
@@ -26,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
 public class AuthControllerTest {
+    private static final String VALID_PASSWORD = "StrongPass1!";
 
     @Autowired
     private MockMvc mockMvc;
@@ -37,6 +43,8 @@ public class AuthControllerTest {
     private AuthService authService;
     @MockitoBean
     private ClientIpResolver clientIpResolver;
+    @MockitoBean
+    private PasswordStrengthEvaluator passwordStrengthEvaluator;
 
     private RegisterRequest createRegisterRequest(String username, String email, String password) {
         RegisterRequest request = new RegisterRequest();
@@ -60,7 +68,7 @@ public class AuthControllerTest {
     }
     @Test
     void register_shouldReturnCreated_whenRequestIsValid() throws Exception {
-        RegisterRequest request = createRegisterRequest("ximeo", "zavod3433@yandex.ru", "88888888");
+        RegisterRequest request = createRegisterRequest("ximeo", "zavod3433@yandex.ru", VALID_PASSWORD);
         AuthResponse response = createAuthResponse(1L, "ximeo", "zavod3433@yandex.ru", UserRole.USER);
 
         when(authService.register(any(RegisterRequest.class))).thenReturn(response);
@@ -79,13 +87,13 @@ public class AuthControllerTest {
         verify(authService).register(argThat(req ->
                 "ximeo".equals(req.getUsername())
                         && "zavod3433@yandex.ru".equals(req.getEmail())
-                        && "88888888".equals(req.getPassword())
+                        && VALID_PASSWORD.equals(req.getPassword())
         ));
     }
 
     @Test
      void register_shouldThrowBarRequestException_whenNameIsNull() throws Exception {
-        RegisterRequest request = createRegisterRequest(null, "zavod3433@yandex.ru", "88888888");
+        RegisterRequest request = createRegisterRequest(null, "zavod3433@yandex.ru", VALID_PASSWORD);
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -102,7 +110,7 @@ public class AuthControllerTest {
 
     @Test
     void register_shouldReturnConflict_whenUsernameAlreadyExists() throws Exception {
-        RegisterRequest request = createRegisterRequest("ximeo","zavod3433@yandex.ru", "88888888" );
+        RegisterRequest request = createRegisterRequest("ximeo","zavod3433@yandex.ru", VALID_PASSWORD);
 
         when(authService.register(any(RegisterRequest.class)))
                 .thenThrow(new UserAlreadyExistsException("Пользователь с таким username уже существует."));
@@ -120,7 +128,7 @@ public class AuthControllerTest {
         verify(authService).register(argThat(req ->
                 "ximeo".equals(req.getUsername())
                         && "zavod3433@yandex.ru".equals(req.getEmail())
-                        && "88888888".equals(req.getPassword())
+                        && VALID_PASSWORD.equals(req.getPassword())
                 ));
     }
 
@@ -156,7 +164,7 @@ public class AuthControllerTest {
                         {
                           "username": "ximeo",
                           "email": "zavod3433@yandex.ru",
-                          "password": "88888888"
+                          "password": "StrongPass1!"
                         }
                 """;
 
@@ -187,7 +195,7 @@ public class AuthControllerTest {
                 {
                   "username": "ximeo",
                   "email": "zavod3433@yandex.ru",
-                  "password": "88888888",
+                  "password": "StrongPass1!",
                   "role": "ADMIN"
                 }
                 """;
@@ -203,7 +211,7 @@ public class AuthControllerTest {
         verify(authService).register(argThat(req ->
                 "ximeo".equals(req.getUsername())
                         && "zavod3433@yandex.ru".equals(req.getEmail())
-                        && "88888888".equals(req.getPassword())
+                        && VALID_PASSWORD.equals(req.getPassword())
         ));
     }
 
@@ -231,14 +239,52 @@ public class AuthControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(jsonPath("$.validationErrors.username").value("Имя пользователя должно быть от 2 до 50 символов."))
                 .andExpect(jsonPath("$.validationErrors.email").value("Email должен быть корректным."))
-                .andExpect(jsonPath("$.validationErrors.password").value("Пароль должен быть от 8 до 100 символов."));
+                .andExpect(jsonPath("$.validationErrors.password").value("Пароль должен быть от 8 до 72 символов."));
 
         verifyNoInteractions(authService);
     }
+
+    @Test
+    void passwordStrength_shouldReturnPasswordStrengthResult_whenRequestIsValid() throws Exception {
+        PasswordStrengthRequest request = new PasswordStrengthRequest();
+        request.setPassword("StrongPass1!");
+
+        PasswordStrengthResult result = new PasswordStrengthResult(
+                PasswordStrengthLevel.STRONG,
+                List.of()
+        );
+
+        when(passwordStrengthEvaluator.evaluate("StrongPass1!")).thenReturn(result);
+
+        mockMvc.perform(post("/api/auth/password-strength")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.level").value("STRONG"))
+                .andExpect(jsonPath("$.suggestions").isArray())
+                .andExpect(jsonPath("$.suggestions").isEmpty());
+
+        verify(passwordStrengthEvaluator).evaluate("StrongPass1!");
+        verifyNoInteractions(authService);
+    }
+
+    @Test
+    void passwordStrength_shouldReturnBadRequest_whenPasswordIsBlank() throws Exception {
+        PasswordStrengthRequest request = new PasswordStrengthRequest();
+        request.setPassword(" ");
+
+        mockMvc.perform(post("/api/auth/password-strength")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.validationErrors.password").value("Пароль не должен быть пустым."));
+
+        verifyNoInteractions(authService, passwordStrengthEvaluator);
+    }
 }
-
-
-
 
 
 

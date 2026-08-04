@@ -34,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 class InterviewEndTest {
+    private static final String VALID_PASSWORD = "StrongPass1!";
 
     @Container
     private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16");
@@ -115,7 +116,7 @@ class InterviewEndTest {
     void interview_shouldCompleteSuccessfully_whenAuthenticatedUserAnswersQuestion() {
         AiProfile aiProfile = createActiveAiProfile();
 
-        RegisterRequest request = createRegisterRequest("ximeo", "ximeo@gmail.com",  "12345678");
+        RegisterRequest request = createRegisterRequest("ximeo", "ximeo@gmail.com", VALID_PASSWORD);
 
         given()
                 .contentType(ContentType.JSON)
@@ -125,7 +126,7 @@ class InterviewEndTest {
                 .then()
                 .statusCode(201);
 
-        LoginRequest loginRequest = createLoginRequest("ximeo@gmail.com", "12345678");
+        LoginRequest loginRequest = createLoginRequest("ximeo@gmail.com", VALID_PASSWORD);
 
         Response responseLogin = given()
                 .contentType(ContentType.JSON)
