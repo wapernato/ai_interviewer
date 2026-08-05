@@ -6,6 +6,8 @@ import org.example.dto.response.auth.AuthResponse;
 import org.example.exception.BadRequestException;
 import org.example.exception.UserAlreadyExistsException;
 import org.example.model.UserRole;
+import org.example.security.ClientIpResolver;
+import org.example.security.PasswordStrengthEvaluator;
 import org.example.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,11 @@ public class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+    @MockitoBean
+    private ClientIpResolver clientIpResolver;
+
+    @MockitoBean
+    private PasswordStrengthEvaluator passwordStrengthEvaluator;
 
     private RegisterRequest createRegisterRequest(String username, String email, String password) {
         RegisterRequest request = new RegisterRequest();
@@ -228,14 +235,11 @@ public class AuthControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(jsonPath("$.validationErrors.username").value("Имя пользователя должно быть от 2 до 50 символов."))
                 .andExpect(jsonPath("$.validationErrors.email").value("Email должен быть корректным."))
-                .andExpect(jsonPath("$.validationErrors.password").value("Пароль должен быть от 8 до 100 символов."));
+                .andExpect(jsonPath("$.validationErrors.password").value("Пароль должен быть от 8 до 72 символов."));
 
         verifyNoInteractions(authService);
     }
 }
-
-
-
 
 
 
