@@ -1,7 +1,7 @@
 package org.example.controller;
 
-import org.example.dto.response.AiProfileResponse;
-import org.example.dto.response.AvailableAiProfileResponse;
+import org.example.dto.response.aiprofile.AiProfileResponse;
+import org.example.dto.response.aiprofile.AvailableAiProfileResponse;
 import org.example.exception.NotFoundException;
 import org.example.service.AiProfileService;
 import org.junit.jupiter.api.Test;

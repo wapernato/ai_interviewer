@@ -1,6 +1,6 @@
 package org.example.service;
 
-import org.example.dto.response.TopicResponse;
+import org.example.dto.response.topic.TopicResponse;
 
 
 import java.util.List;

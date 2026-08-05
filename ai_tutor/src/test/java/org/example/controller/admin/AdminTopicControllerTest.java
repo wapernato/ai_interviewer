@@ -1,7 +1,7 @@
 package org.example.controller.admin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.dto.response.TopicResponse;
+import org.example.dto.response.topic.TopicResponse;
 import org.example.dto.topic.CreateTopicRequest;
 import org.example.dto.topic.UpdateTopicRequest;
 import org.example.exception.NotFoundException;

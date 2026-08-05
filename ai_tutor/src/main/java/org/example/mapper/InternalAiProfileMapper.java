@@ -1,6 +1,6 @@
 package org.example.mapper;
 
-import org.example.dto.response.InternalAiProfileConfigResponse;
+import org.example.dto.response.aiprofile.InternalAiProfileConfigResponse;
 import org.example.model.AiProfile;
 import org.springframework.stereotype.Component;
 

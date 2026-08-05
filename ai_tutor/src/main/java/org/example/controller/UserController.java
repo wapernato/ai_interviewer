@@ -1,7 +1,7 @@
 package org.example.controller;
 
 import jakarta.validation.Valid;
-import org.example.dto.response.UserResponse;
+import org.example.dto.response.user.UserResponse;
 import org.example.dto.user.UpdateUserRequest;
 import org.example.dto.user.UserStatisticsResponse;
 import org.example.security.JwtService;

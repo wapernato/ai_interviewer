@@ -1,6 +1,6 @@
 package org.example.controller;
 
-import org.example.dto.response.TopicResponse;
+import org.example.dto.response.topic.TopicResponse;
 import org.example.exception.NotFoundException;
 import org.example.service.TopicService;
 import org.junit.jupiter.api.Test;

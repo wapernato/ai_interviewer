@@ -1,6 +1,6 @@
 package org.example.service;
 
-import org.example.dto.response.QuestionResponse;
+import org.example.dto.response.question.QuestionResponse;
 
 import java.util.List;
 

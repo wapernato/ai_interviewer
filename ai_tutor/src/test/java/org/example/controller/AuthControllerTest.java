@@ -3,7 +3,7 @@ package org.example.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.dto.auth.PasswordStrengthRequest;
 import org.example.dto.auth.RegisterRequest;
-import org.example.dto.response.AuthResponse;
+import org.example.dto.response.auth.AuthResponse;
 import org.example.exception.UserAlreadyExistsException;
 import org.example.model.UserRole;
 import org.example.security.ClientIpResolver;
@@ -285,6 +285,3 @@ public class AuthControllerTest {
         verifyNoInteractions(authService, passwordStrengthEvaluator);
     }
 }
-
-
-

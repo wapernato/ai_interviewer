@@ -3,7 +3,7 @@ package org.example.controller.admin;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.example.dto.aiprofile.CreateAiProfileRequest;
-import org.example.dto.response.AiProfileResponse;
+import org.example.dto.response.aiprofile.AiProfileResponse;
 import org.example.model.AiProfile;
 import org.example.service.AiProfileService;
 import org.springframework.http.HttpStatus;

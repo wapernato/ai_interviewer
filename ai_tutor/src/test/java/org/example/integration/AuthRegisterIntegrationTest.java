@@ -2,7 +2,7 @@ package org.example.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.dto.auth.RegisterRequest;
-import org.example.dto.response.AuthResponse;
+import org.example.dto.response.auth.AuthResponse;
 import org.example.model.User;
 import org.example.model.UserRole;
 import org.example.repository.UserRepository;

@@ -5,7 +5,7 @@ import jakarta.validation.Valid;
 import org.example.dto.auth.LoginRequest;
 import org.example.dto.auth.PasswordStrengthRequest;
 import org.example.dto.auth.RegisterRequest;
-import org.example.dto.response.AuthResponse;
+import org.example.dto.response.auth.AuthResponse;
 import org.example.security.ClientIpResolver;
 import org.example.security.PasswordStrengthEvaluator;
 import org.example.security.PasswordStrengthResult;

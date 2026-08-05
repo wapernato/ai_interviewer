@@ -1,20 +1,14 @@
-package org.example.dto.response;
+package org.example.dto.response.auth;
 
 import org.example.model.UserRole;
 
-import java.time.Instant;
-
-public class UserResponse {
+public class AuthResponse {
 
     private Long id;
     private String username;
     private String email;
     private UserRole role;
-    private Boolean enabled;
-    private Instant createdAt;
-
-    public UserResponse() {
-    }
+    private String token;
 
     public Long getId() {
         return id;
@@ -27,6 +21,10 @@ public class UserResponse {
     public String getUsername() {
         return username;
     }
+
+    public String getToken() { return token; }
+
+    public void setToken(String token) { this.token = token; }
 
     public void setUsername(String username) {
         this.username = username;
@@ -46,21 +44,5 @@ public class UserResponse {
 
     public void setRole(UserRole role) {
         this.role = role;
-    }
-
-    public Boolean getEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(Boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
     }
 }

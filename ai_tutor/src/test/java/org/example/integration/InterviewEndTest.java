@@ -8,7 +8,7 @@ import org.example.dto.interview.AnswerRequest;
 import org.example.dto.interview.InterviewAnswerResult;
 import org.example.dto.interview.InterviewQuestionResult;
 import org.example.dto.interview.QuestionRequest;
-import org.example.dto.response.AuthResponse;
+import org.example.dto.response.auth.AuthResponse;
 import org.example.model.AiProfile;
 import org.example.repository.AiProfileRepository;
 import org.example.repository.QuestionRepository;

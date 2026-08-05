@@ -2,7 +2,7 @@ package org.example.service.impl;
 
 import org.example.dto.auth.LoginRequest;
 import org.example.dto.auth.RegisterRequest;
-import org.example.dto.response.AuthResponse;
+import org.example.dto.response.auth.AuthResponse;
 import org.example.exception.BadRequestException;
 import org.example.exception.UserAlreadyExistsException;
 import org.example.model.User;
