@@ -34,6 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 
 class AuthRegisterIntegrationTest {
+    private static final String VALID_PASSWORD = "StrongPass1!";
+
     @Container
     private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16");
 
@@ -73,7 +75,7 @@ class AuthRegisterIntegrationTest {
 
     @Test
     void register_shouldSaveUser_whenDataIsValid() throws Exception {
-        RegisterRequest request = createRegister("ximeo", "ximeo@yandex.ru", "88888888");
+        RegisterRequest request = createRegister("ximeo", "ximeo@yandex.ru", VALID_PASSWORD);
 
         String response = mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -94,14 +96,14 @@ class AuthRegisterIntegrationTest {
         assertThat(savedUser).isPresent();
         assertThat(savedUser.get().getUsername()).isEqualTo("ximeo");
         assertThat(savedUser.get().getEmail()).isEqualTo("ximeo@yandex.ru");
-        assertThat(savedUser.get().getPasswordHash()).isNotEqualTo("88888888");
-        assertThat(passwordEncoder.matches("88888888", savedUser.get().getPasswordHash())).isTrue();
+        assertThat(savedUser.get().getPasswordHash()).isNotEqualTo(VALID_PASSWORD);
+        assertThat(passwordEncoder.matches(VALID_PASSWORD, savedUser.get().getPasswordHash())).isTrue();
     }
 
     @Test
     void register_shouldReturnConflictAndNotSaveUser_whenEmailAlreadyExists() throws Exception {
-        RegisterRequest firstRequest = createRegister("ximeo", "ximeo@yandex.ru", "88888888");
-        RegisterRequest secondRequest = createRegister("waper", "ximeo@yandex.ru", "88888888");
+        RegisterRequest firstRequest = createRegister("ximeo", "ximeo@yandex.ru", VALID_PASSWORD);
+        RegisterRequest secondRequest = createRegister("waper", "ximeo@yandex.ru", VALID_PASSWORD);
 
         String response = mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -122,8 +124,8 @@ class AuthRegisterIntegrationTest {
         assertThat(savedUser).isPresent();
         assertThat(savedUser.get().getUsername()).isEqualTo("ximeo");
         assertThat(savedUser.get().getEmail()).isEqualTo("ximeo@yandex.ru");
-        assertThat(savedUser.get().getPasswordHash()).isNotEqualTo("88888888");
-        assertThat(passwordEncoder.matches("88888888", savedUser.get().getPasswordHash())).isTrue();
+        assertThat(savedUser.get().getPasswordHash()).isNotEqualTo(VALID_PASSWORD);
+        assertThat(passwordEncoder.matches(VALID_PASSWORD, savedUser.get().getPasswordHash())).isTrue();
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -143,7 +145,7 @@ class AuthRegisterIntegrationTest {
                 {
                   "username": "ximeo",
                   "email": "ximeo@gmail.com",
-                  "password": "88888888",
+                  "password": "StrongPass1!",
                   "role": "ADMIN"
                 }
                 """;

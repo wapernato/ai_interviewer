@@ -40,6 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 class AuthRestAssuredTest {
+    private static final String VALID_PASSWORD = "StrongPass1!";
 
     @Container
     private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16");
@@ -124,7 +125,7 @@ class AuthRestAssuredTest {
         RegisterRequest request = createRegisterRequest(
                 "ximeo",
                 "ximeo@gmail.com",
-                "88888888");
+                VALID_PASSWORD);
 
         Response rawResponse =
                 given()
@@ -162,9 +163,9 @@ class AuthRestAssuredTest {
         assertThat(savedUser.getRole()).isEqualTo(UserRole.USER);
         assertThat(savedUser.getPasswordHash()).isNotNull();
         assertThat(savedUser.getPasswordHash()).isNotBlank();
-        assertThat(savedUser.getPasswordHash()).isNotEqualTo("88888888");
+        assertThat(savedUser.getPasswordHash()).isNotEqualTo(VALID_PASSWORD);
         assertThat(passwordEncoder.matches(
-                "88888888",
+                VALID_PASSWORD,
                 savedUser.getPasswordHash()
         )).isTrue();
     }
@@ -176,12 +177,12 @@ class AuthRestAssuredTest {
         RegisterRequest requestUserXimeo = createRegisterRequest(
                 "ximeo",
                 "ximeo@gmail.com",
-                "12345678");
+                VALID_PASSWORD);
 
         RegisterRequest requestUserRodion = createRegisterRequest(
                 "rodion",
                 "rodion@gmail.com",
-                "12345678");
+                VALID_PASSWORD);
 
         Response responseRegisterXimeo = given()
                 .contentType(ContentType.JSON)
@@ -211,7 +212,7 @@ class AuthRestAssuredTest {
                 .extract()
                 .response();
 
-        LoginRequest loginRequestRodion = createLoginRequest("rodion@gmail.com", "12345678");
+        LoginRequest loginRequestRodion = createLoginRequest("rodion@gmail.com", VALID_PASSWORD);
 
         Response responseLoginRodion =
                 given()

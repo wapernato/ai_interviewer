@@ -51,7 +51,7 @@ public class AuthController {
     }
 
     @PostMapping("/password-strength")
-    public ResponseEntity<PasswordStrengthResult> passwordStrength(@RequestBody PasswordStrengthRequest request) {
+    public ResponseEntity<PasswordStrengthResult> passwordStrength(@Valid @RequestBody PasswordStrengthRequest request) {
         PasswordStrengthResult result = passwordStrengthEvaluator.evaluate(request.getPassword());
         return ResponseEntity
                 .status(HttpStatus.OK)

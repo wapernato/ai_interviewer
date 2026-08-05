@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
+    private static final String VALID_PASSWORD = "StrongPass1!";
 
     @Mock
     private JwtService jwtService;
@@ -60,10 +61,10 @@ class AuthServiceImplTest {
 
     @Test
     void register_shouldCreateUser_whenRequestIsValid(){
-        RegisterRequest request = createRequest("zavod3433@yandex.ru", "ximeo", "88888888");
+        RegisterRequest request = createRequest("zavod3433@yandex.ru", "ximeo", VALID_PASSWORD);
         when(userRepository.existsByUsername("ximeo")).thenReturn(false);
         when(userRepository.existsByEmail("zavod3433@yandex.ru")).thenReturn(false);
-        when(passwordEncoder.encode("88888888")).thenReturn("encoded-password");
+        when(passwordEncoder.encode(VALID_PASSWORD)).thenReturn("encoded-password");
 
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
                 User user = invocation.getArgument(0);
@@ -80,6 +81,7 @@ class AuthServiceImplTest {
         assertThat(response.getRole()).isEqualTo(UserRole.USER);
         assertThat(response.getToken()).isNull();
 
+        verify(passwordPolicyValidator).validate(VALID_PASSWORD);
         verify(userRepository).save(argThat(user ->
                 "ximeo".equals(user.getUsername())
                         && "zavod3433@yandex.ru".equals(user.getEmail())
@@ -93,14 +95,14 @@ class AuthServiceImplTest {
     void register_shouldNormalizeEmailAndTrimUsername_whenRequestIsValid() {
         String username = "  ximeo  ";
         String email = " Zavod3433@yandex.ru  ";
-        RegisterRequest request = createRequest(email, username, "88888888");
+        RegisterRequest request = createRequest(email, username, VALID_PASSWORD);
 
         String trimUsername = username.trim();
         String normalizedEmail = email.trim().toLowerCase();
 
         when(userRepository.existsByUsername(trimUsername)).thenReturn(false);
         when(userRepository.existsByEmail(normalizedEmail)).thenReturn(false);
-        when(passwordEncoder.encode("88888888")).thenReturn("encoded-password");
+        when(passwordEncoder.encode(VALID_PASSWORD)).thenReturn("encoded-password");
 
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
            User user = invocation.getArgument(0);
@@ -116,6 +118,7 @@ class AuthServiceImplTest {
         assertThat(response.getRole()).isEqualTo(UserRole.USER);
         assertThat(response.getToken()).isNull();
 
+        verify(passwordPolicyValidator).validate(VALID_PASSWORD);
         verify(userRepository).save(argThat(user ->
                 "ximeo".equals(user.getUsername())
                         && "zavod3433@yandex.ru".equals(user.getEmail())
