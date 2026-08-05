@@ -1,12 +1,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { registerUser } from "../../api/authApi";
 import { Alert } from "../../components/Alert";
 import { useAuth } from "./useAuth";
 import { normalizeApiError } from "../../utils/apiError";
 import { registerSchema, type RegisterFormValues } from "./authSchemas";
+import { PasswordStrengthFeedback } from "./PasswordStrengthFeedback";
 
 export function RegisterForm() {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ export function RegisterForm() {
   }
 
   const apiError = mutation.error ? normalizeApiError(mutation.error) : null;
+  const password = useWatch({ control: form.control, name: "password" });
 
   return (
     <form className="auth-form" onSubmit={form.handleSubmit(handleSubmit)}>
@@ -60,6 +62,8 @@ export function RegisterForm() {
           <span className="field-error">{form.formState.errors.password.message}</span>
         ) : null}
       </label>
+
+      <PasswordStrengthFeedback password={password} />
 
       <button className="primary-button" disabled={mutation.isPending} type="submit">
         {mutation.isPending ? "Регистрация..." : "Зарегистрироваться"}

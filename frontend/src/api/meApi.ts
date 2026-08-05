@@ -1,5 +1,10 @@
 import { apiClient } from "./client";
-import type { UpdateUserRequest, UserHistoryItem, UserResponse } from "../types/api";
+import type {
+  UpdateUserRequest,
+  UserHistoryItem,
+  UserResponse,
+  UserStatisticsResponse,
+} from "../types/api";
 
 export async function getMe(): Promise<UserResponse> {
   const response = await apiClient.get<UserResponse>("/me");
@@ -17,5 +22,10 @@ export async function deleteMe(): Promise<void> {
 
 export async function getMyHistory(): Promise<UserHistoryItem[]> {
   const response = await apiClient.get<UserHistoryItem[]>("/me/interview-history");
+  return response.data;
+}
+
+export async function getMyStatistics(): Promise<UserStatisticsResponse> {
+  const response = await apiClient.get<UserStatisticsResponse>("/me/statistics");
   return response.data;
 }

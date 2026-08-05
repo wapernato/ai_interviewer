@@ -9,6 +9,7 @@ import {
   MessagesSquare,
   ShieldCheck,
   UserRound,
+  UsersRound,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -95,6 +96,10 @@ export function AppLayout() {
             <NavLink onClick={closeNavigation} to="/admin/ai-profiles">
               <ShieldCheck aria-hidden="true" size={19} />
               <span>Управление AI</span>
+            </NavLink>
+            <NavLink onClick={closeNavigation} to="/admin/users">
+              <UsersRound aria-hidden="true" size={19} />
+              <span>Пользователи</span>
             </NavLink>
           </nav>
         ) : null}

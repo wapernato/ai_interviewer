@@ -12,9 +12,29 @@ describe("auth schemas", () => {
     const result = registerSchema.safeParse({
       username: "ivan",
       email: "ivan@example.com",
-      password: "password123",
+      password: "StrongPass1!",
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it("rejects a password that does not satisfy the backend policy", () => {
+    const result = registerSchema.safeParse({
+      username: "ivan",
+      email: "ivan@example.com",
+      password: "password123",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a password longer than bcrypt supports", () => {
+    const result = registerSchema.safeParse({
+      username: "ivan",
+      email: "ivan@example.com",
+      password: `Aa1!${"x".repeat(69)}`,
+    });
+
+    expect(result.success).toBe(false);
   });
 });

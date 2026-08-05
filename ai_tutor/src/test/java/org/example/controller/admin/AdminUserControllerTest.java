@@ -1,7 +1,11 @@
 package org.example.controller.admin;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.dto.response.user.UserResponse;
+import org.example.dto.user.UpdateUserRoleRequest;
 import org.example.exception.NotFoundException;
+import org.example.model.UserRole;
+import org.example.security.JwtService;
 import org.example.service.AdminUserService;
 import org.example.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -14,12 +18,14 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,11 +37,17 @@ class AdminUserControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @MockitoBean
     private UserService userService;
 
     @MockitoBean
     private AdminUserService adminUserService;
+
+    @MockitoBean
+    private JwtService jwtService;
 
     private UserResponse createUserResponse(Long id, String username) {
         UserResponse response = new UserResponse();
@@ -207,5 +219,41 @@ class AdminUserControllerTest {
                 .andExpect(jsonPath("$.message").value("Пользователь с именем (Unknown) не найден."));
 
         verify(userService).findByName("Unknown");
+    }
+
+    @Test
+    void updateUserRole_shouldReturnUserResponse_whenDataIsValid() throws Exception {
+        UpdateUserRoleRequest request = new UpdateUserRoleRequest(UserRole.ADMIN);
+        UserResponse response = createUserResponse(2L, "Yakov");
+        response.setRole(UserRole.ADMIN);
+
+        when(jwtService.extractUserId(any())).thenReturn(1L);
+        when(adminUserService.updateUserRole(1L, 2L, UserRole.ADMIN)).thenReturn(response);
+
+        mockMvc.perform(put("/api/admin/users/2/role")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(2L))
+                .andExpect(jsonPath("$.username").value("Yakov"))
+                .andExpect(jsonPath("$.role").value("ADMIN"));
+
+        verify(jwtService).extractUserId(any());
+        verify(adminUserService).updateUserRole(1L, 2L, UserRole.ADMIN);
+    }
+
+    @Test
+    void updateUserRole_shouldReturnBadRequest_whenRoleIsMissing() throws Exception {
+        mockMvc.perform(put("/api/admin/users/2/role")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.validationErrors.request").value("Роль пользователя должна быть указана."));
+
+        verifyNoInteractions(jwtService, adminUserService);
     }
 }

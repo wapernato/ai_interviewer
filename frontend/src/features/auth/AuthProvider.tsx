@@ -1,8 +1,10 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "../../api/client";
 import { clearStoredAuth, readStoredAuth, writeStoredAuth } from "../../api/tokenStorage";
 import type { AuthResponse } from "../../types/api";
+import { normalizeApiError } from "../../utils/apiError";
 import { AuthContext, type AuthContextValue } from "./authContext";
 
 type AuthProviderProps = {
@@ -23,6 +25,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setAuth(null);
     queryClient.clear();
   }, [queryClient]);
+
+  useEffect(() => {
+    const interceptorId = apiClient.interceptors.response.use(
+      (response) => response,
+      (error: unknown) => {
+        const apiError = normalizeApiError(error);
+
+        if (apiError.status === 401) {
+          signOut();
+        }
+
+        return Promise.reject(apiError);
+      },
+    );
+
+    return () => apiClient.interceptors.response.eject(interceptorId);
+  }, [signOut]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

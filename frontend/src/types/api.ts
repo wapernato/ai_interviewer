@@ -31,6 +31,17 @@ export type LoginRequest = {
   password: string;
 };
 
+export type PasswordStrengthLevel = "WEAK" | "MEDIUM" | "STRONG";
+
+export type PasswordStrengthRequest = {
+  password: string;
+};
+
+export type PasswordStrengthResult = {
+  level: PasswordStrengthLevel;
+  suggestions: string[];
+};
+
 export type UserResponse = {
   id: number;
   username: string;
@@ -42,6 +53,17 @@ export type UserResponse = {
 
 export type UpdateUserRequest = {
   username: string;
+};
+
+export type UserStatisticsResponse = {
+  totalQuestions: number;
+  totalAnswers: number;
+  unansweredQuestions: number;
+  completionRate: number;
+};
+
+export type UpdateUserRoleRequest = {
+  role: UserRole;
 };
 
 export type TopicResponse = {

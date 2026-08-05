@@ -1,10 +1,28 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
+import { apiClient } from "../api/client";
 import { writeStoredAuth } from "../api/tokenStorage";
 import { AuthProvider } from "../features/auth/AuthProvider";
+import { ApiError } from "../utils/apiError";
 import { ProtectedRoute } from "./ProtectedRoute";
+
+function PrivatePage() {
+  function requestWithExpiredToken() {
+    void apiClient.get("/private", {
+      adapter: () => Promise.reject(new ApiError("Необходима авторизация.", 401, "UNAUTHORIZED")),
+    }).catch(() => undefined);
+  }
+
+  return (
+    <div>
+      <span>Private page</span>
+      <button onClick={requestWithExpiredToken} type="button">Request protected data</button>
+    </div>
+  );
+}
 
 function renderRoute() {
   const queryClient = new QueryClient({
@@ -17,7 +35,7 @@ function renderRoute() {
         <AuthProvider>
           <Routes>
             <Route element={<ProtectedRoute />}>
-              <Route path="/private" element={<div>Private page</div>} />
+              <Route path="/private" element={<PrivatePage />} />
             </Route>
             <Route path="/login" element={<div>Login page</div>} />
           </Routes>
@@ -50,5 +68,22 @@ describe("ProtectedRoute", () => {
     renderRoute();
 
     expect(screen.getByText("Private page")).toBeInTheDocument();
+  });
+
+  it("redirects to login when the API rejects the stored token", async () => {
+    const user = userEvent.setup();
+    writeStoredAuth({
+      id: 1,
+      username: "admin",
+      email: "admin@example.com",
+      role: "ADMIN",
+      token: "expired-jwt",
+    });
+
+    renderRoute();
+    await user.click(screen.getByRole("button", { name: "Request protected data" }));
+
+    expect(await screen.findByText("Login page")).toBeInTheDocument();
+    expect(localStorage.getItem("ai_interviewer_auth")).toBeNull();
   });
 });
