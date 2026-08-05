@@ -12,6 +12,7 @@ import { HistoryPage } from "../pages/HistoryPage";
 import { ProfilePage } from "../pages/ProfilePage";
 import { AdminTopicsPage } from "../pages/AdminTopicsPage";
 import { AdminAiProfilesPage } from "../pages/AdminAiProfilesPage";
+import { AdminUsersPage } from "../pages/AdminUsersPage";
 import { ForbiddenPage } from "../pages/ForbiddenPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 
@@ -39,6 +40,7 @@ export function AppRoutes() {
         <Route element={<AppLayout />}>
           <Route path="/admin/topics" element={<AdminTopicsPage />} />
           <Route path="/admin/ai-profiles" element={<AdminAiProfilesPage />} />
+          <Route path="/admin/users" element={<AdminUsersPage />} />
         </Route>
       </Route>
 

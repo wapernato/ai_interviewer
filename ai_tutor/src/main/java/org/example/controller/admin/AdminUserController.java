@@ -6,11 +6,14 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import org.example.dto.response.user.UserResponse;
 import org.example.dto.user.UpdateUserRoleRequest;
+import org.example.security.JwtService;
 import org.example.service.AdminUserService;
 import org.example.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,11 +25,14 @@ public class AdminUserController {
 
     private final UserService userService;
     private final AdminUserService adminUserService;
+    private final JwtService jwtService;
 
     public AdminUserController(UserService userService,
-                               AdminUserService adminUserService) {
+                               AdminUserService adminUserService,
+                               JwtService jwtService) {
         this.userService = userService;
         this.adminUserService = adminUserService;
+        this.jwtService = jwtService;
     }
 
     @GetMapping
@@ -63,12 +69,15 @@ public class AdminUserController {
 
     @PutMapping("/{id}/role")
     public ResponseEntity<UserResponse> updateUserRole(
+            @AuthenticationPrincipal Jwt jwt,
             @PathVariable("id")
             @Positive(message = "ID пользователя должен быть положительным числом.")
             Long userId,
             @Valid @RequestBody UpdateUserRoleRequest request
     ) {
-        UserResponse user = adminUserService.updateUserRole(userId, request.role());
+
+        Long actorUserId = jwtService.extractUserId(jwt);
+        UserResponse user = adminUserService.updateUserRole(actorUserId, userId, request.role());
 
         return ResponseEntity
                 .status(HttpStatus.OK)
