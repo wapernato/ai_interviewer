@@ -1,6 +1,6 @@
 package org.example.controller.admin;
 
-import org.example.dto.response.UserResponse;
+import org.example.dto.response.user.UserResponse;
 import org.example.exception.NotFoundException;
 import org.example.service.AdminUserService;
 import org.example.service.UserService;

@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.example.dto.auth.LoginRequest;
 import org.example.dto.auth.RegisterRequest;
-import org.example.dto.response.AuthResponse;
+import org.example.dto.response.auth.AuthResponse;
 import org.example.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

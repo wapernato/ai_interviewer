@@ -1,7 +1,7 @@
 package org.example.service.impl;
 
-import org.example.dto.response.AiProfileResponse;
-import org.example.dto.response.AvailableAiProfileResponse;
+import org.example.dto.response.aiprofile.AiProfileResponse;
+import org.example.dto.response.aiprofile.AvailableAiProfileResponse;
 import org.example.exception.AiProfileAlreadyExistsException;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;

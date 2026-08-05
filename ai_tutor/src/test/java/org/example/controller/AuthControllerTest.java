@@ -2,7 +2,7 @@ package org.example.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.dto.auth.RegisterRequest;
-import org.example.dto.response.AuthResponse;
+import org.example.dto.response.auth.AuthResponse;
 import org.example.exception.BadRequestException;
 import org.example.exception.UserAlreadyExistsException;
 import org.example.model.UserRole;

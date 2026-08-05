@@ -1,6 +1,6 @@
 package org.example.service.impl;
 
-import org.example.dto.response.TopicResponse;
+import org.example.dto.response.topic.TopicResponse;
 import org.example.mapper.TopicMapper;
 import org.springframework.transaction.annotation.Transactional;
 import org.example.exception.BadRequestException;

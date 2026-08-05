@@ -1,6 +1,6 @@
 package org.example.mapper;
 
-import org.example.dto.response.UserResponse;
+import org.example.dto.response.user.UserResponse;
 import org.example.model.User;
 import org.springframework.stereotype.Component;
 

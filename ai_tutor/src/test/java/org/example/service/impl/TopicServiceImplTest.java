@@ -1,6 +1,6 @@
 package org.example.service.impl;
 
-import org.example.dto.response.TopicResponse;
+import org.example.dto.response.topic.TopicResponse;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
 import org.example.exception.TopicAlreadyExistsException;

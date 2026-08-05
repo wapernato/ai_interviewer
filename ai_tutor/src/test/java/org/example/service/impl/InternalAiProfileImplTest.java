@@ -1,6 +1,6 @@
 package org.example.service.impl;
 
-import org.example.dto.response.InternalAiProfileConfigResponse;
+import org.example.dto.response.aiprofile.InternalAiProfileConfigResponse;
 import org.example.exception.AiProfileUnavailableException;
 import org.example.exception.NotFoundException;
 import org.example.mapper.InternalAiProfileMapper;

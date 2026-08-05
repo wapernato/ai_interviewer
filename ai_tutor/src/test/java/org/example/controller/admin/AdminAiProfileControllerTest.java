@@ -2,7 +2,7 @@ package org.example.controller.admin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.dto.aiprofile.CreateAiProfileRequest;
-import org.example.dto.response.AiProfileResponse;
+import org.example.dto.response.aiprofile.AiProfileResponse;
 import org.example.exception.AiProfileAlreadyExistsException;
 import org.example.exception.NotFoundException;
 import org.example.model.AiProfile;

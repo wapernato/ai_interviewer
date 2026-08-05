@@ -1,6 +1,6 @@
 package org.example.service;
 
-import org.example.dto.response.UserResponse;
+import org.example.dto.response.user.UserResponse;
 import org.example.model.UserRole;
 
 public interface AdminUserService {

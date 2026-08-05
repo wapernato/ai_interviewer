@@ -3,7 +3,7 @@ package org.example.controller;
 
 
 import jakarta.validation.constraints.*;
-import org.example.dto.response.TopicResponse;
+import org.example.dto.response.topic.TopicResponse;
 import org.example.service.TopicService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

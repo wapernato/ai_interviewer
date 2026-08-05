@@ -1,7 +1,7 @@
 package org.example.service;
 
-import org.example.dto.response.AiProfileResponse;
-import org.example.dto.response.AvailableAiProfileResponse;
+import org.example.dto.response.aiprofile.AiProfileResponse;
+import org.example.dto.response.aiprofile.AvailableAiProfileResponse;
 import org.example.model.AiProfile;
 
 import java.util.List;

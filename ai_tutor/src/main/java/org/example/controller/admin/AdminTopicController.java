@@ -2,7 +2,7 @@ package org.example.controller.admin;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
-import org.example.dto.response.TopicResponse;
+import org.example.dto.response.topic.TopicResponse;
 import org.example.dto.topic.CreateTopicRequest;
 import org.example.dto.topic.UpdateTopicRequest;
 import org.example.service.TopicService;

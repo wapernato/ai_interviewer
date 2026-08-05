@@ -2,7 +2,7 @@ package org.example.service;
 
 import org.example.dto.auth.LoginRequest;
 import org.example.dto.auth.RegisterRequest;
-import org.example.dto.response.AuthResponse;
+import org.example.dto.response.auth.AuthResponse;
 
 public interface AuthService {
 

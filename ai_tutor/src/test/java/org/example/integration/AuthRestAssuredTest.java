@@ -6,7 +6,7 @@ import io.restassured.response.Response;
 import org.example.dto.auth.LoginRequest;
 import org.example.dto.auth.RegisterRequest;
 import org.example.dto.interview.InterviewQuestionResult;
-import org.example.dto.response.AuthResponse;
+import org.example.dto.response.auth.AuthResponse;
 import org.example.model.AiProfile;
 import org.example.model.Question;
 import org.example.model.QuestionDifficulty;

@@ -1,6 +1,6 @@
 package org.example.service.impl;
 
-import org.example.dto.response.QuestionResponse;
+import org.example.dto.response.question.QuestionResponse;
 import org.example.exception.BadRequestException;
 import org.example.exception.NotFoundException;
 import org.example.mapper.QuestionMapper;

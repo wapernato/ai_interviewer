@@ -1,7 +1,7 @@
 package org.example.controller;
 
 import jakarta.validation.constraints.Positive;
-import org.example.dto.response.InternalAiProfileConfigResponse;
+import org.example.dto.response.aiprofile.InternalAiProfileConfigResponse;
 import org.example.model.AiProfile;
 import org.example.service.AiProfileService;
 import org.example.service.InternalAiProfile;
