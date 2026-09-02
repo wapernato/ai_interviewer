@@ -13,9 +13,11 @@ import org.example.model.QuestionDifficulty;
 import org.example.model.User;
 import org.example.model.UserRole;
 import org.example.repository.AiProfileRepository;
+import org.example.repository.EmailVerificationTokenRepository;
 import org.example.repository.QuestionRepository;
 import org.example.repository.TopicRepository;
 import org.example.repository.UserRepository;
+import org.example.service.EmailSenderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -70,11 +73,18 @@ class AuthRestAssuredTest {
     @Autowired
     private TopicRepository topicRepository;
 
+    @Autowired
+    private EmailVerificationTokenRepository emailVerificationTokenRepository;
+
+    @MockitoBean
+    private EmailSenderService emailSenderService;
+
     @BeforeEach
     void setUp(){
         questionRepository.deleteAll();
         topicRepository.deleteAll();
         aiProfileRepository.deleteAll();
+        emailVerificationTokenRepository.deleteAll();
         userRepository.deleteAll();
 
         RestAssured.baseURI = "http://localhost";
@@ -161,6 +171,7 @@ class AuthRestAssuredTest {
         assertThat(savedUser.getUsername()).isEqualTo("ximeo");
         assertThat(savedUser.getEmail()).isEqualTo("ximeo@gmail.com");
         assertThat(savedUser.getRole()).isEqualTo(UserRole.USER);
+        assertThat(savedUser.getEnabled()).isFalse();
         assertThat(savedUser.getPasswordHash()).isNotNull();
         assertThat(savedUser.getPasswordHash()).isNotBlank();
         assertThat(savedUser.getPasswordHash()).isNotEqualTo(VALID_PASSWORD);
@@ -211,6 +222,10 @@ class AuthRestAssuredTest {
                 .body("username", equalTo("rodion"))
                 .extract()
                 .response();
+
+        User rodion = userRepository.findByEmail("rodion@gmail.com").orElseThrow();
+        rodion.setEnabled(true);
+        userRepository.save(rodion);
 
         LoginRequest loginRequestRodion = createLoginRequest("rodion@gmail.com", VALID_PASSWORD);
 

@@ -5,7 +5,9 @@ import org.example.dto.auth.RegisterRequest;
 import org.example.dto.response.auth.AuthResponse;
 import org.example.model.User;
 import org.example.model.UserRole;
+import org.example.repository.EmailVerificationTokenRepository;
 import org.example.repository.UserRepository;
+import org.example.service.EmailSenderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -58,8 +61,15 @@ class AuthRegisterIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EmailVerificationTokenRepository emailVerificationTokenRepository;
+
+    @MockitoBean
+    private EmailSenderService emailSenderService;
+
     @BeforeEach
     void setUp(){
+        emailVerificationTokenRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -96,6 +106,7 @@ class AuthRegisterIntegrationTest {
         assertThat(savedUser).isPresent();
         assertThat(savedUser.get().getUsername()).isEqualTo("ximeo");
         assertThat(savedUser.get().getEmail()).isEqualTo("ximeo@yandex.ru");
+        assertThat(savedUser.get().getEnabled()).isFalse();
         assertThat(savedUser.get().getPasswordHash()).isNotEqualTo(VALID_PASSWORD);
         assertThat(passwordEncoder.matches(VALID_PASSWORD, savedUser.get().getPasswordHash())).isTrue();
     }
@@ -124,6 +135,7 @@ class AuthRegisterIntegrationTest {
         assertThat(savedUser).isPresent();
         assertThat(savedUser.get().getUsername()).isEqualTo("ximeo");
         assertThat(savedUser.get().getEmail()).isEqualTo("ximeo@yandex.ru");
+        assertThat(savedUser.get().getEnabled()).isFalse();
         assertThat(savedUser.get().getPasswordHash()).isNotEqualTo(VALID_PASSWORD);
         assertThat(passwordEncoder.matches(VALID_PASSWORD, savedUser.get().getPasswordHash())).isTrue();
 

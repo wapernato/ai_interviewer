@@ -10,10 +10,13 @@ import org.example.dto.interview.InterviewQuestionResult;
 import org.example.dto.interview.QuestionRequest;
 import org.example.dto.response.auth.AuthResponse;
 import org.example.model.AiProfile;
+import org.example.model.User;
 import org.example.repository.AiProfileRepository;
+import org.example.repository.EmailVerificationTokenRepository;
 import org.example.repository.QuestionRepository;
 import org.example.repository.TopicRepository;
 import org.example.repository.UserRepository;
+import org.example.service.EmailSenderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -58,11 +62,18 @@ class InterviewEndTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private EmailVerificationTokenRepository emailVerificationTokenRepository;
+
+    @MockitoBean
+    private EmailSenderService emailSenderService;
+
     @BeforeEach
     void setUp(){
         questionRepository.deleteAll();
         topicRepository.deleteAll();
         aiProfileRepository.deleteAll();
+        emailVerificationTokenRepository.deleteAll();
         userRepository.deleteAll();
 
         RestAssured.baseURI = "http://localhost";
@@ -125,6 +136,10 @@ class InterviewEndTest {
                 .post("/api/auth/register")
                 .then()
                 .statusCode(201);
+
+        User user = userRepository.findByEmail("ximeo@gmail.com").orElseThrow();
+        user.setEnabled(true);
+        userRepository.save(user);
 
         LoginRequest loginRequest = createLoginRequest("ximeo@gmail.com", VALID_PASSWORD);
 

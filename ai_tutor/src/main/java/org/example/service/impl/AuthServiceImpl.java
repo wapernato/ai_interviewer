@@ -1,5 +1,6 @@
 package org.example.service.impl;
 
+import org.example.config.AppBackendUrlProperty;
 import org.example.dto.auth.LoginRequest;
 import org.example.dto.auth.RegisterRequest;
 import org.example.dto.response.auth.AuthResponse;
@@ -12,6 +13,8 @@ import org.example.security.JwtService;
 import org.example.security.LoginRateLimiter;
 import org.example.security.PasswordPolicyValidator;
 import org.example.service.AuthService;
+import org.example.service.EmailSenderService;
+import org.example.service.EmailVerificationService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,17 +26,26 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final LoginRateLimiter loginRateLimiter;
     private final PasswordPolicyValidator passwordPolicyValidator;
+    private final EmailVerificationService emailVerificationService;
+    private final AppBackendUrlProperty appBackendUrlProperty;
+    private final EmailSenderService emailSenderService;
 
     public AuthServiceImpl(JwtService jwtService,
                            UserRepository userRepository,
                            PasswordEncoder passwordEncoder,
                            LoginRateLimiter loginRateLimiter,
-                           PasswordPolicyValidator passwordPolicyValidator) {
+                           PasswordPolicyValidator passwordPolicyValidator,
+                           EmailVerificationService emailVerificationService,
+                           AppBackendUrlProperty appBackendUrlProperty,
+                           EmailSenderService emailSenderService) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.loginRateLimiter = loginRateLimiter;
         this.passwordPolicyValidator = passwordPolicyValidator;
+        this.emailVerificationService = emailVerificationService;
+        this.appBackendUrlProperty = appBackendUrlProperty;
+        this.emailSenderService = emailSenderService;
     }
 
     private String normalizedEmail(String email) {
@@ -105,9 +117,15 @@ public class AuthServiceImpl implements AuthService {
         user.setEmail(normalizedEmail);
         user.setPasswordHash(passwordHash);
         user.setRole(UserRole.USER);
-        user.setEnabled(true);
+        user.setEnabled(false);
 
         User userSaved = userRepository.save(user);
+
+        String token = emailVerificationService.createVerificationToken(userSaved);
+
+        String verificationLink = appBackendUrlProperty.backendUrl() + "/api/auth/confirm?token=" + token;
+
+        emailSenderService.sendEmailVerification(userSaved.getEmail(), verificationLink);
 
         return createResponse(userSaved);
     }
@@ -128,6 +146,10 @@ public class AuthServiceImpl implements AuthService {
         if(!passwordMatches){
             loginRateLimiter.registerFailedAttempt(clientIp, normalizedEmail);
             throw new BadRequestException("Неверный email или пароль.");
+        }
+
+        if (!Boolean.TRUE.equals(user.getEnabled())) {
+            throw new BadRequestException("Email пользователя не подтвержден.");
         }
 
         loginRateLimiter.resetAttempts(clientIp, normalizedEmail);

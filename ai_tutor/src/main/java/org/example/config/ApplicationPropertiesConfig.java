@@ -6,7 +6,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties({
         InternalApiProperties.class,
-        BootstrapAdminProperties.class
+        BootstrapAdminProperties.class,
+        AppBackendUrlProperty.class
 })
 public class ApplicationPropertiesConfig {
 }

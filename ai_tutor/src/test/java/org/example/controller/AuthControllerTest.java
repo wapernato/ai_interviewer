@@ -11,6 +11,7 @@ import org.example.security.PasswordStrengthEvaluator;
 import org.example.security.PasswordStrengthLevel;
 import org.example.security.PasswordStrengthResult;
 import org.example.service.AuthService;
+import org.example.service.EmailVerificationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -23,6 +24,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -45,6 +47,8 @@ public class AuthControllerTest {
     private ClientIpResolver clientIpResolver;
     @MockitoBean
     private PasswordStrengthEvaluator passwordStrengthEvaluator;
+    @MockitoBean
+    private EmailVerificationService emailVerificationService;
 
     private RegisterRequest createRegisterRequest(String username, String email, String password) {
         RegisterRequest request = new RegisterRequest();
@@ -266,6 +270,16 @@ public class AuthControllerTest {
                 .andExpect(jsonPath("$.suggestions").isEmpty());
 
         verify(passwordStrengthEvaluator).evaluate("StrongPass1!");
+        verifyNoInteractions(authService);
+    }
+
+    @Test
+    void verifyEmail_shouldReturnNoContent_whenTokenIsValid() throws Exception {
+        mockMvc.perform(get("/api/auth/confirm")
+                        .param("token", "verification-token"))
+                .andExpect(status().isNoContent());
+
+        verify(emailVerificationService).verifyEmail("verification-token");
         verifyNoInteractions(authService);
     }
 
