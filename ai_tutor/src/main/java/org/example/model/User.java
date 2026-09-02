@@ -21,7 +21,7 @@ public class User {
     @Column(name = "role", nullable = false, length = 30)
     private UserRole role = UserRole.USER;
     @Column(name = "enabled", nullable = false)
-    private Boolean enabled = true;
+    private Boolean enabled = false;
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 

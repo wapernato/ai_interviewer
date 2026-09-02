@@ -1,5 +1,6 @@
 package org.example.service.impl;
 
+import org.example.config.AppBackendUrlProperty;
 import org.example.dto.auth.RegisterRequest;
 import org.example.dto.response.auth.AuthResponse;
 import org.example.model.User;
@@ -8,6 +9,8 @@ import org.example.repository.UserRepository;
 import org.example.security.JwtService;
 import org.example.security.LoginRateLimiter;
 import org.example.security.PasswordPolicyValidator;
+import org.example.service.EmailSenderService;
+import org.example.service.EmailVerificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +39,11 @@ class AuthServiceImplTest {
     @Mock
     private PasswordPolicyValidator passwordPolicyValidator;
 
+    @Mock
+    private EmailVerificationService emailVerificationService;
+    @Mock
+    private EmailSenderService emailSenderService;
+
     private AuthServiceImpl authService;
 
     @BeforeEach
@@ -45,7 +53,10 @@ class AuthServiceImplTest {
                 userRepository,
                 passwordEncoder,
                 loginRateLimiter,
-                passwordPolicyValidator
+                passwordPolicyValidator,
+                emailVerificationService,
+                new AppBackendUrlProperty("http://localhost:8080"),
+                emailSenderService
         );
     }
 
@@ -65,6 +76,7 @@ class AuthServiceImplTest {
         when(userRepository.existsByUsername("ximeo")).thenReturn(false);
         when(userRepository.existsByEmail("zavod3433@yandex.ru")).thenReturn(false);
         when(passwordEncoder.encode(VALID_PASSWORD)).thenReturn("encoded-password");
+        when(emailVerificationService.createVerificationToken(any(User.class))).thenReturn("verification-token");
 
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
                 User user = invocation.getArgument(0);
@@ -87,8 +99,16 @@ class AuthServiceImplTest {
                         && "zavod3433@yandex.ru".equals(user.getEmail())
                         && "encoded-password".equals(user.getPasswordHash())
                         && user.getRole() == UserRole.USER
-                        && Boolean.TRUE.equals(user.getEnabled())
+                        && Boolean.FALSE.equals(user.getEnabled())
         ));
+        verify(emailVerificationService).createVerificationToken(argThat(user ->
+                Long.valueOf(1L).equals(user.getId())
+                        && "zavod3433@yandex.ru".equals(user.getEmail())
+        ));
+        verify(emailSenderService).sendEmailVerification(
+                "zavod3433@yandex.ru",
+                "http://localhost:8080/api/auth/confirm?token=verification-token"
+        );
     }
 
     @Test
@@ -103,6 +123,7 @@ class AuthServiceImplTest {
         when(userRepository.existsByUsername(trimUsername)).thenReturn(false);
         when(userRepository.existsByEmail(normalizedEmail)).thenReturn(false);
         when(passwordEncoder.encode(VALID_PASSWORD)).thenReturn("encoded-password");
+        when(emailVerificationService.createVerificationToken(any(User.class))).thenReturn("verification-token");
 
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
            User user = invocation.getArgument(0);
@@ -124,7 +145,15 @@ class AuthServiceImplTest {
                         && "zavod3433@yandex.ru".equals(user.getEmail())
                         && "encoded-password".equals(user.getPasswordHash())
                         && user.getRole() == UserRole.USER
-                        && Boolean.TRUE.equals(user.getEnabled())
+                        && Boolean.FALSE.equals(user.getEnabled())
         ));
+        verify(emailVerificationService).createVerificationToken(argThat(user ->
+                Long.valueOf(1L).equals(user.getId())
+                        && "zavod3433@yandex.ru".equals(user.getEmail())
+        ));
+        verify(emailSenderService).sendEmailVerification(
+                "zavod3433@yandex.ru",
+                "http://localhost:8080/api/auth/confirm?token=verification-token"
+        );
     }
 }
